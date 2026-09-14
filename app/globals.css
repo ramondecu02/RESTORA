@@ -22,60 +22,66 @@
   --font-mono: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ---- Palette: clean white + deep green (professional SaaS) ---- */
+/* ---- Palette: warm ivory + deep green (premium hospitality SaaS) ---- */
 :root {
-  --bg: #f5f6f3;
-  --surface: #ffffff;
-  --panel: #eef1ec;
-  --ink: #14201a;
-  --muted: #5f6b61;
-  --line: #e1e6dd;
-  --hair: #edefe9;
-  --border: #e1e6dd;
+  --bg: #f6f3ec;
+  --surface: #fffefb;
+  --panel: #efeadf;
+  --ink: #17211b;
+  --muted: #6a6559;
+  --line: #e6ddcf;
+  --hair: #efe9dd;
+  --border: #e5ddcd;
   --brand: #1e3d2f;
   --accent: #3e8e6a;
-  --brand-soft: #e7efe9;
+  --brand-soft: #e9efe4;
   --on-brand: #ffffff;
+  --earth: #b98e5a;
+  --sand: #e7dcc6;
   --up: #2e8b57;
-  --down: #cf5b4e;
+  --down: #c66a4a;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1512;
-    --surface: #141c18;
-    --panel: #121a15;
-    --ink: #edf1ec;
-    --muted: #93a099;
-    --line: #28332c;
-    --hair: #1c2621;
-    --border: #28332c;
-    --brand: #54a981;
-    --accent: #54a981;
-    --brand-soft: #16231c;
+    --bg: #10130f;
+    --surface: #171c15;
+    --panel: #141813;
+    --ink: #f0f0e8;
+    --muted: #9da093;
+    --line: #2b302a;
+    --hair: #1f231c;
+    --border: #2b302a;
+    --brand: #6fb894;
+    --accent: #6fb894;
+    --brand-soft: #17231b;
     --on-brand: #08110c;
+    --earth: #c79a68;
+    --sand: #3a3428;
     --up: #5bb98b;
-    --down: #e0796c;
+    --down: #e08a6c;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0e1512;
-  --surface: #141c18;
-  --panel: #121a15;
-  --ink: #edf1ec;
-  --muted: #93a099;
-  --line: #28332c;
-  --hair: #1c2621;
-  --border: #28332c;
-  --brand: #54a981;
-  --accent: #54a981;
-  --brand-soft: #16231c;
+  --bg: #10130f;
+  --surface: #171c15;
+  --panel: #141813;
+  --ink: #f0f0e8;
+  --muted: #9da093;
+  --line: #2b302a;
+  --hair: #1f231c;
+  --border: #2b302a;
+  --brand: #6fb894;
+  --accent: #6fb894;
+  --brand-soft: #17231b;
   --on-brand: #08110c;
+  --earth: #c79a68;
+  --sand: #3a3428;
   --up: #5bb98b;
-  --down: #e0796c;
+  --down: #e08a6c;
   color-scheme: dark;
 }
 
@@ -241,16 +247,6 @@
   border-color: color-mix(in srgb, var(--brand) 40%, var(--hair));
 }
 
-@keyframes revealIn {
-  from {
-    opacity: 0;
-    transform: translateY(22px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 @keyframes growBar {
   from {
     height: 0;
@@ -265,20 +261,103 @@
     transform: translateY(-8px);
   }
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    .reveal {
-      animation: revealIn linear both;
-      animation-timeline: view();
-      animation-range: entry 2% cover 22%;
-    }
+@keyframes pageFade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  .spark-bar {
-    animation: growBar 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- Scroll reveal (JS-driven via IntersectionObserver; cross-browser) ---- */
+/* Elements are only hidden once JS is active, so no-JS still shows everything. */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: opacity, transform;
+}
+.js .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+/* Staggered children (e.g. card grids) */
+.js .reveal-group > * {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.6s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.js .reveal-group.is-visible > * {
+  opacity: 1;
+  transform: none;
+}
+.js .reveal-group.is-visible > *:nth-child(2) { transition-delay: 0.07s; }
+.js .reveal-group.is-visible > *:nth-child(3) { transition-delay: 0.14s; }
+.js .reveal-group.is-visible > *:nth-child(4) { transition-delay: 0.21s; }
+.js .reveal-group.is-visible > *:nth-child(5) { transition-delay: 0.28s; }
+.js .reveal-group.is-visible > *:nth-child(6) { transition-delay: 0.35s; }
+.js .reveal-group.is-visible > *:nth-child(n + 7) { transition-delay: 0.42s; }
+
+/* ---- Page transition (per-route fade, driven by template.tsx) ---- */
+.page-fade {
+  animation: pageFade 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* ---- Photo hover zoom ---- */
+.photo-layer {
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.photo-zoom:hover .photo-layer {
+  transform: scale(1.055);
+}
+
+/* ---- Dashboard line-draw ---- */
+@keyframes dmDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dm-line {
+    stroke-dasharray: 660;
+    stroke-dashoffset: 660;
+    animation: dmDraw 1.5s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s forwards;
+  }
+}
+
+/* ---- Animated count-up / bars ---- */
+.spark-bar {
+  animation: growBar 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.float-y {
+  animation: floatY 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .js .reveal,
+  .js .reveal-group > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .page-fade {
+    animation: none;
+  }
+  .photo-zoom:hover .photo-layer {
+    transform: none;
   }
   .float-y {
-    animation: floatY 6s ease-in-out infinite;
+    animation: none;
   }
 }
 

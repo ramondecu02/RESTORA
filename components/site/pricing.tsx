@@ -8,7 +8,7 @@ export function SitePricing({ copy, locale }: { copy: SiteCopy; locale: Locale }
   const p = copy.pricing;
   return (
     <section id="pricing" className="mx-auto max-w-[1200px]" style={{ padding: "80px 28px" }}>
-      <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div className="reveal" style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
         <Eyebrow>{p.eyebrow}</Eyebrow>
         <h2 className="display" style={{ fontSize: "clamp(30px, 4.4vw, 46px)", margin: "16px 0 0" }}>{p.title}</h2>
         <p style={{ fontSize: 17, color: "var(--muted)", margin: "14px 0 0", maxWidth: "48ch" }}>{p.sub}</p>

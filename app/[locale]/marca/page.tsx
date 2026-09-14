@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
+import { getSiteCopy } from "@/lib/site-copy";
 import { isLocale } from "@/lib/types";
-import { Nav } from "@/components/nav";
-import { Footer } from "@/components/footer";
+import { SiteNav } from "@/components/site/nav";
+import { SiteFooter } from "@/components/site/footer";
 import { Masthead } from "@/components/sections/masthead";
 
 const SWATCHES = [
@@ -41,6 +42,7 @@ export default async function MarcaPage(props: { params: Promise<{ locale: strin
   const { locale } = await props.params;
   if (!isLocale(locale)) notFound();
   const dict = getDictionary(locale);
+  const copy = getSiteCopy(locale);
 
   const cardBase: React.CSSProperties = {
     border: "1px solid var(--hair)",
@@ -50,7 +52,7 @@ export default async function MarcaPage(props: { params: Promise<{ locale: strin
 
   return (
     <>
-      <Nav dict={dict} locale={locale} />
+      <SiteNav copy={copy} locale={locale} />
       <main id="top">
         <section className="mx-auto max-w-[1200px]" style={{ padding: "52px 28px 80px" }}>
           <Masthead index="00" label={dict.brand.kicker} />
@@ -216,7 +218,7 @@ export default async function MarcaPage(props: { params: Promise<{ locale: strin
           </div>
         </section>
       </main>
-      <Footer dict={dict} locale={locale} />
+      <SiteFooter copy={copy} locale={locale} />
     </>
   );
 }

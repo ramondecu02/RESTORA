@@ -5,11 +5,13 @@ import { Photo } from "./photo";
 export function HomeBand({ copy }: { copy: SiteCopy }) {
   const h = copy.home;
   return (
-    <section style={{ padding: "0 28px 88px" }}>
+    <section className="reveal" style={{ padding: "0 28px 88px" }}>
       <Photo
-        src="/images/hero.jpg"
+        src="/images/kitchen-hero.webp"
         alt="Cocina profesional en marcha"
         radius={28}
+        focal="center"
+        zoom
         className="mx-auto max-w-[1200px]"
         style={{ minHeight: 420, display: "flex", alignItems: "flex-end" }}
       >

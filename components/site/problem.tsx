@@ -69,7 +69,7 @@ export function SiteProblem({ copy }: { copy: SiteCopy }) {
     <section className="mx-auto max-w-[1200px]" style={{ padding: "80px 28px" }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 48, alignItems: "start" }}>
         {/* Left: heading + pains */}
-        <div>
+        <div className="reveal">
           <Eyebrow>{copy.problem.eyebrow}</Eyebrow>
           <h2 className="display" style={{ fontSize: "clamp(30px, 4.6vw, 50px)", margin: "16px 0 0", maxWidth: "16ch", textWrap: "balance" }}>
             {copy.problem.title}
@@ -96,25 +96,37 @@ export function SiteProblem({ copy }: { copy: SiteCopy }) {
           </div>
         </div>
 
-        {/* Right: scattered data composition */}
+        {/* Right: real kitchen photo with scattered-data cards floating over it */}
         <div
+          className="reveal"
           style={{
             position: "relative",
             borderRadius: 24,
+            overflow: "hidden",
             padding: 28,
-            background: "linear-gradient(160deg, color-mix(in srgb, var(--accent) 10%, var(--surface)), var(--panel))",
             border: "1px solid var(--hair)",
           }}
         >
-          <ScatterCards />
+          <div
+            aria-hidden="true"
+            style={{ position: "absolute", inset: 0, backgroundImage: 'url("/images/operativa.webp")', backgroundSize: "cover", backgroundPosition: "center" }}
+          />
+          <div
+            aria-hidden="true"
+            style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, color-mix(in srgb, var(--bg) 84%, transparent), color-mix(in srgb, var(--bg) 90%, transparent))" }}
+          />
+          <div style={{ position: "relative" }}>
+            <ScatterCards />
+          </div>
           <div
             style={{
+              position: "relative",
               marginTop: 22,
               textAlign: "center",
               fontStyle: "italic",
               fontSize: 16,
               color: "var(--brand)",
-              fontWeight: 500,
+              fontWeight: 600,
             }}
           >
             {copy.problem.note}

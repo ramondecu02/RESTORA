@@ -14,7 +14,7 @@ const inter = Inter({
 
 // Blocking script: apply the stored (or OS-preferred) theme before first paint
 // to avoid a flash of the wrong palette.
-const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('restora-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.dataset.theme=t;}catch(e){}})();`;
+const THEME_SCRIPT = `(function(){try{document.documentElement.classList.add('js');var t=localStorage.getItem('restora-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.dataset.theme=t;}catch(e){}})();`;
 
 export const dynamicParams = false;
 

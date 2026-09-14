@@ -13,7 +13,7 @@ export function SiteFeatures({ copy, locale }: { copy: SiteCopy; locale: Locale 
         style={{ padding: "80px 28px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 44, alignItems: "start" }}
       >
         {/* Heading */}
-        <div style={{ position: "sticky", top: 100 }}>
+        <div className="reveal" style={{ position: "sticky", top: 100 }}>
           <Eyebrow>{copy.features.eyebrow}</Eyebrow>
           <h2 className="display" style={{ fontSize: "clamp(30px, 4.4vw, 46px)", margin: "16px 0 0", maxWidth: "12ch", textWrap: "balance" }}>
             {copy.features.title}

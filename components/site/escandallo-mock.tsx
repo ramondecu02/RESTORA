@@ -38,9 +38,10 @@ export function EscandalloMock() {
       {/* dish + key figures */}
       <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
         <Photo
-          src="/images/plato.jpg"
+          src="/images/plato.webp"
           alt="Lubina a la brasa"
           radius={14}
+          focal="center"
           style={{ width: 74, height: 74, flexShrink: 0, boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.06)" }}
         />
         <div style={{ flex: 1 }}>

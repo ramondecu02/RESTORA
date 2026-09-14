@@ -9,13 +9,13 @@ export function SiteFaq({ copy }: { copy: SiteCopy }) {
   const [open, setOpen] = useState(0);
   return (
     <section id="faq" className="mx-auto max-w-[820px]" style={{ padding: "80px 28px" }}>
-      <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div className="reveal" style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
         <Eyebrow>{copy.faq.eyebrow}</Eyebrow>
         <h2 className="display" style={{ fontSize: "clamp(28px, 4vw, 42px)", margin: "16px 0 0" }}>{copy.faq.title}</h2>
         <p style={{ fontSize: 17, color: "var(--muted)", margin: "12px 0 0" }}>{copy.faq.sub}</p>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 32 }}>
+      <div className="reveal-group" style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 32 }}>
         {copy.faq.items.map((item, i) => {
           const isOpen = i === open;
           return (

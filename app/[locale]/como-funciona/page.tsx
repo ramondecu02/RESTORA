@@ -20,7 +20,7 @@ export default async function ComoFuncionaPage(props: {
     <>
       <SiteNav copy={copy} locale={locale} />
       <main>
-        <PageHero eyebrow={p.eyebrow} title={p.title} sub={p.sub} photo="/images/chef.jpg" photoAlt="Chef en la cocina" />
+        <PageHero eyebrow={p.eyebrow} title={p.title} sub={p.sub} photo="/images/cocina-abierta.webp" photoAlt="Cocina abierta de restaurante en servicio" focal="center" />
         <SiteInteligencia copy={copy} />
         <SiteConexion copy={copy} />
         <CtaBand copy={copy} locale={locale} />

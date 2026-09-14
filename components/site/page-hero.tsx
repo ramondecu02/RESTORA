@@ -8,20 +8,24 @@ export function PageHero({
   sub,
   photo,
   photoAlt,
+  focal,
 }: {
   eyebrow: string;
   title: string;
   sub?: string;
   photo?: string;
   photoAlt?: string;
+  focal?: string;
 }) {
   if (photo) {
     return (
-      <section style={{ padding: "28px 28px 0" }}>
+      <section className="reveal" style={{ padding: "28px 28px 0" }}>
         <Photo
           src={photo}
           alt={photoAlt ?? title}
           radius={24}
+          focal={focal ?? "center"}
+          zoom
           className="mx-auto max-w-[1200px]"
           style={{ minHeight: 340, display: "flex", alignItems: "flex-end" }}
         >

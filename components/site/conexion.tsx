@@ -81,7 +81,7 @@ export function SiteConexion({ copy }: { copy: SiteCopy }) {
   return (
     <section style={{ background: "var(--panel)", borderTop: "1px solid var(--hair)", borderBottom: "1px solid var(--hair)" }}>
       <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-12 md:grid-cols-2" style={{ padding: "80px 28px" }}>
-        <div>
+        <div className="reveal">
           <Eyebrow>{c.eyebrow}</Eyebrow>
           <h2 className="display" style={{ fontSize: "clamp(30px, 4.4vw, 46px)", margin: "16px 0 0", maxWidth: "14ch", textWrap: "balance" }}>
             {c.title}

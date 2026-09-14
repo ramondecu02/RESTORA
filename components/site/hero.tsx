@@ -3,6 +3,7 @@ import { Coins, ShoppingBag, TrendingUp, Truck, Workflow } from "lucide-react";
 import type { SiteCopy } from "@/lib/site-copy";
 import type { Locale } from "@/lib/types";
 import { DashboardMock } from "./dashboard-mock";
+import { Photo } from "./photo";
 import { Eyebrow } from "./ui";
 
 const CHIP_ICONS = [ShoppingBag, Truck, Coins, TrendingUp, Workflow];
@@ -68,9 +69,21 @@ export function SiteHero({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
           </div>
         </div>
 
-        {/* Right — product dashboard */}
-        <div style={{ display: "flex", justifyContent: "center" }}>
+        {/* Right — product dashboard + chef accent (fusion of producto + cocina) */}
+        <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
           <DashboardMock />
+          <div
+            className="float-y hidden md:block"
+            style={{ position: "absolute", left: -6, bottom: -30, width: 188, zIndex: 2 }}
+          >
+            <Photo
+              src="/images/chef-plating.webp"
+              alt="Chef emplatando"
+              radius={16}
+              focal="center"
+              style={{ width: "100%", aspectRatio: "4 / 3", boxShadow: "0 30px 60px -34px rgba(20,32,26,0.6)", border: "3px solid var(--surface)" }}
+            />
+          </div>
         </div>
       </div>
     </section>

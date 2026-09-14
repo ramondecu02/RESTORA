@@ -8,6 +8,7 @@ import {
   UtensilsCrossed,
   Wallet,
 } from "lucide-react";
+import { CountUp } from "./count-up";
 
 const SIDEBAR = [
   { icon: LayoutDashboard, label: "Dashboard", active: true },
@@ -21,10 +22,10 @@ const SIDEBAR = [
 ];
 
 const STATS = [
-  { label: "Coste de compras", value: "24.680 €", delta: "4,8%", down: true, good: true },
-  { label: "Food Cost", value: "29,4%", delta: "1,7%", down: true, good: true },
-  { label: "Proveedores", value: "12", delta: "0%", flat: true },
-  { label: "Alertas", value: "7", delta: "2", up: true, good: false },
+  { label: "Coste de compras", end: 24680, decimals: 0, suffix: " €", delta: "4,8%", down: true, good: true },
+  { label: "Food Cost", end: 29.4, decimals: 1, suffix: "%", delta: "1,7%", down: true, good: true },
+  { label: "Proveedores", end: 12, decimals: 0, suffix: "", delta: "0%", flat: true },
+  { label: "Alertas", end: 7, decimals: 0, suffix: "", delta: "2", up: true, good: false },
 ];
 
 const DONUT = [
@@ -82,7 +83,7 @@ function LineChart() {
         </linearGradient>
       </defs>
       <path d={area} fill="url(#dm-fill)" />
-      <path d={line} fill="none" stroke="#3E8E6A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path className="dm-line" d={line} fill="none" stroke="#3E8E6A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -154,7 +155,9 @@ export function DashboardMock() {
           {STATS.map((s) => (
             <div key={s.label} style={panel}>
               <div style={{ fontSize: 10.5, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
-              <div style={{ fontWeight: 700, fontSize: 18, marginTop: 4, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+              <div style={{ fontWeight: 700, fontSize: 18, marginTop: 4, fontVariantNumeric: "tabular-nums" }}>
+                <CountUp end={s.end} decimals={s.decimals} suffix={s.suffix} />
+              </div>
               <div
                 style={{
                   fontSize: 10.5,

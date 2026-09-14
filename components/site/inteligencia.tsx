@@ -10,7 +10,7 @@ export function SiteInteligencia({ copy }: { copy: SiteCopy }) {
     <section id="como-funciona" className="mx-auto max-w-[1200px]" style={{ padding: "80px 28px" }}>
       <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
         {/* Left: heading + flow */}
-        <div>
+        <div className="reveal">
           <Eyebrow>{c.eyebrow}</Eyebrow>
           <h2 className="display" style={{ fontSize: "clamp(30px, 4.4vw, 46px)", margin: "16px 0 0", maxWidth: "14ch", textWrap: "balance" }}>
             {c.title}

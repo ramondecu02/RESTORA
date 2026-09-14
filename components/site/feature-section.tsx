@@ -35,7 +35,7 @@ export function FeatureSection({
       }
     >
       <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-12 md:grid-cols-2" style={{ padding: "80px 28px" }}>
-        <div className={reverse ? "md:order-2" : undefined}>
+        <div className={`reveal ${reverse ? "md:order-2" : ""}`}>
           <Eyebrow>{eyebrow}</Eyebrow>
           <h2 className="display" style={{ fontSize: "clamp(30px, 4.4vw, 46px)", margin: "16px 0 0", maxWidth: "15ch", textWrap: "balance" }}>
             {title}

@@ -37,9 +37,11 @@ export default async function ContactoPage(props: {
               <p style={{ fontSize: 18, color: "var(--muted)", margin: "18px 0 0", maxWidth: "46ch", lineHeight: 1.6 }}>{p.sub}</p>
 
               <Photo
-                src="/images/restaurante.jpg"
+                src="/images/sala-contacto.webp"
                 alt="Interior de un restaurante"
                 radius={22}
+                focal="center"
+                zoom
                 style={{ marginTop: 30, minHeight: 240 }}
               />
 
