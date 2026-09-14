@@ -49,24 +49,58 @@ export default function LocaleTemplate({ children }: { children: React.ReactNode
           if (entry.isIntersecting) {
             entry.target.classList.add("is-visible");
             obs.unobserve(entry.target);
+            pending.delete(entry.target as HTMLElement);
           }
         });
       },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.12 },
+      // threshold 0 (not a ratio): a tall block, or a jump-scroll past it,
+      // must never leave content stuck invisible. The negative bottom margin
+      // is what delays the reveal until the block is properly on screen.
+      { rootMargin: "0px 0px -12% 0px", threshold: 0 },
     );
+
+    // Anything at or above this line counts as "arrived".
+    const revealLine = () => window.innerHeight * 0.92;
+    const pending = new Set<HTMLElement>();
 
     targets.forEach((el) => {
       // If already in view on load, reveal without waiting.
-      const rect = el.getBoundingClientRect();
-      if (rect.top < window.innerHeight * 0.92) {
+      if (el.getBoundingClientRect().top < revealLine()) {
         el.classList.add("is-visible");
       } else {
+        pending.add(el);
         io.observe(el);
       }
     });
 
+    // The observer alone can be outrun by a jump: End, a scrollbar drag or an
+    // anchor can move the page further in one frame than it can report. Sweep
+    // on scroll so nothing the reader has already passed stays invisible.
+    let ticking = false;
+    const sweep = () => {
+      ticking = false;
+      if (pending.size === 0) return;
+      const line = revealLine();
+      for (const el of pending) {
+        if (el.getBoundingClientRect().top < line) {
+          el.classList.add("is-visible");
+          io.unobserve(el);
+          pending.delete(el);
+        }
+      }
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(sweep);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+
     return () => {
       io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
       cancelAnimationFrame(raf);
       timers.forEach(clearTimeout);
     };

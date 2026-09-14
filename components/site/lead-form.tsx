@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import type { SiteCopy } from "@/lib/site-copy";
 import { LEAD_ROLES, type Locale } from "@/lib/types";
@@ -95,6 +96,13 @@ export function SiteLeadForm({ lead, locale }: { lead: SiteCopy["lead"]; locale:
       </button>
       {status === "error" && <p role="alert" style={{ color: "var(--down)", fontSize: 13, textAlign: "center", margin: 0 }}>{lead.errGeneric}</p>}
       <p style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", margin: "2px 0 0" }}>{lead.note}</p>
+      <p style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", margin: 0 }}>
+        {lead.privacyPre}{" "}
+        <Link href={`/${locale}/privacidad`} style={{ color: "var(--brand)", textDecoration: "underline", textUnderlineOffset: 2 }}>
+          {lead.privacyLink}
+        </Link>
+        .
+      </p>
     </form>
   );
 }

@@ -38,6 +38,7 @@ export function SiteNav({
     { href: `/${locale}/como-funciona`, label: copy.nav.how },
     { href: `/${locale}/precios`, label: copy.nav.pricing },
     { href: `/${locale}/preguntas`, label: copy.nav.faq },
+    { href: `/${locale}/contacto`, label: copy.nav.contact },
   ];
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
@@ -68,7 +69,7 @@ export function SiteNav({
           <Logo markSize={28} wordmarkSize={19} />
         </Link>
         <div style={{ flex: 1 }} />
-        <div className="hidden items-center lg:flex" style={{ gap: 22, fontSize: 15, fontWeight: 500, whiteSpace: "nowrap" }}>
+        <div className="hidden items-center lg:flex" style={{ gap: "clamp(14px, 1.5vw, 22px)", fontSize: 15, fontWeight: 500, whiteSpace: "nowrap" }}>
           {links.map((link) => {
             const active = isActive(link.href);
             return (

@@ -45,8 +45,8 @@ export function SiteFooter({ copy, locale }: { copy: SiteCopy; locale: Locale })
 
         <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
           <div style={colTitle}>{copy.footer.colLegal}</div>
-          <Link href={`/${locale}/legal/privacidad`} style={link}>{copy.footer.privacy}</Link>
-          <Link href={`/${locale}/legal/rgpd`} style={link}>{copy.footer.rgpd}</Link>
+          <Link href={`/${locale}/privacidad`} style={link}>{copy.footer.privacy}</Link>
+          <Link href={`/${locale}/rgpd`} style={link}>{copy.footer.rgpd}</Link>
           <a href="mailto:hola@restoraapp.com" style={link}>{copy.footer.contact}</a>
         </div>
 

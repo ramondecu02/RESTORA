@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
 import { getSiteCopy } from "@/lib/site-copy";
@@ -37,6 +38,13 @@ function FaviconGlyph({ size, stroke }: { size: number; stroke: number }) {
     </svg>
   );
 }
+
+// Internal brand reference — reachable by URL but kept out of search results.
+export const metadata: Metadata = {
+  title: "Marca · RESTORA",
+  description: "Guía interna de marca de RESTORA: logotipo, color y tipografía.",
+  robots: { index: false, follow: false },
+};
 
 export default async function MarcaPage(props: { params: Promise<{ locale: string }> }) {
   const { locale } = await props.params;
