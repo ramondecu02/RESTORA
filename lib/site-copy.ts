@@ -10,11 +10,58 @@ const es = {
       "RESTORA conecta compras, proveedores, escandallos, costes e inventario para darte una visión clara de cómo funciona realmente tu restaurante.",
   },
   nav: {
+    home: "Inicio",
     features: "Funcionalidades",
     how: "Cómo funciona",
     pricing: "Precios",
     faq: "Preguntas",
+    contact: "Contacto",
     cta: "Solicitar una demo",
+  },
+  pages: {
+    funcionalidades: {
+      eyebrow: "Funcionalidades",
+      title: "Todo tu restaurante, bajo control.",
+      sub: "Compras, proveedores, escandallos, inventario e inteligencia. Cada pieza conectada para que veas el negocio completo, no fragmentos sueltos.",
+    },
+    comoFunciona: {
+      eyebrow: "Cómo funciona",
+      title: "De los datos a las decisiones.",
+      sub: "RESTORA transforma tu operativa diaria en información útil: qué sube de precio, qué plato pierde margen y qué deberías comprar.",
+    },
+    precios: {
+      eyebrow: "Precios",
+      title: "Precios claros, sin sorpresas.",
+      sub: "Elige el plan que encaja con tu restaurante. Aún en vista previa: hoy reservas plaza de socio fundador, sin coste.",
+    },
+    preguntas: {
+      eyebrow: "Preguntas",
+      title: "Resolvemos tus dudas.",
+      sub: "Lo que más nos preguntan los restaurantes antes de empezar con RESTORA.",
+    },
+    contacto: {
+      eyebrow: "Hablemos",
+      title: "Reserva tu demo y tu plaza.",
+      sub: "Cuéntanos tu caso y te contactamos en 48 h. Plazas limitadas a los primeros restaurantes de Cataluña.",
+    },
+  },
+  home: {
+    bandEyebrow: "Hecho para hostelería",
+    bandTitle: "Pensado por y para quienes viven la cocina.",
+    bandSub: "Menos horas frente a hojas de cálculo. Más tiempo para lo que de verdad importa: tu cocina, tu equipo y tus clientes.",
+    exploreEyebrow: "Explora RESTORA",
+    exploreTitle: "Descubre cada parte del sistema.",
+    exploreSub: "Cada área tiene su propio espacio. Entra en la que más te interese.",
+    cards: [
+      { key: "funcionalidades", title: "Funcionalidades", desc: "Compras, proveedores, escandallos, inventario e inteligencia en un solo lugar." },
+      { key: "como-funciona", title: "Cómo funciona", desc: "Cómo convertimos tus datos operativos en decisiones rentables." },
+      { key: "precios", title: "Precios", desc: "Planes claros y programa de socio fundador para los primeros restaurantes." },
+      { key: "preguntas", title: "Preguntas", desc: "Resolvemos las dudas más habituales antes de empezar." },
+    ],
+  },
+  ctaBand: {
+    title: "¿Listo para tomar el control de tu restaurante?",
+    sub: "Reserva tu plaza de socio fundador. Sin coste ni compromiso.",
   },
   hero: {
     eyebrow: "Gestión inteligente para restaurantes",
@@ -159,11 +206,58 @@ const ca: SiteCopy = {
       "RESTORA connecta compres, proveïdors, escandalls, costos i inventari per donar-te una visió clara de com funciona realment el teu restaurant.",
   },
   nav: {
+    home: "Inici",
     features: "Funcionalitats",
     how: "Com funciona",
     pricing: "Preus",
     faq: "Preguntes",
+    contact: "Contacte",
     cta: "Sol·licitar una demo",
+  },
+  pages: {
+    funcionalidades: {
+      eyebrow: "Funcionalitats",
+      title: "Tot el teu restaurant, sota control.",
+      sub: "Compres, proveïdors, escandalls, inventari i intel·ligència. Cada peça connectada perquè vegis el negoci complet, no fragments solts.",
+    },
+    comoFunciona: {
+      eyebrow: "Com funciona",
+      title: "De les dades a les decisions.",
+      sub: "RESTORA transforma la teva operativa diària en informació útil: què puja de preu, quin plat perd marge i què hauries de comprar.",
+    },
+    precios: {
+      eyebrow: "Preus",
+      title: "Preus clars, sense sorpreses.",
+      sub: "Tria el pla que encaixa amb el teu restaurant. Encara en vista prèvia: avui reserves plaça de soci fundador, sense cost.",
+    },
+    preguntas: {
+      eyebrow: "Preguntes",
+      title: "Resolem els teus dubtes.",
+      sub: "El que més ens pregunten els restaurants abans de començar amb RESTORA.",
+    },
+    contacto: {
+      eyebrow: "Parlem-ne",
+      title: "Reserva la teva demo i la teva plaça.",
+      sub: "Explica'ns el teu cas i et contactem en 48 h. Places limitades als primers restaurants de Catalunya.",
+    },
+  },
+  home: {
+    bandEyebrow: "Fet per a l'hostaleria",
+    bandTitle: "Pensat per i per a qui viu la cuina.",
+    bandSub: "Menys hores davant de fulls de càlcul. Més temps per al que de debò importa: la teva cuina, el teu equip i els teus clients.",
+    exploreEyebrow: "Explora RESTORA",
+    exploreTitle: "Descobreix cada part del sistema.",
+    exploreSub: "Cada àrea té el seu propi espai. Entra a la que més t'interessi.",
+    cards: [
+      { key: "funcionalidades", title: "Funcionalitats", desc: "Compres, proveïdors, escandalls, inventari i intel·ligència en un sol lloc." },
+      { key: "como-funciona", title: "Com funciona", desc: "Com convertim les teves dades operatives en decisions rendibles." },
+      { key: "precios", title: "Preus", desc: "Plans clars i programa de soci fundador per als primers restaurants." },
+      { key: "preguntas", title: "Preguntes", desc: "Resolem els dubtes més habituals abans de començar." },
+    ],
+  },
+  ctaBand: {
+    title: "A punt per prendre el control del teu restaurant?",
+    sub: "Reserva la teva plaça de soci fundador. Sense cost ni compromís.",
   },
   hero: {
     eyebrow: "Gestió intel·ligent per a restaurants",

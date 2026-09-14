@@ -2,14 +2,11 @@ import { notFound } from "next/navigation";
 import { getSiteCopy } from "@/lib/site-copy";
 import { isLocale } from "@/lib/types";
 import { SiteNav } from "@/components/site/nav";
-import { SiteHero } from "@/components/site/hero";
-import { SiteProblem } from "@/components/site/problem";
-import { HomeBand } from "@/components/site/home-band";
-import { SiteExplore } from "@/components/site/explore";
+import { SiteFaq } from "@/components/site/faq";
 import { CtaBand } from "@/components/site/cta-band";
 import { SiteFooter } from "@/components/site/footer";
 
-export default async function HomePage(props: {
+export default async function PreguntasPage(props: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await props.params;
@@ -19,11 +16,8 @@ export default async function HomePage(props: {
   return (
     <>
       <SiteNav copy={copy} locale={locale} />
-      <main>
-        <SiteHero copy={copy} locale={locale} />
-        <SiteProblem copy={copy} />
-        <HomeBand copy={copy} />
-        <SiteExplore copy={copy} locale={locale} />
+      <main style={{ paddingTop: 16 }}>
+        <SiteFaq copy={copy} />
         <CtaBand copy={copy} locale={locale} />
       </main>
       <SiteFooter copy={copy} locale={locale} />

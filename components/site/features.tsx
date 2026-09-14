@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { FileText } from "lucide-react";
 import type { SiteCopy } from "@/lib/site-copy";
+import type { Locale } from "@/lib/types";
 import { ICONS } from "./icons";
 import { Eyebrow } from "./ui";
 
-export function SiteFeatures({ copy }: { copy: SiteCopy }) {
+export function SiteFeatures({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
   return (
     <section id="funcionalidades" style={{ background: "var(--panel)", borderTop: "1px solid var(--hair)", borderBottom: "1px solid var(--hair)" }}>
       <div
@@ -19,9 +21,9 @@ export function SiteFeatures({ copy }: { copy: SiteCopy }) {
           <p style={{ fontSize: 17, color: "var(--muted)", margin: "18px 0 0", maxWidth: "42ch", lineHeight: 1.6 }}>
             {copy.features.sub}
           </p>
-          <a href="#lead" className="btn btn-brand" style={{ padding: "13px 22px", fontSize: 15, marginTop: 26 }}>
+          <Link href={`/${locale}/contacto`} className="btn btn-brand" style={{ padding: "13px 22px", fontSize: 15, marginTop: 26 }}>
             {copy.features.cta} →
-          </a>
+          </Link>
         </div>
 
         {/* Cards */}

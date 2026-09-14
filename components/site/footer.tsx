@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { SiteCopy } from "@/lib/site-copy";
 import type { Locale } from "@/lib/types";
 import { LangSwitcher } from "@/components/lang-switcher";
@@ -35,16 +36,17 @@ export function SiteFooter({ copy, locale }: { copy: SiteCopy; locale: Locale })
 
         <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
           <div style={colTitle}>{copy.footer.colProduct}</div>
-          <a href="#funcionalidades" style={link}>{copy.nav.features}</a>
-          <a href="#como-funciona" style={link}>{copy.nav.how}</a>
-          <a href="#pricing" style={link}>{copy.nav.pricing}</a>
-          <a href="#faq" style={link}>{copy.nav.faq}</a>
+          <Link href={`/${locale}/funcionalidades`} style={link}>{copy.nav.features}</Link>
+          <Link href={`/${locale}/como-funciona`} style={link}>{copy.nav.how}</Link>
+          <Link href={`/${locale}/precios`} style={link}>{copy.nav.pricing}</Link>
+          <Link href={`/${locale}/preguntas`} style={link}>{copy.nav.faq}</Link>
+          <Link href={`/${locale}/contacto`} style={link}>{copy.nav.contact}</Link>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
           <div style={colTitle}>{copy.footer.colLegal}</div>
-          <a href={`/${locale}/legal/privacidad`} style={link}>{copy.footer.privacy}</a>
-          <a href={`/${locale}/legal/rgpd`} style={link}>{copy.footer.rgpd}</a>
+          <Link href={`/${locale}/legal/privacidad`} style={link}>{copy.footer.privacy}</Link>
+          <Link href={`/${locale}/legal/rgpd`} style={link}>{copy.footer.rgpd}</Link>
           <a href="mailto:hola@restoraapp.com" style={link}>{copy.footer.contact}</a>
         </div>
 

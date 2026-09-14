@@ -1,3 +1,5 @@
+import { Photo } from "./photo";
+
 const ING: [string, string, string][] = [
   ["Lubina", "300 g", "4,60 €"],
   ["Aceite de oliva", "20 ml", "0,38 €"],
@@ -35,15 +37,11 @@ export function EscandalloMock() {
 
       {/* dish + key figures */}
       <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-        <span
-          style={{
-            width: 74,
-            height: 74,
-            borderRadius: 14,
-            flexShrink: 0,
-            background: "radial-gradient(circle at 35% 30%, #E9DCC4, #B98E5A 70%, #7c5a34)",
-            boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.06)",
-          }}
+        <Photo
+          src="/images/plato.jpg"
+          alt="Lubina a la brasa"
+          radius={14}
+          style={{ width: 74, height: 74, flexShrink: 0, boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.06)" }}
         />
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: 17 }}>Lubina a la brasa</div>

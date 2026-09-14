@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { Check } from "lucide-react";
 import type { SiteCopy } from "@/lib/site-copy";
+import type { Locale } from "@/lib/types";
 import { Eyebrow } from "./ui";
 
-export function SitePricing({ copy }: { copy: SiteCopy }) {
+export function SitePricing({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
   const p = copy.pricing;
   return (
     <section id="pricing" className="mx-auto max-w-[1200px]" style={{ padding: "80px 28px" }}>
@@ -66,13 +68,13 @@ export function SitePricing({ copy }: { copy: SiteCopy }) {
                   </div>
                 ))}
               </div>
-              <a
-                href="#lead"
+              <Link
+                href={`/${locale}/contacto`}
                 className={f ? "btn btn-brand" : "btn btn-outline"}
                 style={{ display: "block", textAlign: "center", marginTop: 26, padding: 13, fontSize: 15 }}
               >
                 {p.cta}
-              </a>
+              </Link>
             </div>
           );
         })}
@@ -100,7 +102,7 @@ export function SitePricing({ copy }: { copy: SiteCopy }) {
           <p style={{ fontSize: 15, color: "color-mix(in srgb, var(--ink) 78%, transparent)", margin: "10px 0 0", maxWidth: "52ch" }}>{p.founderBody}</p>
         </div>
         <div style={{ justifySelf: "end" }}>
-          <a href="#lead" className="btn btn-brand" style={{ padding: "14px 24px", fontSize: 15.5, whiteSpace: "nowrap" }}>{copy.nav.cta} →</a>
+          <Link href={`/${locale}/contacto`} className="btn btn-brand" style={{ padding: "14px 24px", fontSize: 15.5, whiteSpace: "nowrap" }}>{copy.nav.cta} →</Link>
         </div>
       </div>
     </section>

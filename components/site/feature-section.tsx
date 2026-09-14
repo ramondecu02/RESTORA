@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { Eyebrow } from "./ui";
 
 export function FeatureSection({
@@ -7,7 +8,7 @@ export function FeatureSection({
   title,
   sub,
   ctaLabel,
-  ctaHref = "#lead",
+  ctaHref,
   soon,
   visual,
   reverse = false,
@@ -47,10 +48,10 @@ export function FeatureSection({
             >
               {soon}
             </span>
-          ) : ctaLabel ? (
-            <a href={ctaHref} className="btn btn-brand" style={{ padding: "13px 22px", fontSize: 15, marginTop: 26 }}>
+          ) : ctaLabel && ctaHref ? (
+            <Link href={ctaHref} className="btn btn-brand" style={{ padding: "13px 22px", fontSize: 15, marginTop: 26 }}>
               {ctaLabel} →
-            </a>
+            </Link>
           ) : null}
         </div>
         <div className={`reveal ${reverse ? "md:order-1" : ""}`} style={{ display: "flex", justifyContent: "center" }}>

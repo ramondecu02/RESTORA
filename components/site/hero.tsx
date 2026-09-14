@@ -1,11 +1,13 @@
+import Link from "next/link";
 import { Coins, ShoppingBag, TrendingUp, Truck, Workflow } from "lucide-react";
 import type { SiteCopy } from "@/lib/site-copy";
+import type { Locale } from "@/lib/types";
 import { DashboardMock } from "./dashboard-mock";
 import { Eyebrow } from "./ui";
 
 const CHIP_ICONS = [ShoppingBag, Truck, Coins, TrendingUp, Workflow];
 
-export function SiteHero({ copy }: { copy: SiteCopy }) {
+export function SiteHero({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
   return (
     <section style={{ position: "relative", overflow: "hidden" }}>
       {/* soft brand glow behind the dashboard */}
@@ -45,12 +47,12 @@ export function SiteHero({ copy }: { copy: SiteCopy }) {
             {copy.hero.sub}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 30 }}>
-            <a href="#lead" className="btn btn-brand" style={{ padding: "14px 24px", fontSize: 15.5 }}>
+            <Link href={`/${locale}/contacto`} className="btn btn-brand" style={{ padding: "14px 24px", fontSize: 15.5 }}>
               {copy.hero.ctaPrimary} →
-            </a>
-            <a href="#como-funciona" className="btn btn-outline" style={{ padding: "14px 24px", fontSize: 15.5 }}>
+            </Link>
+            <Link href={`/${locale}/como-funciona`} className="btn btn-outline" style={{ padding: "14px 24px", fontSize: 15.5 }}>
               {copy.hero.ctaSecondary}
-            </a>
+            </Link>
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "22px 30px", marginTop: 38 }}>
