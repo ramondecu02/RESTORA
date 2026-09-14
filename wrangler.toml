@@ -1,0 +1,20 @@
+# Cloudflare Pages config for the RESTORA landing (static export + Functions).
+# Deploy:  npm run build:cf  &&  npx wrangler pages deploy
+name = "restora-web"
+compatibility_date = "2026-09-14"
+pages_build_output_dir = "out"
+
+# D1 database binding used by functions/api/leads.js (env.DB)
+[[d1_databases]]
+binding = "DB"
+database_name = "restora-leads"
+database_id = "db98235c-819f-4f27-9230-f9ca4e5d2993"
+
+# Non-secret variables (optional). Set the sender once you verify a domain
+# in Resend; otherwise the function falls back to onboarding@resend.dev.
+[vars]
+# LEAD_NOTIFY_FROM = "RESTORA <hola@restoraapp.com>"
+
+# Secrets — DO NOT put here. Set them with:
+#   npx wrangler pages secret put RESEND_API_KEY
+#   npx wrangler pages secret put LEAD_NOTIFY_TO

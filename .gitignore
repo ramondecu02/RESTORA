@@ -17,6 +17,10 @@
 /.next/
 /out/
 
+# cloudflare export staging
+/.cf-stash/
+/.wrangler/
+
 # production
 /build
 

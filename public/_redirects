@@ -1,0 +1,2 @@
+# Cloudflare Pages redirects. Default the root to the Spanish landing.
+/    /es/    302
