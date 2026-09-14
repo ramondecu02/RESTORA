@@ -12,12 +12,22 @@ export default function LocaleTemplate({ children }: { children: React.ReactNode
 
   useEffect(() => {
     // Always start a new page at the very top — force an instant jump even
-    // though html has scroll-behavior: smooth (for in-page anchors).
+    // though html has scroll-behavior: smooth (for in-page anchors), and
+    // re-assert it once the first paint/reflow settles so late-loading media
+    // can't leave the page a few pixels down.
     const html = document.documentElement;
-    const prev = html.style.scrollBehavior;
-    html.style.scrollBehavior = "auto";
-    window.scrollTo(0, 0);
-    html.style.scrollBehavior = prev;
+    const snap = (force: boolean) => {
+      // Only correct small strays (font swap / media reflow); never yank a
+      // reader who has deliberately scrolled away.
+      if (!force && window.scrollY > 160) return;
+      const prev = html.style.scrollBehavior;
+      html.style.scrollBehavior = "auto";
+      window.scrollTo(0, 0);
+      html.style.scrollBehavior = prev;
+    };
+    snap(true);
+    const raf = requestAnimationFrame(() => snap(true));
+    const timers = [120, 320, 650].map((ms) => window.setTimeout(() => snap(false), ms));
 
     const targets = Array.from(
       document.querySelectorAll<HTMLElement>(".reveal, .reveal-group"),
@@ -27,7 +37,10 @@ export default function LocaleTemplate({ children }: { children: React.ReactNode
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced || typeof IntersectionObserver === "undefined") {
       targets.forEach((el) => el.classList.add("is-visible"));
-      return;
+      return () => {
+        cancelAnimationFrame(raf);
+        timers.forEach(clearTimeout);
+      };
     }
 
     const io = new IntersectionObserver(
@@ -52,7 +65,11 @@ export default function LocaleTemplate({ children }: { children: React.ReactNode
       }
     });
 
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+      timers.forEach(clearTimeout);
+    };
   }, [pathname]);
 
   return (

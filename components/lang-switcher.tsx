@@ -70,7 +70,7 @@ export function LangSwitcher({
 
   return (
     <div
-      className="mono"
+      className="mono lang-switch"
       style={{
         display: "flex",
         alignItems: "center",

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-// Inter — clean, modern SaaS typeface used across the site.
-import { Inter } from "next/font/google";
+// Inter for UI/body; Instrument Serif for editorial display headlines (home).
+import { Inter, Instrument_Serif } from "next/font/google";
 import "../globals.css";
 import { getSiteCopy } from "@/lib/site-copy";
 import { isLocale, LOCALES, type Locale } from "@/lib/types";
@@ -9,6 +9,14 @@ import { isLocale, LOCALES, type Locale } from "@/lib/types";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const serif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -57,7 +65,7 @@ export default async function LocaleLayout(props: {
     <html
       lang={typedLocale}
       suppressHydrationWarning
-      className={`${inter.variable} antialiased`}
+      className={`${inter.variable} ${serif.variable} antialiased`}
     >
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />

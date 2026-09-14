@@ -55,9 +55,37 @@ const es = {
     cards: [
       { key: "funcionalidades", title: "Funcionalidades", desc: "Compras, proveedores, escandallos, inventario e inteligencia en un solo lugar." },
       { key: "como-funciona", title: "Cómo funciona", desc: "Cómo convertimos tus datos operativos en decisiones rentables." },
-      { key: "precios", title: "Precios", desc: "Planes claros y programa de socio fundador para los primeros restaurantes." },
+      { key: "precios", title: "Precios", desc: "Desde 89 €/mes y una oferta exclusiva para socios fundadores." },
       { key: "preguntas", title: "Preguntas", desc: "Resolvemos las dudas más habituales antes de empezar." },
     ],
+    heroMetrics: [
+      { label: "Food cost", end: 31.4, decimals: 1, suffix: "%", delta: "−2,4%", good: true },
+      { label: "Margen bruto", end: 68, decimals: 1, suffix: "%", delta: "+1,8%", good: true },
+      { label: "Compras del mes", end: 12840, decimals: 0, suffix: " €", delta: "+4,2%", good: false },
+    ],
+    heroAlert: { text: "El aceite de oliva ha subido un 14%", action: "Revisar proveedores" },
+    capabilities: [
+      { title: "Compras", desc: "Controla pedidos y proveedores" },
+      { title: "Escandallos", desc: "Calcula costes y optimiza recetas" },
+      { title: "Rentabilidad", desc: "Decide con datos reales" },
+      { title: "Inventario", desc: "Evita roturas y desperdicio" },
+      { title: "Inteligencia", desc: "Alertas antes de perder margen" },
+    ],
+    rentabilidad: {
+      eyebrow: "Rentabilidad",
+      title: "Cada plato, cada compra, cada punto de margen.",
+      sub: "RESTORA pone números claros donde antes había intuición: qué plato rinde, qué proveedor se encarece y dónde recuperas margen.",
+      metrics: [
+        { label: "Food cost", end: 31.4, decimals: 1, suffix: "%", delta: "−2,4%" },
+        { label: "Margen bruto", end: 68, decimals: 1, suffix: "%", delta: "+1,8%" },
+        { label: "Platos analizados", end: 128, decimals: 0, suffix: "", delta: "+12" },
+      ],
+    },
+    compras: {
+      eyebrow: "Compras",
+      title: "Compra mejor, con el histórico delante.",
+      sub: "Cada pedido, cada precio y cada proveedor en un mismo sitio. RESTORA te enseña cómo evoluciona el coste antes de que te sorprenda la factura.",
+    },
   },
   ctaBand: {
     title: "¿Listo para tomar el control de tu restaurante?",
@@ -254,9 +282,37 @@ const ca: SiteCopy = {
     cards: [
       { key: "funcionalidades", title: "Funcionalitats", desc: "Compres, proveïdors, escandalls, inventari i intel·ligència en un sol lloc." },
       { key: "como-funciona", title: "Com funciona", desc: "Com convertim les teves dades operatives en decisions rendibles." },
-      { key: "precios", title: "Preus", desc: "Plans clars i programa de soci fundador per als primers restaurants." },
+      { key: "precios", title: "Preus", desc: "Des de 89 €/mes i una oferta exclusiva per a socis fundadors." },
       { key: "preguntas", title: "Preguntes", desc: "Resolem els dubtes més habituals abans de començar." },
     ],
+    heroMetrics: [
+      { label: "Food cost", end: 31.4, decimals: 1, suffix: "%", delta: "−2,4%", good: true },
+      { label: "Marge brut", end: 68, decimals: 1, suffix: "%", delta: "+1,8%", good: true },
+      { label: "Compres del mes", end: 12840, decimals: 0, suffix: " €", delta: "+4,2%", good: false },
+    ],
+    heroAlert: { text: "L'oli d'oliva ha pujat un 14%", action: "Revisar proveïdors" },
+    capabilities: [
+      { title: "Compres", desc: "Controla comandes i proveïdors" },
+      { title: "Escandalls", desc: "Calcula costos i optimitza receptes" },
+      { title: "Rendibilitat", desc: "Decideix amb dades reals" },
+      { title: "Inventari", desc: "Evita ruptures i malbaratament" },
+      { title: "Intel·ligència", desc: "Alertes abans de perdre marge" },
+    ],
+    rentabilidad: {
+      eyebrow: "Rendibilitat",
+      title: "Cada plat, cada compra, cada punt de marge.",
+      sub: "RESTORA posa números clars on abans hi havia intuïció: quin plat rendeix, quin proveïdor s'encareix i on recuperes marge.",
+      metrics: [
+        { label: "Food cost", end: 31.4, decimals: 1, suffix: "%", delta: "−2,4%" },
+        { label: "Marge brut", end: 68, decimals: 1, suffix: "%", delta: "+1,8%" },
+        { label: "Plats analitzats", end: 128, decimals: 0, suffix: "", delta: "+12" },
+      ],
+    },
+    compras: {
+      eyebrow: "Compres",
+      title: "Compra millor, amb l'històric al davant.",
+      sub: "Cada comanda, cada preu i cada proveïdor en un mateix lloc. RESTORA et mostra com evoluciona el cost abans que et sorprengui la factura.",
+    },
   },
   ctaBand: {
     title: "A punt per prendre el control del teu restaurant?",

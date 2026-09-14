@@ -89,6 +89,8 @@
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 88px;
+    /* Never let the browser re-anchor scroll when media settles in. */
+    overflow-anchor: none;
   }
   body {
     background: var(--bg);
@@ -318,6 +320,158 @@
   transform: scale(1.055);
 }
 
+/* =======================================================================
+   EDITORIAL SYSTEM (home) — serif display, art-directed images, grain
+   ======================================================================= */
+
+.display-serif {
+  font-family: var(--font-serif), "Iowan Old Style", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.012em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+.display-serif em {
+  font-style: italic;
+}
+
+.editorial-eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.hairline {
+  height: 1px;
+  background: var(--hair);
+  border: 0;
+}
+
+/* Capability rail: stacked dividers on mobile, vertical rules on desktop */
+.strip-item + .strip-item {
+  border-top: 1px solid var(--hair);
+}
+@media (min-width: 720px) {
+  .strip-item + .strip-item {
+    border-top: 0;
+    border-left: 1px solid var(--hair);
+  }
+}
+
+/* --- Art-directed images: never distorted, focal point kept on mobile --- */
+.frame-img {
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+.focal-hero {
+  object-position: 44% 46%;
+}
+.focal-chef {
+  object-position: 50% 44%;
+}
+.focal-producto {
+  object-position: 50% 52%;
+}
+.focal-mercancia {
+  object-position: 52% 56%;
+}
+.focal-operativa {
+  object-position: 50% 42%;
+}
+.focal-sala {
+  object-position: 50% 46%;
+}
+.focal-closing {
+  object-position: 50% 52%;
+}
+@media (max-width: 860px) {
+  .focal-hero {
+    object-position: 56% 38%;
+  }
+  .focal-chef {
+    object-position: 54% 42%;
+  }
+  .focal-mercancia {
+    object-position: 56% 54%;
+  }
+  .focal-operativa {
+    object-position: 46% 40%;
+  }
+  .focal-closing {
+    object-position: 56% 50%;
+  }
+}
+
+/* --- Nav floating over the cinematic hero (home only) --- */
+.nav-overlay nav a {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+.nav-overlay nav a[aria-current="page"] {
+  color: #fff !important;
+}
+.nav-overlay a[aria-label="RESTORA"] svg rect {
+  fill: rgba(255, 255, 255, 0.18);
+}
+.nav-overlay .btn-brand {
+  background: #fff !important;
+  color: #14241c !important;
+  border-color: #fff !important;
+}
+.nav-overlay .lang-switch {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+.nav-overlay .lang-switch a {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+.nav-overlay .lang-switch a[aria-current="true"] {
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #14241c !important;
+}
+.nav-overlay button {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #fff !important;
+  background: transparent !important;
+}
+
+/* Cinematic grain — reads as film texture and softens upscaling */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* Frame interactions */
+.img-zoom .frame-img {
+  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.img-zoom:hover .frame-img {
+  transform: scale(1.045);
+}
+.kb .frame-img {
+  animation: kenburns 30s ease-in-out infinite alternate;
+}
+
+/* Staggered mount entrance (above-the-fold content: never hidden by JS) */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise-in {
+  animation: riseIn 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
 /* ---- Ken Burns (slow living zoom for large photos) ---- */
 @keyframes kenburns {
   from {
@@ -360,6 +514,12 @@
     stroke-dashoffset: 660;
     animation: dmDraw 1.5s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s forwards;
   }
+  /* Length-independent draw (requires pathLength="1" on the path) */
+  .line-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: dmDraw 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.55s forwards;
+  }
 }
 
 /* ---- Animated count-up / bars ---- */
@@ -389,9 +549,14 @@
   .float-y,
   .photo-kenburns .photo-layer,
   .cta-kenburns,
-  .glow-pulse {
+  .glow-pulse,
+  .kb .frame-img,
+  .rise-in {
     animation: none !important;
     transform: none !important;
+  }
+  .img-zoom:hover .frame-img {
+    transform: none;
   }
 }
 

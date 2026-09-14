@@ -54,7 +54,7 @@ export function Logo({
           fontSize: wordmarkSize,
           letterSpacing: "0.16em",
           lineHeight: 1,
-          color: "var(--ink)",
+          color: "currentColor",
         }}
       >
         RESTORA
