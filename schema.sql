@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS leads (
   pos        TEXT,                   -- TPV actual (nullable)
   lang       TEXT NOT NULL,          -- es | ca
   status     TEXT NOT NULL DEFAULT 'nuevo',  -- nuevo | contactado | descartado
+  message    TEXT,                   -- pregunta / mensaje del visitante (opcional)
   notes      TEXT,
   source     TEXT NOT NULL DEFAULT 'landing',
   ip         TEXT

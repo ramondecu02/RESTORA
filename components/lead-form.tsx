@@ -13,6 +13,7 @@ export function LeadForm({ dict, locale }: { dict: Dictionary; locale: Locale })
   const [role, setRole] = useState<string>(LEAD_ROLES[0]);
   const [city, setCity] = useState("");
   const [pos, setPos] = useState("");
+  const [message, setMessage] = useState("");
   const [website, setWebsite] = useState(""); // honeypot — must stay empty
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<{ restaurant?: string; city?: string }>({});
@@ -31,7 +32,7 @@ export function LeadForm({ dict, locale }: { dict: Dictionary; locale: Locale })
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ restaurant, role, city, pos, lang: locale, website }),
+        body: JSON.stringify({ restaurant, role, city, pos, message, lang: locale, website }),
       });
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
       setStatus("success");
@@ -150,6 +151,18 @@ export function LeadForm({ dict, locale }: { dict: Dictionary; locale: Locale })
           value={pos}
           onChange={(e) => setPos(e.target.value)}
           autoComplete="off"
+        />
+      </label>
+
+      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <span className="field-label">{dict.lead.fMessage}</span>
+        <textarea
+          className="field-input"
+          placeholder={dict.lead.fMessagePh}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={3}
+          style={{ resize: "vertical", lineHeight: 1.5 }}
         />
       </label>
 

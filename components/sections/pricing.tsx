@@ -19,10 +19,29 @@ export function Pricing({ dict }: { dict: Dictionary }) {
 
         <div
           style={{
+            marginTop: 18,
+            display: "flex",
+            gap: 10,
+            alignItems: "flex-start",
+            border: "1px dashed var(--amber)",
+            background: "var(--amber-soft)",
+            color: "var(--ink)",
+            borderRadius: 12,
+            padding: "12px 16px",
+            fontSize: 14,
+            maxWidth: "62ch",
+          }}
+        >
+          <span style={{ color: "var(--amber)", fontWeight: 700 }}>◆</span>
+          <span>{dict.pricing.previewNote}</span>
+        </div>
+
+        <div
+          style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
             gap: 16,
-            marginTop: 40,
+            marginTop: 34,
             alignItems: "start",
           }}
         >
@@ -31,6 +50,7 @@ export function Pricing({ dict }: { dict: Dictionary }) {
             return (
               <div
                 key={plan.name}
+                className="hover-lift reveal"
                 style={{
                   background: "var(--surface)",
                   border: featured ? "2px solid var(--amber)" : "1px solid var(--hair)",

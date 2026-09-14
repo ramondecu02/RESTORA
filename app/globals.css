@@ -202,3 +202,69 @@
     transform: translateY(-7px);
   }
 }
+
+/* ---- Interactions & motion ---- */
+
+/* Cards / tiles that lift on hover. */
+.hover-lift {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 48px -30px rgba(30, 33, 26, 0.5);
+  border-color: color-mix(in srgb, var(--amber) 45%, var(--hair));
+}
+
+@keyframes revealIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes growBar {
+  from {
+    height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Scroll-driven reveal. Falls back to fully visible where unsupported. */
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: revealIn linear both;
+      animation-timeline: view();
+      animation-range: entry 2% cover 22%;
+    }
+  }
+  .spark-bar {
+    animation: growBar 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+
+/* Floating quick-access CTA (shown after the hero scrolls away). */
+.floating-cta {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 60;
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+  box-shadow: 0 18px 40px -18px rgba(185, 116, 10, 0.6);
+}
+.floating-cta[data-show="true"] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}

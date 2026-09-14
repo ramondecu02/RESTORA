@@ -10,6 +10,7 @@ const COLUMNS = [
   "lang",
   "status",
   "source",
+  "message",
   "notes",
 ] as const;
 
@@ -39,6 +40,7 @@ export function leadsToCsv(leads: Lead[]): string {
         lead.lang,
         lead.status,
         lead.source,
+        lead.message,
         lead.notes,
       ]
         .map(escapeCell)

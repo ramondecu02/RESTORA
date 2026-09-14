@@ -73,6 +73,7 @@ export default async function LeadDetailPage(props: {
           <InfoRow label="Rol" value={isLeadRole(lead.role) ? ROLE_LABELS_ADMIN[lead.role] : lead.role} />
           <InfoRow label="Ciudad" value={lead.city} />
           <InfoRow label="TPV actual" value={lead.pos ?? "—"} />
+          <InfoRow label="Pregunta" value={lead.message ?? "—"} />
           <InfoRow label="Idioma web" value={lead.lang.toUpperCase()} mono />
           <InfoRow label="Origen" value={lead.source} mono />
           <InfoRow label="ID" value={lead.id} mono />

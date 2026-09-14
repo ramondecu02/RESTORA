@@ -36,6 +36,7 @@ export function createLead(input: LeadInput): Promise<Lead> {
       city: input.city,
       pos: input.pos,
       lang: input.lang,
+      message: input.message,
       source: "landing",
     },
   });

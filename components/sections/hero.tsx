@@ -66,9 +66,14 @@ export function Hero({ dict }: { dict: Dictionary }) {
             <a href="#lead" className="btn btn-amber" style={{ padding: "15px 26px", fontSize: 16 }}>
               {dict.hero.ctaPrimary} →
             </a>
-            <a href="#howto" className="btn btn-outline" style={{ padding: "15px 26px", fontSize: 16 }}>
+            <a href="#showcase" className="btn btn-outline" style={{ padding: "15px 26px", fontSize: 16 }}>
               {dict.hero.ctaSecondary}
             </a>
+          </div>
+
+          <div className="mono" style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, color: "var(--muted)", marginTop: 14 }}>
+            <span style={{ color: "var(--amber)" }}>◆</span>
+            {dict.hero.badge}
           </div>
 
           {/* Data ticker */}
@@ -172,7 +177,14 @@ export function Hero({ dict }: { dict: Dictionary }) {
                 {bars.map((bar, i) => (
                   <div
                     key={i}
-                    style={{ flex: 1, background: bar.bg, borderRadius: "3px 3px 0 0", height: bar.h }}
+                    className="spark-bar"
+                    style={{
+                      flex: 1,
+                      background: bar.bg,
+                      borderRadius: "3px 3px 0 0",
+                      height: bar.h,
+                      animationDelay: `${i * 55}ms`,
+                    }}
                   />
                 ))}
               </div>

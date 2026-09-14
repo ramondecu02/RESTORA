@@ -11,21 +11,21 @@ const COPY: Record<Slug, Record<Locale, { title: string; body: string }>> = {
   privacidad: {
     es: {
       title: "Política de privacidad",
-      body: "Este documento está en preparación. Para cualquier cuestión sobre el tratamiento de tus datos, escríbenos a hola@restora.cat.",
+      body: "Este documento está en preparación. Para cualquier cuestión sobre el tratamiento de tus datos, escríbenos a hola@restoraapp.com.",
     },
     ca: {
       title: "Política de privacitat",
-      body: "Aquest document està en preparació. Per a qualsevol qüestió sobre el tractament de les teves dades, escriu-nos a hola@restora.cat.",
+      body: "Aquest document està en preparació. Per a qualsevol qüestió sobre el tractament de les teves dades, escriu-nos a hola@restoraapp.com.",
     },
   },
   rgpd: {
     es: {
       title: "Aviso RGPD",
-      body: "Este documento está en preparación. Tratamos los datos de este formulario solo para contactarte sobre el programa de socios fundadores. Escríbenos a hola@restora.cat para ejercer tus derechos.",
+      body: "Este documento está en preparación. Tratamos los datos de este formulario solo para contactarte sobre el programa de socios fundadores. Escríbenos a hola@restoraapp.com para ejercer tus derechos.",
     },
     ca: {
       title: "Avís RGPD",
-      body: "Aquest document està en preparació. Tractem les dades d'aquest formulari només per contactar-te sobre el programa de socis fundadors. Escriu-nos a hola@restora.cat per exercir els teus drets.",
+      body: "Aquest document està en preparació. Tractem les dades d'aquest formulari només per contactar-te sobre el programa de socis fundadors. Escriu-nos a hola@restoraapp.com per exercir els teus drets.",
     },
   },
 };

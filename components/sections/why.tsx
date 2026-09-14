@@ -28,7 +28,7 @@ export function Why({ dict }: { dict: Dictionary }) {
         }}
       >
         {dict.why.items.map((item) => (
-          <div key={item.title} className="card" style={{ padding: 28 }}>
+          <div key={item.title} className="card hover-lift reveal" style={{ padding: 28 }}>
             <div className="display" style={{ fontWeight: 700, fontSize: 24, lineHeight: 1.02 }}>
               {item.title}
             </div>

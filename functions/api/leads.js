@@ -38,6 +38,7 @@ export async function onRequestPost({ request, env }) {
   const role = ROLES.includes(roleRaw) ? roleRaw : null;
   const pos = String(body.pos ?? "").trim().slice(0, 120) || null;
   const lang = String(body.lang ?? "").trim() === "ca" ? "ca" : "es";
+  const message = String(body.message ?? "").trim().slice(0, 2000) || null;
 
   const errors = {};
   if (!restaurant) errors.restaurant = "required";
@@ -69,16 +70,16 @@ export async function onRequestPost({ request, env }) {
 
   try {
     await env.DB.prepare(
-      "INSERT INTO leads (id, created_at, restaurant, role, city, pos, lang, status, notes, source, ip) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+      "INSERT INTO leads (id, created_at, restaurant, role, city, pos, lang, status, message, notes, source, ip) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
     )
-      .bind(id, createdAt, restaurant, role, city, pos, lang, "nuevo", null, "landing", ip)
+      .bind(id, createdAt, restaurant, role, city, pos, lang, "nuevo", message, null, "landing", ip)
       .run();
   } catch {
     return json({ ok: false, error: "server_error" }, 500);
   }
 
   // Best-effort email notification — never blocks the response.
-  await notify(env, { restaurant, role, city, pos, lang, createdAt }).catch(() => {});
+  await notify(env, { restaurant, role, city, pos, lang, message, createdAt }).catch(() => {});
 
   return json({ ok: true, id }, 201);
 }
@@ -102,6 +103,7 @@ async function notify(env, lead) {
     ["Ciudad", lead.city],
     ["TPV actual", lead.pos || "—"],
     ["Idioma", lead.lang],
+    ["Pregunta", lead.message || "—"],
     ["Fecha", lead.createdAt],
   ]
     .map(

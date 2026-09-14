@@ -16,8 +16,9 @@ const es = {
   },
   nav: {
     l1: "Cómo funciona",
-    l2: "Por qué RESTORA",
+    l2: "En acción",
     l3: "Precios",
+    l4: "Preguntas",
     cta: "Sé socio fundador",
   },
   sec: {
@@ -27,6 +28,8 @@ const es = {
     icp: "Para quién",
     pricing: "Precios",
     proof: "Credibilidad",
+    showcase: "En acción",
+    faq: "Preguntas",
   },
   brand: { kicker: "Identidad", title: "El plato inteligente" },
   hero: {
@@ -43,6 +46,7 @@ const es = {
     stat2Label: "Media zona",
     liveAlert: "RESTORA · ALERTA EN VIVO",
     today: "HOY",
+    badge: "Vista previa · acceso anticipado",
   },
   ticker: [
     { v: "31,4%", k: "Food cost medio" },
@@ -130,7 +134,9 @@ const es = {
     title: "Precios claros. Sin letra pequeña.",
     sub: "Empieza por donde te aporte antes. Sube de plan cuando el margen lo pida.",
     recommended: "Recomendado",
-    cta: "Empezar",
+    cta: "Reservar plaza",
+    previewNote:
+      "Vista previa. El pago aún no está activo: ahora reservas tu plaza de socio fundador, sin coste ni compromiso.",
     implantation: "Implantación 0–500 € · gratis para socios fundadores.",
     founderTitle: "Socio Fundador",
     founderProgram: "Programa",
@@ -212,6 +218,8 @@ const es = {
     fCityPh: "Tarragona",
     fPos: "TPV actual",
     fPosPh: "p. ej. Ágora, Glop, ninguno…",
+    fMessage: "¿Alguna pregunta?",
+    fMessagePh: "Cuéntanos qué necesitas o pregúntanos lo que quieras (opcional).",
     roles: ["Jefe de cocina", "Gestor / responsable de costes", "Propietario"],
     submit: "Solicitar acceso",
     sending: "Enviando…",
@@ -223,6 +231,38 @@ const es = {
     errCity: "Escribe la ciudad.",
     errGeneric: "No hemos podido enviar tu solicitud. Inténtalo de nuevo.",
   },
+  showcase: {
+    title: "Míralo en acción.",
+    sub: "Así se ve RESTORA por dentro. Toca cada nivel y mira lo que pasa en la app.",
+    hint: "Toca un nivel",
+    caption: "Vista de la app · demo",
+  },
+  faq: {
+    title: "Preguntas frecuentes",
+    sub: "Lo que más nos preguntan los restaurantes.",
+    items: [
+      {
+        q: "¿Ya puedo contratar RESTORA?",
+        a: "Todavía no. Esto es una vista previa de lo que estamos construyendo: puedes reservar plaza como socio fundador y te avisamos en cuanto abramos acceso.",
+      },
+      {
+        q: "¿Tengo que cambiar mi TPV?",
+        a: "No. RESTORA es la capa de inteligencia por encima de lo que ya usas. Empiezas con una foto del albarán, sin cambiar tu operativa.",
+      },
+      {
+        q: "¿Mis datos son privados?",
+        a: "Sí. Tus datos son tuyos. El benchmark sectorial es siempre anónimo y agregado: nadie ve los números de tu restaurante.",
+      },
+      {
+        q: "¿Cuánto costará?",
+        a: "Los precios que ves son orientativos (Base, Pro y Grupo). Los socios fundadores tendrán precio y condiciones especiales.",
+      },
+      {
+        q: "¿Cuándo estará disponible?",
+        a: "Estamos arrancando con los primeros restaurantes de Cataluña. Déjanos tus datos y serás de los primeros en entrar.",
+      },
+    ],
+  },
   footer: {
     tagline:
       "La capa de inteligencia de negocio para restaurantes profesionalizados.",
@@ -232,7 +272,7 @@ const es = {
     colLang: "Idioma",
     privacy: "Privacidad",
     rgpd: "Aviso RGPD",
-    contact: "hola@restora.cat",
+    contact: "hola@restoraapp.com",
     rights: "Todos los derechos reservados.",
     langEs: "Castellano",
     langCa: "Català",
@@ -253,8 +293,9 @@ const ca: Dictionary = {
   },
   nav: {
     l1: "Com funciona",
-    l2: "Per què RESTORA",
+    l2: "En acció",
     l3: "Preus",
+    l4: "Preguntes",
     cta: "Sigues soci fundador",
   },
   sec: {
@@ -264,6 +305,8 @@ const ca: Dictionary = {
     icp: "Per a qui",
     pricing: "Preus",
     proof: "Credibilitat",
+    showcase: "En acció",
+    faq: "Preguntes",
   },
   brand: { kicker: "Identitat", title: "El plat intel·ligent" },
   hero: {
@@ -280,6 +323,7 @@ const ca: Dictionary = {
     stat2Label: "Mitjana zona",
     liveAlert: "RESTORA · ALERTA EN VIU",
     today: "AVUI",
+    badge: "Vista prèvia · accés anticipat",
   },
   ticker: [
     { v: "31,4%", k: "Food cost mitjà" },
@@ -367,7 +411,9 @@ const ca: Dictionary = {
     title: "Preus clars. Sense lletra petita.",
     sub: "Comença per on t'aporti abans. Puja de pla quan el marge ho demani.",
     recommended: "Recomanat",
-    cta: "Començar",
+    cta: "Reservar plaça",
+    previewNote:
+      "Vista prèvia. El pagament encara no està actiu: ara reserves la teva plaça de soci fundador, sense cost ni compromís.",
     implantation: "Implantació 0–500 € · gratis per a socis fundadors.",
     founderTitle: "Soci Fundador",
     founderProgram: "Programa",
@@ -449,6 +495,8 @@ const ca: Dictionary = {
     fCityPh: "Tarragona",
     fPos: "TPV actual",
     fPosPh: "p. ex. Àgora, Glop, cap…",
+    fMessage: "Alguna pregunta?",
+    fMessagePh: "Explica'ns què necessites o pregunta'ns el que vulguis (opcional).",
     roles: ["Cap de cuina", "Gestor / responsable de costos", "Propietari"],
     submit: "Sol·licitar accés",
     sending: "Enviant…",
@@ -460,6 +508,38 @@ const ca: Dictionary = {
     errCity: "Escriu la ciutat.",
     errGeneric: "No hem pogut enviar la teva sol·licitud. Torna-ho a provar.",
   },
+  showcase: {
+    title: "Mira'l en acció.",
+    sub: "Així es veu RESTORA per dins. Toca cada nivell i mira què passa a l'app.",
+    hint: "Toca un nivell",
+    caption: "Vista de l'app · demo",
+  },
+  faq: {
+    title: "Preguntes freqüents",
+    sub: "El que més ens pregunten els restaurants.",
+    items: [
+      {
+        q: "Ja puc contractar RESTORA?",
+        a: "Encara no. Això és una vista prèvia del que estem construint: pots reservar plaça com a soci fundador i t'avisem quan obrim l'accés.",
+      },
+      {
+        q: "He de canviar el meu TPV?",
+        a: "No. RESTORA és la capa d'intel·ligència per sobre del que ja fas servir. Comences amb una foto de l'albarà, sense canviar la teva operativa.",
+      },
+      {
+        q: "Les meves dades són privades?",
+        a: "Sí. Les teves dades són teves. El benchmark sectorial és sempre anònim i agregat: ningú veu els números del teu restaurant.",
+      },
+      {
+        q: "Quant costarà?",
+        a: "Els preus que veus són orientatius (Base, Pro i Grup). Els socis fundadors tindran preu i condicions especials.",
+      },
+      {
+        q: "Quan estarà disponible?",
+        a: "Estem arrancant amb els primers restaurants de Catalunya. Deixa'ns les teves dades i seràs dels primers a entrar.",
+      },
+    ],
+  },
   footer: {
     tagline:
       "La capa d'intel·ligència de negoci per a restaurants professionalitzats.",
@@ -469,7 +549,7 @@ const ca: Dictionary = {
     colLang: "Idioma",
     privacy: "Privacitat",
     rgpd: "Avís RGPD",
-    contact: "hola@restora.cat",
+    contact: "hola@restoraapp.com",
     rights: "Tots els drets reservats.",
     langEs: "Castellano",
     langCa: "Català",

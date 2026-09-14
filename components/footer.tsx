@@ -63,15 +63,16 @@ export function Footer({ dict, locale }: { dict: Dictionary; locale: Locale }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={colTitle}>{dict.footer.colProduct}</div>
           <a href="#howto" style={{ color: "inherit" }}>{dict.nav.l1}</a>
-          <a href="#why" style={{ color: "inherit" }}>{dict.nav.l2}</a>
+          <a href="#showcase" style={{ color: "inherit" }}>{dict.nav.l2}</a>
           <a href="#pricing" style={{ color: "inherit" }}>{dict.nav.l3}</a>
+          <a href="#faq" style={{ color: "inherit" }}>{dict.nav.l4}</a>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={colTitle}>{dict.footer.colLegal}</div>
           <a href={`/${locale}/legal/privacidad`} style={{ color: "inherit" }}>{dict.footer.privacy}</a>
           <a href={`/${locale}/legal/rgpd`} style={{ color: "inherit" }}>{dict.footer.rgpd}</a>
-          <a href="mailto:hola@restora.cat" style={{ color: "inherit" }}>{dict.footer.contact}</a>
+          <a href="mailto:hola@restoraapp.com" style={{ color: "inherit" }}>{dict.footer.contact}</a>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

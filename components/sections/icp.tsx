@@ -30,7 +30,7 @@ export function Icp({ dict }: { dict: Dictionary }) {
           {dict.icp.list.map((item) => (
             <div
               key={item}
-              className="card"
+              className="card hover-lift reveal"
               style={{ display: "flex", alignItems: "center", gap: 14, borderRadius: 12, padding: "16px 20px" }}
             >
               <span style={{ width: 9, height: 9, background: "var(--amber)", transform: "rotate(45deg)", flexShrink: 0 }} />

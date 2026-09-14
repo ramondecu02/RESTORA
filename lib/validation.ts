@@ -12,6 +12,7 @@ export interface LeadInput {
   city: string;
   pos: string | null;
   lang: Locale;
+  message: string | null;
 }
 
 export type ParseResult<T> =
@@ -48,6 +49,9 @@ export function parseLeadInput(raw: Record<string, unknown>): ParseResult<LeadIn
   const langRaw = asString(raw.lang);
   const lang: Locale = isLocale(langRaw) ? langRaw : DEFAULT_LOCALE;
 
+  const messageRaw = asString(raw.message).slice(0, MAX_LONG);
+  const message = messageRaw.length > 0 ? messageRaw : null;
+
   if (Object.keys(errors).length > 0) {
     return { ok: false, errors };
   }
@@ -60,6 +64,7 @@ export function parseLeadInput(raw: Record<string, unknown>): ParseResult<LeadIn
       city,
       pos,
       lang,
+      message,
     },
   };
 }

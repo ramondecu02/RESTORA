@@ -53,7 +53,7 @@ export function Proof({ dict }: { dict: Dictionary }) {
         }}
       >
         {dict.proof.testimonials.map((testimonial) => (
-          <div key={testimonial.who} className="card" style={{ padding: 26 }}>
+          <div key={testimonial.who} className="card hover-lift reveal" style={{ padding: 26 }}>
             <div className="display" style={{ fontWeight: 600, fontSize: 20, color: "var(--muted)", lineHeight: 1.2, textTransform: "none" }}>
               “{testimonial.quote}”
             </div>

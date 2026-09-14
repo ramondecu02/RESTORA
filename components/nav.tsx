@@ -7,8 +7,9 @@ import { ThemeToggle } from "./theme-toggle";
 export function Nav({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   const links = [
     { href: "#howto", label: dict.nav.l1 },
-    { href: "#why", label: dict.nav.l2 },
+    { href: "#showcase", label: dict.nav.l2 },
     { href: "#pricing", label: dict.nav.l3 },
+    { href: "#faq", label: dict.nav.l4 },
   ];
 
   return (
@@ -52,7 +53,7 @@ export function Nav({ dict, locale }: { dict: Dictionary; locale: Locale }) {
         >
           <Logo href="#top" />
           <div style={{ flex: 1 }} />
-          <div className="hidden flex-wrap items-center sm:flex" style={{ gap: 24, fontSize: 14.5, fontWeight: 500 }}>
+          <div className="hidden flex-wrap items-center md:flex" style={{ gap: 22, fontSize: 14.5, fontWeight: 500 }}>
             {links.map((link) => (
               <a key={link.href} href={link.href} className="text-muted transition-colors hover:text-ink">
                 {link.label}

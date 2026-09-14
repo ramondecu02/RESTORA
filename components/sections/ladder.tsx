@@ -38,7 +38,7 @@ export function Ladder({ dict }: { dict: Dictionary }) {
             return (
               <div
                 key={step.name}
-                className="card"
+                className="card hover-lift reveal"
                 style={{ borderRadius: 16, padding: 26, marginBottom: LIFTS[i], position: "relative", overflow: "hidden" }}
               >
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: color }} />

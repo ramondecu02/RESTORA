@@ -22,6 +22,7 @@ model Lead {
   pos        String? //  TPV actual (nullable)
   lang       String //  es | ca
   status     String   @default("nuevo") //  nuevo | contactado | descartado
+  message    String? //  pregunta / mensaje del visitante (opcional)
   notes      String?
   source     String   @default("landing")
 
