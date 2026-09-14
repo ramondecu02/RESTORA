@@ -15,7 +15,7 @@ export function FloatingCta({ label }: { label: string }) {
   return (
     <a
       href="#lead"
-      className="floating-cta btn btn-amber"
+      className="floating-cta btn btn-brand"
       data-show={show ? "true" : "false"}
       aria-hidden={show ? undefined : "true"}
       tabIndex={show ? undefined : -1}

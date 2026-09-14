@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { getDictionary } from "@/lib/dictionaries";
+import { getSiteCopy } from "@/lib/site-copy";
 import { isLocale, type Locale } from "@/lib/types";
-import { Nav } from "@/components/nav";
-import { Footer } from "@/components/footer";
+import { SiteNav } from "@/components/site/nav";
+import { SiteFooter } from "@/components/site/footer";
 
 const SLUGS = ["privacidad", "rgpd"] as const;
 type Slug = (typeof SLUGS)[number];
@@ -40,14 +40,14 @@ export default async function LegalPage(props: {
   const { locale, slug } = await props.params;
   if (!isLocale(locale)) notFound();
   if (!SLUGS.includes(slug as Slug)) notFound();
-  const dict = getDictionary(locale);
+  const siteCopy = getSiteCopy(locale);
   const copy = COPY[slug as Slug][locale];
 
   return (
     <>
-      <Nav dict={dict} locale={locale} />
+      <SiteNav copy={siteCopy} locale={locale} />
       <main id="top" className="mx-auto max-w-[720px]" style={{ padding: "72px 28px 96px", minHeight: "60vh" }}>
-        <h1 className="display" style={{ fontWeight: 800, fontSize: "clamp(30px, 5vw, 48px)", lineHeight: 0.98, margin: 0 }}>
+        <h1 className="display" style={{ fontSize: "clamp(30px, 5vw, 46px)", margin: 0 }}>
           {copy.title}
         </h1>
         <p style={{ color: "var(--muted)", fontSize: 17, margin: "20px 0 0", maxWidth: "52ch" }}>{copy.body}</p>
@@ -57,7 +57,7 @@ export default async function LegalPage(props: {
           </a>
         </p>
       </main>
-      <Footer dict={dict} locale={locale} />
+      <SiteFooter copy={siteCopy} locale={locale} />
     </>
   );
 }

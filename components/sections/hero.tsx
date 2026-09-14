@@ -8,7 +8,7 @@ export function Hero({ dict }: { dict: Dictionary }) {
     const pct = Math.round(22 + h * 0.7);
     return {
       h,
-      bg: last ? "var(--amber)" : `color-mix(in srgb, var(--amber) ${pct}%, transparent)`,
+      bg: last ? "var(--brand)" : `color-mix(in srgb, var(--brand) ${pct}%, transparent)`,
     };
   });
 
@@ -33,15 +33,15 @@ export function Hero({ dict }: { dict: Dictionary }) {
               fontSize: 11.5,
               letterSpacing: "0.06em",
               textTransform: "uppercase",
-              color: "var(--amber)",
+              color: "var(--brand)",
               fontWeight: 600,
-              border: "1px solid var(--amber)",
+              border: "1px solid var(--brand)",
               borderRadius: 999,
               padding: "6px 14px",
               maxWidth: "100%",
             }}
           >
-            <span style={{ width: 6, height: 6, background: "var(--amber)", borderRadius: "50%", flexShrink: 0 }} />
+            <span style={{ width: 6, height: 6, background: "var(--brand)", borderRadius: "50%", flexShrink: 0 }} />
             <span>{dict.hero.eyebrow}</span>
           </div>
 
@@ -63,7 +63,7 @@ export function Hero({ dict }: { dict: Dictionary }) {
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 32 }}>
-            <a href="#lead" className="btn btn-amber" style={{ padding: "15px 26px", fontSize: 16 }}>
+            <a href="#lead" className="btn btn-brand" style={{ padding: "15px 26px", fontSize: 16 }}>
               {dict.hero.ctaPrimary} →
             </a>
             <a href="#showcase" className="btn btn-outline" style={{ padding: "15px 26px", fontSize: 16 }}>
@@ -72,7 +72,7 @@ export function Hero({ dict }: { dict: Dictionary }) {
           </div>
 
           <div className="mono" style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, color: "var(--muted)", marginTop: 14 }}>
-            <span style={{ color: "var(--amber)" }}>◆</span>
+            <span style={{ color: "var(--brand)" }}>◆</span>
             {dict.hero.badge}
           </div>
 
@@ -126,7 +126,7 @@ export function Hero({ dict }: { dict: Dictionary }) {
               color: "var(--muted)",
             }}
           >
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--amber)" }} />
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--brand)" }} />
             {dict.hero.liveAlert}
             <div style={{ flex: 1 }} />
             <span>{dict.hero.today}</span>
@@ -139,11 +139,11 @@ export function Hero({ dict }: { dict: Dictionary }) {
                   width: 38,
                   height: 38,
                   borderRadius: 10,
-                  background: "var(--amber-soft)",
+                  background: "var(--brand-soft)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "var(--amber)",
+                  color: "var(--brand)",
                   fontSize: 17,
                   flexShrink: 0,
                 }}
@@ -159,7 +159,7 @@ export function Hero({ dict }: { dict: Dictionary }) {
                 </div>
                 <p style={{ fontSize: 14.5, color: "var(--muted)", margin: "8px 0 0" }}>{dict.hero.alertBody}</p>
               </div>
-              <div className="mono" style={{ fontWeight: 600, color: "var(--amber)", fontSize: 18 }}>
+              <div className="mono" style={{ fontWeight: 600, color: "var(--brand)", fontSize: 18 }}>
                 +14%
               </div>
             </div>
@@ -191,7 +191,7 @@ export function Hero({ dict }: { dict: Dictionary }) {
               <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
                 <div style={{ flex: 1, background: "var(--bg)", borderRadius: 9, padding: "10px 12px" }}>
                   <div className="mono" style={{ fontSize: 10, color: "var(--muted)" }}>{dict.hero.stat1Label}</div>
-                  <div className="mono" style={{ fontWeight: 600, fontSize: 19, color: "var(--amber)" }}>2,21 €/L</div>
+                  <div className="mono" style={{ fontWeight: 600, fontSize: 19, color: "var(--brand)" }}>2,21 €/L</div>
                 </div>
                 <div style={{ flex: 1, background: "var(--bg)", borderRadius: 9, padding: "10px 12px" }}>
                   <div className="mono" style={{ fontSize: 10, color: "var(--muted)" }}>{dict.hero.stat2Label}</div>

@@ -26,7 +26,7 @@ export default async function LoginPage(props: {
       <div className="card" style={{ width: "100%", maxWidth: 400, padding: 32 }}>
         <div
           className="mono"
-          style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", fontWeight: 600 }}
+          style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--brand)", fontWeight: 600 }}
         >
           RESTORA · Admin
         </div>
@@ -51,12 +51,12 @@ export default async function LoginPage(props: {
           </label>
 
           {sp.error && (
-            <p role="alert" style={{ color: "var(--amber)", fontSize: 13, margin: 0 }}>
+            <p role="alert" style={{ color: "var(--brand)", fontSize: 13, margin: 0 }}>
               Credenciales incorrectas.
             </p>
           )}
 
-          <button type="submit" className="btn btn-amber" style={{ padding: 14, fontSize: 15, marginTop: 4 }}>
+          <button type="submit" className="btn btn-brand" style={{ padding: 14, fontSize: 15, marginTop: 4 }}>
             Entrar →
           </button>
         </form>

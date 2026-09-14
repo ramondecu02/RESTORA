@@ -28,7 +28,7 @@ export function Nav({ dict, locale }: { dict: Dictionary; locale: Locale }) {
           className="mx-auto flex max-w-[1200px] flex-wrap items-center"
           style={{ padding: "8px 28px", gap: "8px 22px" }}
         >
-          <span style={{ color: "var(--amber)" }}>● V1 · CATALUNYA</span>
+          <span style={{ color: "var(--brand)" }}>● V1 · CATALUNYA</span>
           <span style={{ opacity: 0.5 }}>{dict.util.thesis}</span>
           <div style={{ flex: 1 }} />
           <span>{dict.util.slots}</span>
@@ -64,7 +64,7 @@ export function Nav({ dict, locale }: { dict: Dictionary; locale: Locale }) {
           <ThemeToggle />
           <a
             href="#lead"
-            className="btn btn-amber"
+            className="btn btn-brand"
             style={{ padding: "10px 18px", fontSize: 14, whiteSpace: "nowrap" }}
           >
             {dict.nav.cta}

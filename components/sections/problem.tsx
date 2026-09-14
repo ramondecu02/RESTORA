@@ -28,7 +28,7 @@ export function Problem({ dict }: { dict: Dictionary }) {
       >
         {dict.problem.pains.map((pain, i) => (
           <div key={pain.title} className="card hover-lift reveal" style={{ padding: 24, display: "flex", flexDirection: "column", gap: 10 }}>
-            <div className="mono" style={{ fontSize: 12, color: "var(--amber)", fontWeight: 600 }}>
+            <div className="mono" style={{ fontSize: 12, color: "var(--brand)", fontWeight: 600 }}>
               {`0${i + 1}`}
             </div>
             <div className="display" style={{ fontWeight: 700, fontSize: 22, lineHeight: 1.02 }}>

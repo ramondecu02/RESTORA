@@ -55,7 +55,7 @@ export function Faq({ dict }: { dict: Dictionary }) {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "var(--amber)",
+                    color: "var(--brand)",
                     fontSize: 16,
                     transform: isOpen ? "rotate(45deg)" : "none",
                     transition: "transform .2s ease",

@@ -23,8 +23,8 @@ export function Pricing({ dict }: { dict: Dictionary }) {
             display: "flex",
             gap: 10,
             alignItems: "flex-start",
-            border: "1px dashed var(--amber)",
-            background: "var(--amber-soft)",
+            border: "1px dashed var(--brand)",
+            background: "var(--brand-soft)",
             color: "var(--ink)",
             borderRadius: 12,
             padding: "12px 16px",
@@ -32,7 +32,7 @@ export function Pricing({ dict }: { dict: Dictionary }) {
             maxWidth: "62ch",
           }}
         >
-          <span style={{ color: "var(--amber)", fontWeight: 700 }}>◆</span>
+          <span style={{ color: "var(--brand)", fontWeight: 700 }}>◆</span>
           <span>{dict.pricing.previewNote}</span>
         </div>
 
@@ -53,7 +53,7 @@ export function Pricing({ dict }: { dict: Dictionary }) {
                 className="hover-lift reveal"
                 style={{
                   background: "var(--surface)",
-                  border: featured ? "2px solid var(--amber)" : "1px solid var(--hair)",
+                  border: featured ? "2px solid var(--brand)" : "1px solid var(--hair)",
                   borderRadius: 18,
                   padding: 30,
                   position: "relative",
@@ -68,8 +68,8 @@ export function Pricing({ dict }: { dict: Dictionary }) {
                       top: -13,
                       left: "50%",
                       transform: "translateX(-50%)",
-                      background: "var(--amber)",
-                      color: "var(--on-amber)",
+                      background: "var(--brand)",
+                      color: "var(--on-brand)",
                       fontSize: 11,
                       fontWeight: 600,
                       letterSpacing: "0.1em",
@@ -94,7 +94,7 @@ export function Pricing({ dict }: { dict: Dictionary }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
                   {plan.features.map((feature) => (
                     <div key={feature} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14.5 }}>
-                      <span style={{ color: "var(--amber)", fontWeight: 700, lineHeight: 1.4 }}>✓</span>
+                      <span style={{ color: "var(--brand)", fontWeight: 700, lineHeight: 1.4 }}>✓</span>
                       <span>{feature}</span>
                     </div>
                   ))}
@@ -108,9 +108,9 @@ export function Pricing({ dict }: { dict: Dictionary }) {
                     marginTop: 26,
                     padding: 14,
                     fontSize: 15,
-                    background: featured ? "var(--amber)" : "transparent",
-                    color: featured ? "var(--on-amber)" : "var(--ink)",
-                    border: featured ? "1px solid var(--amber)" : "1px solid var(--line)",
+                    background: featured ? "var(--brand)" : "transparent",
+                    color: featured ? "var(--on-brand)" : "var(--ink)",
+                    border: featured ? "1px solid var(--brand)" : "1px solid var(--line)",
                   }}
                 >
                   {dict.pricing.cta}
@@ -128,10 +128,10 @@ export function Pricing({ dict }: { dict: Dictionary }) {
         <div
           style={{
             marginTop: 26,
-            border: "1.5px dashed var(--amber)",
+            border: "1.5px dashed var(--brand)",
             borderRadius: 18,
             padding: 30,
-            background: "var(--amber-soft)",
+            background: "var(--brand-soft)",
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
             gap: 20,
@@ -141,7 +141,7 @@ export function Pricing({ dict }: { dict: Dictionary }) {
           <div>
             <div
               className="mono"
-              style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", fontWeight: 600 }}
+              style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--brand)", fontWeight: 600 }}
             >
               ◆ {dict.pricing.founderProgram}
             </div>
@@ -153,7 +153,7 @@ export function Pricing({ dict }: { dict: Dictionary }) {
             </p>
           </div>
           <div style={{ justifySelf: "end" }}>
-            <a href="#lead" className="btn btn-amber" style={{ padding: "15px 26px", fontSize: 16, whiteSpace: "nowrap" }}>
+            <a href="#lead" className="btn btn-brand" style={{ padding: "15px 26px", fontSize: 16, whiteSpace: "nowrap" }}>
               {dict.nav.cta} →
             </a>
           </div>

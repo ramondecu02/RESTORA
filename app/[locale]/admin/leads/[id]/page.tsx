@@ -44,8 +44,8 @@ export default async function LeadDetailPage(props: {
           role="status"
           style={{
             marginTop: 16,
-            border: "1px solid var(--amber)",
-            background: "var(--amber-soft)",
+            border: "1px solid var(--brand)",
+            background: "var(--brand-soft)",
             color: "var(--ink)",
             borderRadius: 12,
             padding: "12px 16px",
@@ -108,7 +108,7 @@ export default async function LeadDetailPage(props: {
             />
           </label>
 
-          <button type="submit" className="btn btn-amber" style={{ padding: 14, fontSize: 15 }}>
+          <button type="submit" className="btn btn-brand" style={{ padding: 14, fontSize: 15 }}>
             Guardar cambios
           </button>
         </form>

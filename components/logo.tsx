@@ -20,7 +20,7 @@ export function BrandMark({
       aria-hidden="true"
       style={{ display: "block", borderRadius: radius }}
     >
-      <rect width="64" height="64" rx="16" fill="var(--amber)" />
+      <rect width="64" height="64" rx="16" fill="var(--brand)" />
       <circle cx="32" cy="35" r="17" fill="none" stroke="#fff" strokeWidth="2.5" opacity=".38" />
       <polyline
         points="19,41 27,35 35,38 45,23"
@@ -46,13 +46,13 @@ export function Logo({
 }) {
   const inner = (
     <>
-      <BrandMark size={markSize} />
+      <BrandMark size={markSize} radius={8} />
       <span
-        className="display"
         style={{
-          fontWeight: 800,
+          fontFamily: "var(--font-display)",
+          fontWeight: 700,
           fontSize: wordmarkSize,
-          letterSpacing: "0.03em",
+          letterSpacing: "0.16em",
           lineHeight: 1,
           color: "var(--ink)",
         }}

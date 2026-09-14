@@ -56,7 +56,7 @@ export function LangSwitcher({
                 padding: "6px 12px",
                 borderRadius: 999,
                 fontWeight: active ? 600 : 400,
-                background: active ? "var(--amber)" : "transparent",
+                background: active ? "var(--brand)" : "transparent",
                 color: active ? "#14160E" : "inherit",
               }}
             >
@@ -94,8 +94,8 @@ export function LangSwitcher({
               padding: "5px 12px",
               borderRadius: 999,
               fontWeight: active ? 600 : 500,
-              background: active ? "var(--amber)" : "transparent",
-              color: active ? "var(--on-amber)" : "var(--muted)",
+              background: active ? "var(--brand)" : "transparent",
+              color: active ? "var(--on-brand)" : "var(--muted)",
             }}
           >
             {labels[target].nav}

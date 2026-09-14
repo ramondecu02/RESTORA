@@ -19,13 +19,13 @@ export function Manifesto({ dict }: { dict: Dictionary }) {
           width: 420,
           height: 420,
           borderRadius: "50%",
-          background: "radial-gradient(circle, color-mix(in srgb, var(--amber) 50%, transparent), transparent 70%)",
+          background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 50%, transparent), transparent 70%)",
         }}
       />
       <div className="mx-auto max-w-[960px]" style={{ padding: "96px 28px", position: "relative" }}>
         <div
           className="mono"
-          style={{ fontSize: 13, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", fontWeight: 600 }}
+          style={{ fontSize: 13, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--brand)", fontWeight: 600 }}
         >
           04 / {dict.manifesto.kicker}
         </div>

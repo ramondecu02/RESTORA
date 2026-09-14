@@ -6,20 +6,20 @@ import { Footer } from "@/components/footer";
 import { Masthead } from "@/components/sections/masthead";
 
 const SWATCHES = [
-  { hex: "#B9740A", label: "ámbar\n#B9740A" },
+  { hex: "#1E3D2F", label: "ámbar\n#1E3D2F" },
   { hex: "#1E211A", label: "tinta\n#1E211A" },
   { hex: "#F0EEE6", label: "fondo\n#F0EEE6" },
   { hex: "#2F9E56", label: "N1\n#2F9E56" },
   { hex: "#2F6FB5", label: "N2\n#2F6FB5" },
   { hex: "#7A3FC4", label: "N3\n#7A3FC4" },
-  { hex: "#E7A83A", label: "ámbar·osc\n#E7A83A" },
+  { hex: "#3E8E6A", label: "ámbar·osc\n#3E8E6A" },
 ];
 
 // Fixed-color lockup mark for the on-light / on-dark demonstrations.
 function DemoMark() {
   return (
     <svg width="50" height="50" viewBox="0 0 64 64" aria-hidden="true">
-      <rect width="64" height="64" rx="16" fill="#B9740A" />
+      <rect width="64" height="64" rx="16" fill="#1E3D2F" />
       <circle cx="32" cy="35" r="17" fill="none" stroke="#fff" strokeWidth="2.5" opacity=".38" />
       <polyline points="19,41 27,35 35,38 45,23" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="45" cy="23" r="4.2" fill="#fff" />
@@ -30,7 +30,7 @@ function DemoMark() {
 function FaviconGlyph({ size, stroke }: { size: number; stroke: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
-      <rect width="64" height="64" rx="16" fill="var(--amber)" />
+      <rect width="64" height="64" rx="16" fill="var(--brand)" />
       <polyline points="17,42 27,35 35,38 46,22" fill="none" stroke="#fff" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" />
       {size > 16 && <circle cx="46" cy="22" r={size > 32 ? 4.4 : 5} fill="#fff" />}
     </svg>
@@ -147,7 +147,7 @@ export default async function MarcaPage(props: { params: Promise<{ locale: strin
                     width: 46,
                     height: 46,
                     borderRadius: 11,
-                    border: "2px solid var(--amber)",
+                    border: "2px solid var(--brand)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -158,7 +158,7 @@ export default async function MarcaPage(props: { params: Promise<{ locale: strin
                   <span className="display" style={{ fontWeight: 800, fontSize: 28, color: "var(--ink)", lineHeight: 1 }}>
                     R
                   </span>
-                  <span style={{ position: "absolute", right: -5, bottom: -5, width: 11, height: 11, background: "var(--amber)", transform: "rotate(45deg)" }} />
+                  <span style={{ position: "absolute", right: -5, bottom: -5, width: 11, height: 11, background: "var(--brand)", transform: "rotate(45deg)" }} />
                 </div>
                 <span className="mono" style={{ fontSize: 10.5, letterSpacing: "0.05em", color: "var(--muted)", lineHeight: 1.4 }}>
                   OPCIÓN B
@@ -209,7 +209,7 @@ export default async function MarcaPage(props: { params: Promise<{ locale: strin
                 <span className="mono" style={{ fontSize: 10, color: "var(--muted)" }}>CUERPO · 400/500/600</span>
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap" }}>
-                <div className="mono" style={{ fontWeight: 500, fontSize: 19, color: "var(--amber)" }}>31,4% · 1,94 €/L · +14%</div>
+                <div className="mono" style={{ fontWeight: 500, fontSize: 19, color: "var(--brand)" }}>31,4% · 1,94 €/L · +14%</div>
                 <span className="mono" style={{ fontSize: 10, color: "var(--muted)" }}>EL DATO · PLEX MONO</span>
               </div>
             </div>

@@ -108,17 +108,17 @@ function ComprasScreen({ l }: { l: L }) {
               gap: 8,
               padding: "9px 10px",
               borderRadius: 9,
-              background: hot ? "var(--amber-soft)" : "var(--bg)",
-              border: hot ? "1px solid var(--amber)" : "1px solid var(--hair)",
+              background: hot ? "var(--brand-soft)" : "var(--bg)",
+              border: hot ? "1px solid var(--brand)" : "1px solid var(--hair)",
             }}
           >
             <span style={{ fontSize: 12.5, fontWeight: 500 }}>{name}</span>
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: hot ? "var(--amber)" : "var(--ink)" }}>
+              <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: hot ? "var(--brand)" : "var(--ink)" }}>
                 {price}
               </span>
               {hot && (
-                <span style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--amber)" }}>▲ +14%</span>
+                <span style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--brand)" }}>▲ +14%</span>
               )}
             </span>
           </div>
@@ -344,7 +344,7 @@ export function Showcase({ dict, locale }: { dict: Dictionary; locale: Locale })
       </div>
 
       <div style={{ marginTop: 34, textAlign: "center" }}>
-        <a href="#lead" className="btn btn-amber" style={{ padding: "14px 26px", fontSize: 16 }}>
+        <a href="#lead" className="btn btn-brand" style={{ padding: "14px 26px", fontSize: 16 }}>
           {dict.nav.cta} →
         </a>
       </div>

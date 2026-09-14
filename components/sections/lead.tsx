@@ -9,7 +9,7 @@ export function Lead({ dict, locale }: { dict: Dictionary; locale: Locale }) {
         <div style={{ textAlign: "center" }}>
           <div
             className="mono"
-            style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", fontWeight: 600 }}
+            style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--brand)", fontWeight: 600 }}
           >
             08 / {dict.lead.kicker}
           </div>

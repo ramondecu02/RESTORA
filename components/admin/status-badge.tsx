@@ -2,7 +2,7 @@ import { STATUS_LABELS_ADMIN } from "@/lib/i18n";
 import { isLeadStatus, type LeadStatus } from "@/lib/types";
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
-  nuevo: "var(--amber)",
+  nuevo: "var(--brand)",
   contactado: "#2f9e56",
   descartado: "var(--muted)",
 };

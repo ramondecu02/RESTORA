@@ -47,7 +47,7 @@ export function LeadForm({ dict, locale }: { dict: Dictionary; locale: Locale })
         style={{
           marginTop: 30,
           background: "var(--surface)",
-          border: "1.5px solid var(--amber)",
+          border: "1.5px solid var(--brand)",
           borderRadius: 18,
           padding: 44,
           textAlign: "center",
@@ -58,8 +58,8 @@ export function LeadForm({ dict, locale }: { dict: Dictionary; locale: Locale })
             width: 52,
             height: 52,
             borderRadius: "50%",
-            background: "var(--amber)",
-            color: "var(--on-amber)",
+            background: "var(--brand)",
+            color: "var(--on-brand)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -106,7 +106,7 @@ export function LeadForm({ dict, locale }: { dict: Dictionary; locale: Locale })
           autoComplete="organization"
         />
         {errors.restaurant && (
-          <span role="alert" style={{ color: "var(--amber)", fontSize: 12.5 }}>
+          <span role="alert" style={{ color: "var(--brand)", fontSize: 12.5 }}>
             {errors.restaurant}
           </span>
         )}
@@ -135,7 +135,7 @@ export function LeadForm({ dict, locale }: { dict: Dictionary; locale: Locale })
             autoComplete="address-level2"
           />
           {errors.city && (
-            <span role="alert" style={{ color: "var(--amber)", fontSize: 12.5 }}>
+            <span role="alert" style={{ color: "var(--brand)", fontSize: 12.5 }}>
               {errors.city}
             </span>
           )}
@@ -181,12 +181,12 @@ export function LeadForm({ dict, locale }: { dict: Dictionary; locale: Locale })
         </label>
       </div>
 
-      <button type="submit" className="btn btn-amber" style={{ marginTop: 6, padding: 16, fontSize: 16 }} disabled={loading}>
+      <button type="submit" className="btn btn-brand" style={{ marginTop: 6, padding: 16, fontSize: 16 }} disabled={loading}>
         {loading ? dict.lead.sending : `${dict.lead.submit} →`}
       </button>
 
       {status === "error" && (
-        <p role="alert" style={{ color: "var(--amber)", fontSize: 13, textAlign: "center", margin: 0 }}>
+        <p role="alert" style={{ color: "var(--brand)", fontSize: 13, textAlign: "center", margin: 0 }}>
           {dict.lead.errGeneric}
         </p>
       )}

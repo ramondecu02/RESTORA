@@ -70,7 +70,7 @@ export default async function LeadsPage(props: {
         </div>
         <div>
           <div className="mono-label">Nuevos esta semana</div>
-          <div className="mono" style={{ fontWeight: 600, fontSize: 40, lineHeight: 1, color: "var(--amber)" }}>
+          <div className="mono" style={{ fontWeight: 600, fontSize: 40, lineHeight: 1, color: "var(--brand)" }}>
             {stats.newThisWeek}
           </div>
         </div>
@@ -113,7 +113,7 @@ export default async function LeadsPage(props: {
           </select>
         </label>
         <div style={{ display: "flex", gap: 8 }}>
-          <button type="submit" className="btn btn-amber" style={{ padding: "12px 18px", fontSize: 14, flex: 1 }}>
+          <button type="submit" className="btn btn-brand" style={{ padding: "12px 18px", fontSize: 14, flex: 1 }}>
             Filtrar
           </button>
           <Link href={`/${locale}/admin/leads`} className="btn btn-outline" style={{ padding: "12px 16px", fontSize: 14 }}>

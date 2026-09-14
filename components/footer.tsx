@@ -5,7 +5,7 @@ import { LangSwitcher } from "./lang-switcher";
 function FooterMark() {
   return (
     <svg width="30" height="30" viewBox="0 0 64 64" style={{ borderRadius: 8 }} aria-hidden="true">
-      <rect width="64" height="64" rx="16" fill="var(--amber)" />
+      <rect width="64" height="64" rx="16" fill="var(--brand)" />
       <circle cx="32" cy="35" r="17" fill="none" stroke="#14160E" strokeWidth="2.5" opacity=".38" />
       <polyline
         points="19,41 27,35 35,38 45,23"
@@ -55,7 +55,7 @@ export function Footer({ dict, locale }: { dict: Dictionary; locale: Locale }) {
             </span>
           </div>
           <p style={{ fontSize: 14, margin: "14px 0 0", maxWidth: "30ch" }}>{dict.footer.tagline}</p>
-          <div className="mono" style={{ fontSize: 12, marginTop: 16, color: "var(--amber)" }}>
+          <div className="mono" style={{ fontSize: 12, marginTop: 16, color: "var(--brand)" }}>
             ◆ {dict.footer.made}
           </div>
         </div>

@@ -33,7 +33,7 @@ export function Icp({ dict }: { dict: Dictionary }) {
               className="card hover-lift reveal"
               style={{ display: "flex", alignItems: "center", gap: 14, borderRadius: 12, padding: "16px 20px" }}
             >
-              <span style={{ width: 9, height: 9, background: "var(--amber)", transform: "rotate(45deg)", flexShrink: 0 }} />
+              <span style={{ width: 9, height: 9, background: "var(--brand)", transform: "rotate(45deg)", flexShrink: 0 }} />
               <span style={{ fontWeight: 500, fontSize: 16.5 }}>{item}</span>
             </div>
           ))}

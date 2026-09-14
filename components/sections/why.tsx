@@ -41,8 +41,8 @@ export function Why({ dict }: { dict: Dictionary }) {
       <div
         style={{
           marginTop: 14,
-          background: "var(--amber)",
-          color: "var(--on-amber)",
+          background: "var(--brand)",
+          color: "var(--on-brand)",
           borderRadius: 20,
           padding: 44,
           display: "grid",
