@@ -23,6 +23,7 @@ export function CtaBand({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
         {/* Photo backdrop */}
         <div
           aria-hidden="true"
+          className="cta-kenburns"
           style={{
             position: "absolute",
             inset: 0,

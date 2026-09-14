@@ -25,8 +25,7 @@ export function PageHero({
           alt={photoAlt ?? title}
           radius={24}
           focal={focal ?? "center"}
-          zoom
-          className="mx-auto max-w-[1200px]"
+          className="photo-kenburns mx-auto max-w-[1200px]"
           style={{ minHeight: 340, display: "flex", alignItems: "flex-end" }}
         >
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(10,18,14,0.78) 0%, rgba(10,18,14,0.35) 55%, rgba(10,18,14,0.15) 100%)" }} />

@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     // Cloudflare / export tooling artifacts:
     ".wrangler/**",
     ".cf-stash/**",
+    "cloudflare/**",
   ]),
 ]);
 

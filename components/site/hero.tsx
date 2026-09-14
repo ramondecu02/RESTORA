@@ -14,13 +14,14 @@ export function SiteHero({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
       {/* soft brand glow behind the dashboard */}
       <div
         aria-hidden="true"
+        className="glow-pulse"
         style={{
           position: "absolute",
           top: -120,
           right: -80,
           width: 620,
           height: 620,
-          background: "radial-gradient(circle, color-mix(in srgb, var(--accent) 16%, transparent), transparent 68%)",
+          background: "radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, transparent), transparent 68%)",
           pointerEvents: "none",
         }}
       />

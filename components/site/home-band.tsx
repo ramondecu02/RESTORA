@@ -11,8 +11,7 @@ export function HomeBand({ copy }: { copy: SiteCopy }) {
         alt="Cocina profesional en marcha"
         radius={28}
         focal="center"
-        zoom
-        className="mx-auto max-w-[1200px]"
+        className="photo-kenburns mx-auto max-w-[1200px]"
         style={{ minHeight: 420, display: "flex", alignItems: "flex-end" }}
       >
         <div

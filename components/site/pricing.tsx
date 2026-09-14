@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import type { SiteCopy } from "@/lib/site-copy";
 import type { Locale } from "@/lib/types";
 import { Eyebrow } from "./ui";
@@ -7,7 +7,7 @@ import { Eyebrow } from "./ui";
 export function SitePricing({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
   const p = copy.pricing;
   return (
-    <section id="pricing" className="mx-auto max-w-[1200px]" style={{ padding: "80px 28px" }}>
+    <section id="pricing" className="mx-auto max-w-[1080px]" style={{ padding: "80px 28px" }}>
       <div className="reveal" style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
         <Eyebrow>{p.eyebrow}</Eyebrow>
         <h2 className="display" style={{ fontSize: "clamp(30px, 4.4vw, 46px)", margin: "16px 0 0" }}>{p.title}</h2>
@@ -32,77 +32,80 @@ export function SitePricing({ copy, locale }: { copy: SiteCopy; locale: Locale }
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginTop: 44, alignItems: "start", maxWidth: 980, marginInline: "auto" }}>
-        {p.plans.map((plan) => {
-          const f = plan.featured;
-          return (
-            <div
-              key={plan.name}
-              className="hover-lift reveal"
-              style={{
-                background: "var(--surface)",
-                border: f ? "2px solid var(--brand)" : "1px solid var(--hair)",
-                borderRadius: 20,
-                padding: 30,
-                position: "relative",
-                boxShadow: f ? "0 34px 74px -40px rgba(30,61,47,0.4)" : "0 1px 2px rgba(20,32,26,0.04)",
-              }}
-            >
-              {f && (
-                <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "var(--brand)", color: "var(--on-brand)", fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", padding: "5px 14px", borderRadius: 999, whiteSpace: "nowrap" }}>
-                  {p.recommended}
-                </div>
-              )}
-              <div className="display" style={{ fontWeight: 700, fontSize: 22 }}>{plan.name}</div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 10 }}>
-                <span className="mono" style={{ fontWeight: 700, fontSize: 38, fontVariantNumeric: "tabular-nums" }}>{plan.price}</span>
-                <span style={{ fontSize: 14, color: "var(--muted)" }}>{plan.period}</span>
-              </div>
-              <p style={{ fontSize: 14, color: "var(--muted)", margin: "8px 0 0", minHeight: 40 }}>{plan.tagline}</p>
-              <div style={{ height: 1, background: "var(--hair)", margin: "20px 0" }} />
-              <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-                {plan.features.map((feat) => (
-                  <div key={feat} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14 }}>
-                    <Check size={17} strokeWidth={2.4} color="var(--brand)" style={{ flexShrink: 0, marginTop: 1 }} />
-                    <span>{feat}</span>
-                  </div>
-                ))}
-              </div>
-              <Link
-                href={`/${locale}/contacto`}
-                className={f ? "btn btn-brand" : "btn btn-outline"}
-                style={{ display: "block", textAlign: "center", marginTop: 26, padding: 13, fontSize: 15 }}
-              >
-                {p.cta}
-              </Link>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Founder banner */}
       <div
+        className="reveal-group"
         style={{
-          marginTop: 26,
-          maxWidth: 980,
-          marginInline: "auto",
-          border: "1.5px dashed var(--brand)",
-          borderRadius: 20,
-          padding: 30,
-          background: "var(--brand-soft)",
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          gap: 20,
-          alignItems: "center",
+          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gap: 18,
+          marginTop: 44,
+          alignItems: "stretch",
         }}
       >
-        <div>
-          <div style={{ fontSize: 11.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--brand)", fontWeight: 700 }}>◆ {p.founderProgram}</div>
-          <div className="display" style={{ fontWeight: 700, fontSize: 26, color: "var(--ink)", marginTop: 6 }}>{p.founderTitle}</div>
-          <p style={{ fontSize: 15, color: "color-mix(in srgb, var(--ink) 78%, transparent)", margin: "10px 0 0", maxWidth: "52ch" }}>{p.founderBody}</p>
+        {/* From-price card */}
+        <div className="card hover-lift" style={{ padding: 34, display: "flex", flexDirection: "column" }}>
+          <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)" }}>
+            {p.fromLabel}
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
+            <span className="display" style={{ fontWeight: 700, fontSize: 56, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" }}>{p.price}</span>
+            <span style={{ fontSize: 17, color: "var(--muted)" }}>{p.period}</span>
+          </div>
+          <div style={{ height: 1, background: "var(--hair)", margin: "22px 0" }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+            {p.includes.map((f) => (
+              <div key={f} style={{ display: "flex", gap: 11, alignItems: "flex-start", fontSize: 15 }}>
+                <Check size={18} strokeWidth={2.4} color="var(--brand)" style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>{f}</span>
+              </div>
+            ))}
+          </div>
+          <Link href={`/${locale}/contacto`} className="btn btn-outline" style={{ marginTop: 28, padding: 14, fontSize: 15.5, justifyContent: "center" }}>
+            {p.cta}
+          </Link>
         </div>
-        <div style={{ justifySelf: "end" }}>
-          <Link href={`/${locale}/contacto`} className="btn btn-brand" style={{ padding: "14px 24px", fontSize: 15.5, whiteSpace: "nowrap" }}>{copy.nav.cta} →</Link>
+
+        {/* Founder offer — featured */}
+        <div
+          className="hover-lift"
+          style={{
+            position: "relative",
+            overflow: "hidden",
+            background: "var(--brand)",
+            color: "var(--on-brand)",
+            border: "1px solid var(--brand)",
+            borderRadius: 20,
+            padding: 34,
+            display: "flex",
+            flexDirection: "column",
+            boxShadow: "0 40px 84px -46px rgba(30,61,47,0.5)",
+          }}
+        >
+          <div
+            aria-hidden="true"
+            style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 22px)", pointerEvents: "none" }}
+          />
+          <div style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 8, alignSelf: "flex-start", background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 999, padding: "6px 13px", fontSize: 12, fontWeight: 600 }}>
+            <Sparkles size={14} strokeWidth={2} />
+            {p.founderBadge}
+          </div>
+          <h3 className="display" style={{ position: "relative", fontWeight: 700, fontSize: 26, marginTop: 16, color: "#fff" }}>{p.founderTitle}</h3>
+          <p style={{ position: "relative", fontSize: 15, color: "rgba(255,255,255,0.85)", margin: "10px 0 0", lineHeight: 1.55 }}>{p.founderBody}</p>
+          <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 12, marginTop: 20, flex: 1 }}>
+            {p.founderPerks.map((perk) => (
+              <div key={perk} style={{ display: "flex", gap: 11, alignItems: "flex-start", fontSize: 15 }}>
+                <Check size={18} strokeWidth={2.6} color="#fff" style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>{perk}</span>
+              </div>
+            ))}
+          </div>
+          <Link
+            href={`/${locale}/contacto`}
+            className="btn"
+            style={{ position: "relative", marginTop: 28, padding: 14, fontSize: 15.5, justifyContent: "center", background: "#fff", color: "var(--brand)", border: "1px solid #fff" }}
+          >
+            {p.cta} →
+          </Link>
         </div>
       </div>
     </section>

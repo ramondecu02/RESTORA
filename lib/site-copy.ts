@@ -131,21 +131,24 @@ const es = {
   },
   pricing: {
     eyebrow: "Precios",
-    title: "Precios claros. Sin letra pequeña.",
-    sub: "Empieza por donde te aporte antes. Sube de plan cuando el margen lo pida.",
-    recommended: "Recomendado",
-    cta: "Reservar plaza",
+    title: "Un precio claro. Sin letra pequeña.",
+    sub: "Todo RESTORA en un único plan que crece contigo. Sin permanencia.",
+    fromLabel: "Desde",
+    price: "89 €",
+    period: "/mes",
+    includes: ["Compras y proveedores", "Escandallos y food cost", "Inteligencia y alertas", "Inventario"],
     previewNote:
-      "Vista previa. El pago aún no está activo: ahora reservas tu plaza de socio fundador, sin coste ni compromiso.",
-    founderProgram: "Programa",
-    founderTitle: "Socio Fundador",
+      "Vista previa: el pago aún no está activo. Hoy reservas tu plaza de socio fundador, sin coste ni compromiso.",
+    founderBadge: "Oferta exclusiva · plazas limitadas",
+    founderTitle: "Programa Socios Fundadores",
     founderBody:
-      "Para los primeros 5-10 restaurantes de Cataluña: precio y acceso especial, e influencia directa en el producto que estás ayudando a construir.",
-    plans: [
-      { name: "Base", price: "89 €", period: "/mes", featured: false, tagline: "Empieza por las compras. Valor desde el primer día.", features: ["Compras y proveedores", "Histórico de precios", "Alertas de subida", "1 local"] },
-      { name: "Pro", price: "149 €", period: "/mes", featured: true, tagline: "El sistema completo: compras, ventas y margen por plato.", features: ["Todo lo de Base", "Escandallos y food cost", "Inteligencia y previsión", "Inventario", "1 local"] },
-      { name: "Grupo", price: "249 €", period: "/mes", featured: false, tagline: "Para varios locales con vista consolidada de grupo.", features: ["Todo lo de Pro", "De 2 a 5 locales", "Vista consolidada", "Onboarding dedicado"] },
+      "Para los primeros restaurantes de Cataluña que construyen RESTORA con nosotros.",
+    founderPerks: [
+      "Precio especial de por vida",
+      "Acceso prioritario y onboarding dedicado",
+      "Influencia directa en el producto",
     ],
+    cta: "Reservar mi plaza",
   },
   faq: {
     eyebrow: "Preguntas",
@@ -327,21 +330,24 @@ const ca: SiteCopy = {
   },
   pricing: {
     eyebrow: "Preus",
-    title: "Preus clars. Sense lletra petita.",
-    sub: "Comença per on t'aporti abans. Puja de pla quan el marge ho demani.",
-    recommended: "Recomanat",
-    cta: "Reservar plaça",
+    title: "Un preu clar. Sense lletra petita.",
+    sub: "Tot RESTORA en un únic pla que creix amb tu. Sense permanència.",
+    fromLabel: "Des de",
+    price: "89 €",
+    period: "/mes",
+    includes: ["Compres i proveïdors", "Escandalls i food cost", "Intel·ligència i alertes", "Inventari"],
     previewNote:
-      "Vista prèvia. El pagament encara no està actiu: ara reserves la teva plaça de soci fundador, sense cost ni compromís.",
-    founderProgram: "Programa",
-    founderTitle: "Soci Fundador",
+      "Vista prèvia: el pagament encara no està actiu. Avui reserves la teva plaça de soci fundador, sense cost ni compromís.",
+    founderBadge: "Oferta exclusiva · places limitades",
+    founderTitle: "Programa Socis Fundadors",
     founderBody:
-      "Per als primers 5-10 restaurants de Catalunya: preu i accés especial, i influència directa en el producte que estàs ajudant a construir.",
-    plans: [
-      { name: "Base", price: "89 €", period: "/mes", featured: false, tagline: "Comença per les compres. Valor des del primer dia.", features: ["Compres i proveïdors", "Històric de preus", "Alertes de pujada", "1 local"] },
-      { name: "Pro", price: "149 €", period: "/mes", featured: true, tagline: "El sistema complet: compres, vendes i marge per plat.", features: ["Tot el de Base", "Escandalls i food cost", "Intel·ligència i previsió", "Inventari", "1 local"] },
-      { name: "Grup", price: "249 €", period: "/mes", featured: false, tagline: "Per a diversos locals amb vista consolidada de grup.", features: ["Tot el de Pro", "De 2 a 5 locals", "Vista consolidada", "Onboarding dedicat"] },
+      "Per als primers restaurants de Catalunya que construeixen RESTORA amb nosaltres.",
+    founderPerks: [
+      "Preu especial de per vida",
+      "Accés prioritari i onboarding dedicat",
+      "Influència directa en el producte",
     ],
+    cta: "Reservar la meva plaça",
   },
   faq: {
     eyebrow: "Preguntes",
