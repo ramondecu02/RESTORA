@@ -1,0 +1,20 @@
+# Local PostgreSQL for development.
+#   docker compose up -d
+#   npm run db:deploy   # apply migrations
+#   npm run db:seed     # optional sample leads
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: restora-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: restora
+      POSTGRES_PASSWORD: restora
+      POSTGRES_DB: restora
+    ports:
+      - "5432:5432"
+    volumes:
+      - restora_pgdata:/var/lib/postgresql/data
+
+volumes:
+  restora_pgdata:

@@ -1,0 +1,32 @@
+// RESTORA — data model
+// Handoff §"Backend & lista de leads": a single `leads` table.
+// Production target is PostgreSQL (Vercel Postgres / Supabase / Neon).
+// Allowed values for role/status/lang are kept as plain text (as in the
+// handoff schema) and validated in the application layer — see lib/validation.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now()) @map("created_at")
+  restaurant String
+  role       String //  jefe_cocina | gestor | propietario
+  city       String
+  pos        String? //  TPV actual (nullable)
+  lang       String //  es | ca
+  status     String   @default("nuevo") //  nuevo | contactado | descartado
+  notes      String?
+  source     String   @default("landing")
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([city])
+  @@map("leads")
+}

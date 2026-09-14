@@ -1,0 +1,204 @@
+@import "tailwindcss";
+
+/* ---- Design tokens exposed to Tailwind (utilities: bg-bg, text-ink, …) ---- */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-hair: var(--hair);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-on-amber: var(--on-amber);
+  --color-n1: #2f9e56;
+  --color-n2: #2f6fb5;
+  --color-n3: #7a3fc4;
+
+  --font-display: var(--font-big-shoulders), "Arial Narrow", sans-serif;
+  --font-body: var(--font-work-sans), system-ui, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+}
+
+/* ---- Theme palettes (from the prototype's themeColors()) ---- */
+:root {
+  --bg: #f0eee6;
+  --surface: #fbfaf6;
+  --panel: #f6f4ec;
+  --ink: #1e211a;
+  --muted: #75786b;
+  --line: #c9c7bb;
+  --hair: #dad8cd;
+  --amber: #b9740a;
+  --amber-soft: #efe3ce;
+  --on-amber: #ffffff;
+  color-scheme: light;
+}
+
+/* No-JS fallback: honor the OS preference until a choice is stored. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12140e;
+    --surface: #1b1e15;
+    --panel: #191b13;
+    --ink: #f2f1e8;
+    --muted: #9b9e8f;
+    --line: #3a3d31;
+    --hair: #2c2f24;
+    --amber: #e7a83a;
+    --amber-soft: #2a281c;
+    --on-amber: #14160e;
+    color-scheme: dark;
+  }
+}
+
+/* Explicit choice always wins in both directions. */
+:root[data-theme="dark"] {
+  --bg: #12140e;
+  --surface: #1b1e15;
+  --panel: #191b13;
+  --ink: #f2f1e8;
+  --muted: #9b9e8f;
+  --line: #3a3d31;
+  --hair: #2c2f24;
+  --amber: #e7a83a;
+  --amber-soft: #2a281c;
+  --on-amber: #14160e;
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* offset anchor targets so they clear the sticky nav */
+    scroll-padding-top: 88px;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+    -webkit-font-smoothing: antialiased;
+  }
+  a {
+    color: var(--amber);
+    text-decoration: none;
+  }
+  ::selection {
+    background: var(--amber);
+    color: #fff;
+  }
+  input,
+  button,
+  select,
+  textarea {
+    font-family: inherit;
+  }
+}
+
+/* ---- Reusable pieces of the visual system ---- */
+@layer components {
+  .display {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.005em;
+  }
+  .mono {
+    font-family: var(--font-mono);
+  }
+  .mono-label {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Section index + hairline rule ("00 / IDENTIDAD ————") */
+  .masthead {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .masthead-kicker {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--amber);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .masthead-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--hair);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: 14px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  .btn-amber {
+    background: var(--amber);
+    color: var(--on-amber);
+    border: 1px solid var(--amber);
+  }
+  .btn-amber:hover {
+    filter: brightness(1.07);
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .btn-outline:hover {
+    border-color: var(--amber);
+  }
+
+  .field-label {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .field-input {
+    padding: 13px 14px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    font-size: 15px;
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s ease;
+  }
+  .field-input:focus {
+    border-color: var(--amber);
+  }
+}
+
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
