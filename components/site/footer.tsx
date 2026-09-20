@@ -11,7 +11,7 @@ import { TrustBadges } from "./trust-badges";
 // Fixed deep-green footer (consistent in both themes).
 const BG = "#12211a";
 const TXT = "rgba(237,241,236,0.72)";
-const HEAD = "rgba(237,241,236,0.45)";
+const HEAD = "rgba(237,241,236,0.64)"; // ≥ 4.5:1 on the footer green (a11y)
 const RULE = "1px solid rgba(237,241,236,0.12)";
 
 export function SiteFooter({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
