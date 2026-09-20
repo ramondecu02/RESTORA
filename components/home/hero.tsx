@@ -56,6 +56,7 @@ export function HomeHero({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
         alt="Chef emplatando en una cocina profesional"
         sizes="100vw"
         priority
+        fetchPriority="high"
         focal="focal-hero"
         kenburns
         style={{ position: "absolute", inset: 0, borderRadius: 0, zIndex: 0, background: "#0a0f0c" }}

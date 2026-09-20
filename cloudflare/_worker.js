@@ -44,6 +44,93 @@ export default {
 };
 
 /* ----------------------------- Lead capture ----------------------------- */
+// Three kinds of submission come from the static site:
+//   demo       — founder / demo request (restaurant, role, city…)
+//   mensaje    — light contact form (name + email + message)
+//   newsletter — email + consent (food-cost checklist)
+
+const KINDS = ["demo", "mensaje", "newsletter"];
+const KIND_LABELS = { demo: "Solicitud de demo", mensaje: "Mensaje rápido", newsletter: "Alta newsletter" };
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const str = (v, max) => String(v ?? "").trim().slice(0, max);
+
+function parseLead(body) {
+  const kindRaw = str(body.kind, 20);
+  const kind = KINDS.includes(kindRaw) ? kindRaw : "demo";
+  const lang = str(body.lang, 2) === "ca" ? "ca" : "es";
+  const name = str(body.name, 120) || null;
+  const emailRaw = str(body.email, 160).toLowerCase();
+  const email = emailRaw && EMAIL_RE.test(emailRaw) ? emailRaw : null;
+  const restaurant = str(body.restaurant, 120);
+  const city = str(body.city, 120);
+  const roleRaw = str(body.role, 40);
+  const role = ROLES.includes(roleRaw) ? roleRaw : null;
+  const pos = str(body.pos, 120) || null;
+  const message = str(body.message, 2000) || null;
+  const consent = body.consent === true || body.consent === "true" || body.consent === 1;
+
+  const errors = {};
+  if (kind === "demo") {
+    if (!restaurant) errors.restaurant = "required";
+    if (!city) errors.city = "required";
+    if (!role) errors.role = "invalid";
+  } else if (kind === "mensaje") {
+    if (!name) errors.name = "required";
+    if (!email) errors.email = emailRaw ? "invalid" : "required";
+    if (!message) errors.message = "required";
+  } else {
+    if (!email) errors.email = emailRaw ? "invalid" : "required";
+    if (!consent) errors.consent = "required";
+  }
+  if (Object.keys(errors).length > 0) return { ok: false, errors };
+  return {
+    ok: true,
+    lead: {
+      kind, lang, name, email, message, pos,
+      restaurant: restaurant || name || (kind === "newsletter" ? "Newsletter" : "Mensaje web"),
+      city: city || "—",
+      role: role || kind,
+      source: kind === "demo" ? "landing" : `landing:${kind}`,
+    },
+  };
+}
+
+const INSERT_V2 =
+  "INSERT INTO leads (id, created_at, kind, name, email, restaurant, role, city, pos, lang, status, message, notes, source, ip) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+const INSERT_V1 =
+  "INSERT INTO leads (id, created_at, restaurant, role, city, pos, lang, status, message, notes, source, ip) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+
+async function ensureSchema(env) {
+  for (const col of ["kind TEXT NOT NULL DEFAULT 'demo'", "name TEXT", "email TEXT"]) {
+    try {
+      await env.DB.prepare(`ALTER TABLE leads ADD COLUMN ${col}`).run();
+    } catch (err) {
+      if (!/duplicate column/i.test(String(err && err.message))) throw err;
+    }
+  }
+}
+
+async function insertLead(env, id, createdAt, lead, ip) {
+  const v2 = () =>
+    env.DB.prepare(INSERT_V2)
+      .bind(id, createdAt, lead.kind, lead.name, lead.email, lead.restaurant, lead.role, lead.city, lead.pos, lead.lang, "nuevo", lead.message, null, lead.source, ip)
+      .run();
+  try {
+    await v2();
+    return;
+  } catch (err) {
+    if (!/no such column/i.test(String(err && err.message))) throw err;
+  }
+  try {
+    await ensureSchema(env);
+    await v2();
+  } catch {
+    const legacyMessage = [`[${lead.kind}]`, lead.name, lead.email && `<${lead.email}>`, lead.message].filter(Boolean).join(" · ");
+    await env.DB.prepare(INSERT_V1)
+      .bind(id, createdAt, lead.restaurant, lead.role, lead.city, lead.pos, lead.lang, "nuevo", legacyMessage, null, lead.source, ip)
+      .run();
+  }
+}
 
 async function handleLead(request, env) {
   if (!env.DB) return json({ ok: false, error: "db_unavailable" }, 500);
@@ -60,19 +147,9 @@ async function handleLead(request, env) {
     return json({ ok: true }, 201);
   }
 
-  const restaurant = String(body.restaurant ?? "").trim().slice(0, 120);
-  const city = String(body.city ?? "").trim().slice(0, 120);
-  const roleRaw = String(body.role ?? "").trim();
-  const role = ROLES.includes(roleRaw) ? roleRaw : null;
-  const pos = String(body.pos ?? "").trim().slice(0, 120) || null;
-  const lang = String(body.lang ?? "").trim() === "ca" ? "ca" : "es";
-  const message = String(body.message ?? "").trim().slice(0, 2000) || null;
-
-  const errors = {};
-  if (!restaurant) errors.restaurant = "required";
-  if (!city) errors.city = "required";
-  if (!role) errors.role = "invalid";
-  if (Object.keys(errors).length > 0) return json({ ok: false, errors }, 400);
+  const parsed = parseLead(body);
+  if (!parsed.ok) return json({ ok: false, errors: parsed.errors }, 400);
+  const lead = parsed.lead;
 
   const ip = request.headers.get("cf-connecting-ip") || "unknown";
 
@@ -92,14 +169,12 @@ async function handleLead(request, env) {
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();
   try {
-    await env.DB.prepare(
-      "INSERT INTO leads (id, created_at, restaurant, role, city, pos, lang, status, message, notes, source, ip) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-    ).bind(id, createdAt, restaurant, role, city, pos, lang, "nuevo", message, null, "landing", ip).run();
+    await insertLead(env, id, createdAt, lead, ip);
   } catch {
     return json({ ok: false, error: "server_error" }, 500);
   }
 
-  await notify(env, { restaurant, role, city, pos, lang, message, createdAt }).catch(() => {});
+  await notify(env, { ...lead, createdAt }).catch(() => {});
   return json({ ok: true, id }, 201);
 }
 
@@ -112,25 +187,27 @@ function escapeHtml(value) {
 async function notify(env, lead) {
   if (!env.RESEND_API_KEY || !env.LEAD_NOTIFY_TO) return;
   const from = env.LEAD_NOTIFY_FROM || "RESTORA <onboarding@resend.dev>";
-  const rows = [
-    ["Restaurante", lead.restaurant],
-    ["Rol", ROLE_LABELS[lead.role] || lead.role],
-    ["Ciudad", lead.city],
-    ["TPV actual", lead.pos || "—"],
-    ["Idioma", lead.lang],
-    ["Pregunta", lead.message || "—"],
-    ["Fecha", lead.createdAt],
-  ]
-    .map(
-      ([k, v]) =>
-        `<tr><td style="padding:4px 14px 4px 0;color:#75786b">${k}</td><td style="padding:4px 0"><b>${escapeHtml(v)}</b></td></tr>`,
-    )
-    .join("");
-  const html = `<div style="font-family:system-ui,sans-serif"><h2>Nueva inscripción · socio fundador</h2><table style="font-size:14px;border-collapse:collapse">${rows}</table></div>`;
+  const rows = (
+    lead.kind === "demo"
+      ? [
+          ["Restaurante", lead.restaurant],
+          ["Rol", ROLE_LABELS[lead.role] || lead.role],
+          ["Ciudad", lead.city],
+          ["TPV actual", lead.pos || "—"],
+          ["Pregunta", lead.message || "—"],
+        ]
+      : lead.kind === "mensaje"
+        ? [["Nombre", lead.name], ["Email", lead.email], ["Mensaje", lead.message]]
+        : [["Email", lead.email]]
+  ).concat([["Idioma", lead.lang], ["Fecha", lead.createdAt]]);
+  const html = `<div style="font-family:system-ui,sans-serif"><h2>${escapeHtml(KIND_LABELS[lead.kind])}</h2><table style="font-size:14px;border-collapse:collapse">${rows
+    .map(([k, v]) => `<tr><td style="padding:4px 14px 4px 0;color:#75786b">${k}</td><td style="padding:4px 0"><b>${escapeHtml(v)}</b></td></tr>`)
+    .join("")}</table></div>`;
+  const who = lead.kind === "demo" ? lead.restaurant : lead.name || lead.email;
   await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to: [env.LEAD_NOTIFY_TO], subject: `Nueva inscripción RESTORA: ${lead.restaurant}`, html }),
+    body: JSON.stringify({ from, to: [env.LEAD_NOTIFY_TO], reply_to: lead.email || undefined, subject: `${KIND_LABELS[lead.kind]} · ${who}`, html }),
   });
 }
 
@@ -182,10 +259,18 @@ function setupNotice() {
 }
 
 async function fetchLeads(env, limit = 1000) {
-  const res = await env.DB.prepare(
-    "SELECT created_at, restaurant, city, role, pos, lang, status, message FROM leads ORDER BY created_at DESC LIMIT ?",
-  ).bind(limit).all();
-  return res.results || [];
+  try {
+    const res = await env.DB.prepare(
+      "SELECT created_at, kind, name, email, restaurant, city, role, pos, lang, status, message FROM leads ORDER BY created_at DESC LIMIT ?",
+    ).bind(limit).all();
+    return res.results || [];
+  } catch (err) {
+    if (!/no such column/i.test(String(err && err.message))) throw err;
+    const res = await env.DB.prepare(
+      "SELECT created_at, restaurant, city, role, pos, lang, status, message FROM leads ORDER BY created_at DESC LIMIT ?",
+    ).bind(limit).all();
+    return (res.results || []).map((l) => ({ ...l, kind: "demo", name: null, email: null }));
+  }
 }
 
 async function handleAdmin(request, env) {
@@ -213,9 +298,11 @@ async function handleAdmin(request, env) {
     .map(
       (l) => `<tr>
       <td class="mono">${escapeHtml(fmtDate(l.created_at))}</td>
-      <td><b>${escapeHtml(l.restaurant)}</b></td>
+      <td>${escapeHtml(KIND_LABELS[l.kind] || l.kind || "—")}</td>
+      <td><b>${escapeHtml(l.kind === "mensaje" ? l.name || l.restaurant : l.restaurant)}</b></td>
+      <td>${l.email ? `<a href="mailto:${escapeHtml(l.email)}">${escapeHtml(l.email)}</a>` : "—"}</td>
       <td>${escapeHtml(l.city)}</td>
-      <td>${escapeHtml(ROLE_LABELS[l.role] || l.role || "—")}</td>
+      <td>${escapeHtml(l.kind && l.kind !== "demo" ? "—" : ROLE_LABELS[l.role] || l.role || "—")}</td>
       <td>${escapeHtml(l.pos || "—")}</td>
       <td class="mono">${escapeHtml((l.lang || "").toUpperCase())}</td>
       <td>${escapeHtml(l.message || "—")}</td>
@@ -243,7 +330,7 @@ async function handleAdmin(request, env) {
     th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--hair);vertical-align:top}
     th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:#efeadf;position:sticky;top:0}
     tr:hover td{background:#faf8f2}
-    td:nth-child(7){max-width:320px;color:var(--muted)}
+    td:nth-child(9){max-width:320px;color:var(--muted)}
     .empty{padding:40px;text-align:center;color:var(--muted)}
   </style>
   <header><h1>RESTORA · INSCRIPCIONES</h1><a class="btn" href="/admin/leads.csv">Descargar CSV ↓</a></header>
@@ -252,7 +339,7 @@ async function handleAdmin(request, env) {
     <div class="card">
       ${
         leads.length
-          ? `<table><thead><tr><th>Fecha</th><th>Restaurante</th><th>Ciudad</th><th>Rol</th><th>TPV</th><th>Idioma</th><th>Pregunta / mensaje</th></tr></thead><tbody>${rows}</tbody></table>`
+          ? `<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Restaurante / nombre</th><th>Email</th><th>Ciudad</th><th>Rol</th><th>TPV</th><th>Idioma</th><th>Pregunta / mensaje</th></tr></thead><tbody>${rows}</tbody></table>`
           : `<div class="empty">Aún no hay inscripciones. Aparecerán aquí en cuanto alguien envíe el formulario.</div>`
       }
     </div>
@@ -278,10 +365,10 @@ async function handleAdminCsv(request, env) {
     const s = String(v ?? "");
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  const header = ["created_at", "restaurant", "city", "role", "pos", "lang", "status", "message"];
+  const header = ["created_at", "kind", "name", "email", "restaurant", "city", "role", "pos", "lang", "status", "message"];
   const lines = [header.join(",")];
   for (const l of leads) {
-    lines.push([l.created_at, l.restaurant, l.city, ROLE_LABELS[l.role] || l.role, l.pos, l.lang, l.status, l.message].map(esc).join(","));
+    lines.push([l.created_at, l.kind || "demo", l.name, l.email, l.restaurant, l.city, ROLE_LABELS[l.role] || l.role, l.pos, l.lang, l.status, l.message].map(esc).join(","));
   }
   return new Response("﻿" + lines.join("\r\n"), {
     headers: {

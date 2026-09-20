@@ -1,0 +1,24 @@
+# Cloudflare Pages response headers (https://developers.cloudflare.com/pages/configuration/headers/)
+# HTTPS itself is terminated by Cloudflare; "Always Use HTTPS" (dashboard →
+# SSL/TLS → Edge Certificates) does the http→https redirect. HSTS below tells
+# browsers to never try plain HTTP again. Add "; preload" and submit the
+# domain at hstspreload.org once every subdomain serves HTTPS.
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+
+# Hashed build assets never change: cache them for a year.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Photos and downloadable resources change rarely.
+/images/*
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
+/og/*
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
+/recursos/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=86400

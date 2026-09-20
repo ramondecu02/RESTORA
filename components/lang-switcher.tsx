@@ -53,11 +53,11 @@ export function LangSwitcher({
               href={`/${target}${rest}`}
               onClick={() => rememberLocale(target)}
               style={{
-                padding: "6px 12px",
+                padding: "8px 14px",
                 borderRadius: 999,
                 fontWeight: active ? 600 : 400,
-                background: active ? "var(--brand)" : "transparent",
-                color: active ? "#14160E" : "inherit",
+                background: active ? "#fff" : "transparent",
+                color: active ? "#12211a" : "inherit",
               }}
             >
               {labels[target].footer}
@@ -91,7 +91,7 @@ export function LangSwitcher({
             onClick={() => rememberLocale(target)}
             aria-current={active ? "true" : undefined}
             style={{
-              padding: "5px 12px",
+              padding: "7px 10px",
               borderRadius: 999,
               fontWeight: active ? 600 : 500,
               background: active ? "var(--brand)" : "transparent",

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { notFound } from "next/navigation";
-import { Mail } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import { getSiteCopy } from "@/lib/site-copy";
 import { getContacto } from "@/lib/pages-copy";
 import { isLocale } from "@/lib/types";
@@ -9,11 +10,13 @@ import { SiteFooter } from "@/components/site/footer";
 import { SiteLeadForm } from "@/components/site/lead-form";
 import { PageHead } from "@/components/pages/page-head";
 import { Frame } from "@/components/home/frame";
+import { WhatsAppIcon } from "@/components/site/social-icons";
+import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_E164, whatsappUrl } from "@/lib/site";
 
 export async function generateMetadata(props: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await props.params;
   const c = getContacto(isLocale(locale) ? locale : "es");
-  return { title: `${c.hero.title} · RESTORA`, description: c.hero.sub };
+  return pageMetadata(isLocale(locale) ? locale : "es", "contacto", `${c.hero.title} · RESTORA`, c.hero.sub);
 }
 
 export default async function ContactoPage(props: {
@@ -34,23 +37,45 @@ export default async function ContactoPage(props: {
           <div className="mx-auto grid max-w-[1180px] lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)]" style={{ gap: "clamp(30px, 4.5vw, 64px)" }}>
             {/* Left: email, steps, photo */}
             <div style={{ minWidth: 0 }}>
-              <a
-                href={`mailto:${c.email}`}
-                className="card hover-lift reveal"
-                style={{ display: "flex", gap: 16, alignItems: "center", padding: "22px 24px", color: "var(--ink)" }}
-              >
-                <span className="icon-badge" style={{ width: 46, height: 46 }}>
-                  <Mail size={20} strokeWidth={1.8} />
-                </span>
-                <span style={{ minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 11.5, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted)" }}>
-                    {c.emailLabel}
+              <div className="reveal-group" style={{ display: "grid", gap: 12 }}>
+                <a
+                  href={`mailto:${c.email}`}
+                  className="card hover-lift"
+                  style={{ display: "flex", gap: 16, alignItems: "center", padding: "22px 24px", color: "var(--ink)" }}
+                >
+                  <span className="icon-badge" style={{ width: 46, height: 46 }}>
+                    <Mail size={20} strokeWidth={1.8} />
                   </span>
-                  <span className="display-serif" style={{ display: "block", fontSize: "clamp(20px, 2.4vw, 28px)", marginTop: 6, color: "var(--brand)", wordBreak: "break-word" }}>
-                    {c.email}
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: "block", fontSize: 11.5, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted)" }}>
+                      {c.emailLabel}
+                    </span>
+                    <span className="display-serif" style={{ display: "block", fontSize: "clamp(20px, 2.4vw, 28px)", marginTop: 6, color: "var(--brand)", wordBreak: "break-word" }}>
+                      {c.email}
+                    </span>
                   </span>
-                </span>
-              </a>
+                </a>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+                  <a href={`tel:${CONTACT_PHONE_E164}`} className="card hover-lift" style={{ display: "flex", gap: 14, alignItems: "center", padding: "18px 20px", color: "var(--ink)" }}>
+                    <span className="icon-badge" style={{ width: 42, height: 42 }}>
+                      <Phone size={18} strokeWidth={1.8} />
+                    </span>
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: "block", fontSize: 11.5, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted)" }}>{c.phoneLabel}</span>
+                      <span style={{ display: "block", fontSize: 17, fontWeight: 700, marginTop: 4, fontVariantNumeric: "tabular-nums" }}>{CONTACT_PHONE_DISPLAY}</span>
+                    </span>
+                  </a>
+                  <a href={whatsappUrl(locale)} target="_blank" rel="noopener noreferrer" className="card hover-lift" style={{ display: "flex", gap: 14, alignItems: "center", padding: "18px 20px", color: "var(--ink)" }}>
+                    <span className="icon-badge" style={{ width: 42, height: 42 }}>
+                      <WhatsAppIcon size={20} />
+                    </span>
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: "block", fontSize: 11.5, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted)" }}>{c.whatsappLabel}</span>
+                      <span style={{ display: "block", fontSize: 14.5, fontWeight: 600, marginTop: 4, color: "var(--brand)" }}>{c.whatsappNote} →</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
               <p className="reveal" style={{ fontSize: 14.5, color: "var(--muted)", margin: "14px 0 0" }}>{c.emailNote}</p>
 
               <div className="reveal" style={{ marginTop: "clamp(30px, 4vw, 46px)" }}>
@@ -90,7 +115,7 @@ export default async function ContactoPage(props: {
               <div id="formulario" className="lg:sticky" style={{ top: 100 }}>
                 <h2 className="display-serif" style={{ fontSize: "clamp(22px, 2.6vw, 30px)", margin: 0 }}>{c.formTitle}</h2>
                 <p style={{ fontSize: 15, color: "var(--muted)", margin: "10px 0 0", maxWidth: "44ch", lineHeight: 1.6 }}>{c.formSub}</p>
-                <SiteLeadForm lead={copy.lead} locale={locale} />
+                <SiteLeadForm lead={copy.lead} trust={copy.trust} locale={locale} />
               </div>
             </div>
           </div>

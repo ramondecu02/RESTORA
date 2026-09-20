@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import { Check } from "lucide-react";
 import { getSiteCopy } from "@/lib/site-copy";
@@ -13,7 +14,7 @@ import { Frame } from "@/components/home/frame";
 export async function generateMetadata(props: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await props.params;
   const c = getComoFunciona(isLocale(locale) ? locale : "es");
-  return { title: `${c.hero.eyebrow} · RESTORA`, description: c.hero.sub };
+  return pageMetadata(isLocale(locale) ? locale : "es", "como-funciona", `${c.hero.eyebrow} · RESTORA`, c.hero.sub);
 }
 
 export default async function ComoFuncionaPage(props: {

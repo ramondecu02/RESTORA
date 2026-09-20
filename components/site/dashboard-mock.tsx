@@ -98,7 +98,7 @@ const panel: React.CSSProperties = {
 export function DashboardMock() {
   return (
     <div
-      className="mono"
+      className="mono dm-root"
       style={{
         width: 640,
         maxWidth: "100%",
@@ -107,13 +107,11 @@ export function DashboardMock() {
         borderRadius: 18,
         boxShadow: "0 40px 90px -50px rgba(20,32,26,0.45)",
         overflow: "hidden",
-        display: "grid",
-        gridTemplateColumns: "150px 1fr",
         fontFamily: "var(--font-body)",
       }}
     >
-      {/* Sidebar */}
-      <aside style={{ borderRight: "1px solid var(--hair)", padding: "16px 12px", background: "color-mix(in srgb, var(--panel) 60%, var(--surface))" }}>
+      {/* Sidebar (hidden under 640px — see .dm-side in globals.css) */}
+      <aside className="dm-side" style={{ borderRight: "1px solid var(--hair)", padding: "16px 12px", background: "color-mix(in srgb, var(--panel) 60%, var(--surface))" }}>
         <div style={{ fontWeight: 700, letterSpacing: "0.14em", fontSize: 13, padding: "2px 8px 14px" }}>RESTORA</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {SIDEBAR.map((s) => {
@@ -151,7 +149,7 @@ export function DashboardMock() {
         </div>
 
         {/* Stat tiles */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+        <div className="dm-stats">
           {STATS.map((s) => (
             <div key={s.label} style={panel}>
               <div style={{ fontSize: 10.5, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
@@ -173,7 +171,7 @@ export function DashboardMock() {
         </div>
 
         {/* Chart + donut */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 8 }}>
+        <div className="dm-charts">
           <div style={panel}>
             <div style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 6 }}>Evolución del coste de compras</div>
             <LineChart />
@@ -198,7 +196,7 @@ export function DashboardMock() {
         </div>
 
         {/* Lists */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div className="dm-lists">
           <div style={panel}>
             <div style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 8 }}>Mayor aumento de precio</div>
             {RISERS.map(([name, d]) => (

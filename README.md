@@ -16,7 +16,7 @@ Este repositorio es la implementación de producción del *design handoff*
 - **Next.js 16** (App Router) + **React 19** + **TypeScript**
 - **Tailwind CSS v4** (tokens de diseño como variables CSS, tema claro/oscuro)
 - **Prisma 6** + **PostgreSQL** (Vercel Postgres / Supabase / Neon)
-- Fuentes autoalojadas con `next/font`: Big Shoulders, Work Sans, IBM Plex Mono
+- Fuentes autoalojadas con `next/font`: Inter (UI) e Instrument Serif (titulares)
 - Desplegable en **Vercel**
 
 ## Qué incluye
@@ -72,16 +72,19 @@ npm run dev        # http://localhost:3000
 | `ADMIN_EMAIL`         | Email del único usuario admin.                                     |
 | `ADMIN_PASSWORD`      | Contraseña del admin.                                              |
 | `AUTH_SECRET`         | Secreto para firmar la cookie de sesión (mín. 16 car.; usa 32+).   |
-| `NEXT_PUBLIC_SITE_URL`| URL pública del sitio (metadata / OpenGraph). Opcional en dev.     |
+| `NEXT_PUBLIC_SITE_URL`| URL pública del sitio (canonical / hreflang / OpenGraph / sitemap). Por defecto `https://restoraapp.app`. |
 
 ## Rutas
 
 **Público**
 
 - `GET /` → redirige a `/es` o `/ca`
-- `GET /es`, `GET /ca` — landing
-- `GET /<locale>/marca` — brand board interno
-- `GET /<locale>/legal/{privacidad,rgpd}` — legales (placeholder)
+- `GET /es`, `GET /ca` — home
+- `GET /<locale>/{funcionalidades,como-funciona,precios,preguntas,sobre-nosotros,contacto}`
+- `GET /<locale>/{aviso-legal,privacidad,cookies,rgpd}` — legales (datos de empresa pendientes, no inventados)
+- `GET /<locale>/marca` — brand board interno (noindex)
+- `GET /sitemap.xml`, `GET /robots.txt` — generados por `app/sitemap.ts` y `app/robots.ts`
+- `GET /recursos/checklist-food-cost-{es,ca}.pdf` — lead magnet de la newsletter
 
 **API**
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
@@ -8,6 +9,7 @@ import { isLocale } from "@/lib/types";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { CtaBand } from "@/components/site/cta-band";
+import { ShareBand } from "@/components/site/share-band";
 import { PageHead } from "@/components/pages/page-head";
 import { ModuleDemo } from "@/components/mock/demos";
 import { Frame } from "@/components/home/frame";
@@ -15,7 +17,7 @@ import { Frame } from "@/components/home/frame";
 export async function generateMetadata(props: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await props.params;
   const c = getFuncionalidades(isLocale(locale) ? locale : "es");
-  return { title: `${c.hero.eyebrow} · RESTORA`, description: c.hero.sub };
+  return pageMetadata(isLocale(locale) ? locale : "es", "funcionalidades", `${c.hero.eyebrow} · RESTORA`, c.hero.sub);
 }
 
 export default async function FuncionalidadesPage(props: {
@@ -122,6 +124,7 @@ export default async function FuncionalidadesPage(props: {
           </Frame>
         </section>
 
+        <ShareBand copy={copy} />
         <CtaBand copy={copy} locale={locale} />
       </main>
       <SiteFooter copy={copy} locale={locale} />

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
@@ -9,11 +10,12 @@ import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { PageHead } from "@/components/pages/page-head";
 import { Frame } from "@/components/home/frame";
+import { NewsletterSection } from "@/components/site/newsletter-section";
 
 export async function generateMetadata(props: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await props.params;
   const c = getPreguntas(isLocale(locale) ? locale : "es");
-  return { title: `${c.hero.eyebrow} · RESTORA`, description: c.hero.sub };
+  return pageMetadata(isLocale(locale) ? locale : "es", "preguntas", `${c.hero.eyebrow} · RESTORA`, c.hero.sub);
 }
 
 export default async function PreguntasPage(props: {
@@ -60,6 +62,8 @@ export default async function PreguntasPage(props: {
             </div>
           </section>
         ))}
+
+        <NewsletterSection copy={copy} locale={locale} />
 
         {/* Still unsure → contact */}
         <section style={{ padding: "clamp(56px, 7vw, 100px) 28px" }}>

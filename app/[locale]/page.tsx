@@ -1,7 +1,9 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getSiteCopy } from "@/lib/site-copy";
 import { isLocale } from "@/lib/types";
+import { pageMetadata } from "@/lib/seo";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteExplore } from "@/components/site/explore";
@@ -12,14 +14,26 @@ import { FeatureRow, OverlayCard } from "@/components/home/feature-row";
 import { HomeProfit } from "@/components/home/profit";
 import { HomeIntelligence } from "@/components/home/intelligence";
 import { HomeClosing } from "@/components/home/closing";
+import { HomeVideo } from "@/components/home/video";
+import { NewsletterSection } from "@/components/site/newsletter-section";
+import { ShareBand } from "@/components/site/share-band";
 
 const label: React.CSSProperties = {
   fontSize: 11,
   letterSpacing: "0.12em",
   textTransform: "uppercase",
-  color: "var(--muted)",
+  // Ink (not muted): the card is translucent over a photo, so muted text
+  // dropped under the 4.5:1 contrast threshold.
+  color: "var(--ink)",
   fontWeight: 600,
 };
+
+export async function generateMetadata(props: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await props.params;
+  const typed = isLocale(locale) ? locale : "es";
+  const copy = getSiteCopy(typed);
+  return pageMetadata(typed, "", copy.meta.title, copy.meta.description);
+}
 
 export default async function HomePage(props: {
   params: Promise<{ locale: string }>;
@@ -33,6 +47,7 @@ export default async function HomePage(props: {
       <SiteNav copy={copy} locale={locale} overlay />
       <main>
         <HomeHero copy={copy} locale={locale} />
+        <HomeVideo copy={copy} locale={locale} />
         <HomeStrip copy={copy} />
         <HomeProblem copy={copy} locale={locale} />
 
@@ -115,6 +130,8 @@ export default async function HomePage(props: {
         <HomeProfit copy={copy} />
         <HomeIntelligence copy={copy} locale={locale} />
         <SiteExplore copy={copy} locale={locale} />
+        <NewsletterSection copy={copy} locale={locale} />
+        <ShareBand copy={copy} />
         <HomeClosing copy={copy} locale={locale} />
       </main>
       <SiteFooter copy={copy} locale={locale} />

@@ -14,10 +14,81 @@ const es = {
     "Responsable del tratamiento y datos de contacto",
     "Delegado de Protección de Datos (si se designa)",
     "Plazo de conservación concreto de los datos",
+    "Créditos y licencias de las fotografías",
   ],
   contactLine: "Para cualquier cuestión sobre tus datos puedes escribirnos a hola@restoraapp.com.",
   contactCta: "Escríbenos",
   updated: "Última actualización: pendiente de la publicación definitiva.",
+  avisoLegal: {
+    eyebrow: "Legal",
+    title: "Aviso legal",
+    sub: "Quién es el titular de esta web, para qué sirve y en qué condiciones puedes usarla (Ley 34/2002, LSSI-CE).",
+    sections: [
+      {
+        title: "Datos identificativos del titular",
+        body: "En cumplimiento del artículo 10 de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y de Comercio Electrónico, se informa de que el titular de restoraapp.app es la entidad responsable de RESTORA. Su razón social, NIF, domicilio y, si procede, datos de inscripción registral figuran en el bloque de datos pendientes de esta misma página y se completarán antes de la publicación definitiva. Correo de contacto: hola@restoraapp.com.",
+      },
+      {
+        title: "Objeto de la web",
+        body: "Esta web presenta RESTORA, una herramienta de control de food cost y rentabilidad para restaurantes, y permite solicitar una demostración, enviarnos un mensaje o suscribirse a nuestras comunicaciones. El acceso y la navegación implican la aceptación de este aviso legal; si no estás de acuerdo con él, te pedimos que no utilices el sitio.",
+      },
+      {
+        title: "Condiciones de uso",
+        body: "Te comprometes a usar la web y sus formularios de forma lícita y de buena fe: sin enviar información falsa o de terceros sin su consentimiento, sin intentar acceder a áreas restringidas ni alterar el funcionamiento del sitio. Los contenidos son informativos y pueden cambiar sin previo aviso; hacemos lo posible por mantener la web disponible, pero no garantizamos la ausencia de interrupciones.",
+      },
+      {
+        title: "Propiedad intelectual e industrial",
+        body: "La marca RESTORA, el logotipo, los textos, el diseño, el código y las capturas del producto son titularidad de RESTORA o se usan con licencia. Puedes consultar y compartir la web con fines informativos, pero no reproducir, modificar ni explotar comercialmente sus contenidos sin autorización previa por escrito. Las fotografías se publican con las licencias que se indicarán en el bloque de datos pendientes.",
+      },
+      {
+        title: "Enlaces a terceros",
+        body: "La web puede enlazar a servicios de terceros (por ejemplo, WhatsApp o una plataforma de vídeo). No controlamos esos sitios ni respondemos de sus contenidos, sus condiciones o su tratamiento de datos; te recomendamos revisar sus políticas al salir de restoraapp.app.",
+      },
+      {
+        title: "Exclusión de responsabilidad",
+        body: "Las pantallas, cifras y ejemplos que aparecen en la web son ilustrativos y sirven para explicar el producto; los resultados reales dependen de los datos de cada restaurante. RESTORA no se hace responsable de decisiones tomadas únicamente a partir de la información publicada aquí, ni de daños derivados de virus, indisponibilidad o usos no autorizados de la web ajenos a nuestro control.",
+      },
+      {
+        title: "Protección de datos",
+        body: "El tratamiento de los datos que nos facilitas a través de los formularios se rige por nuestra política de privacidad y por la información RGPD, disponibles en esta misma web.",
+      },
+      {
+        title: "Legislación aplicable y jurisdicción",
+        body: "Este aviso legal se rige por la legislación española. Para cualquier controversia serán competentes los juzgados y tribunales que correspondan al domicilio del titular, salvo que la normativa de consumidores y usuarios establezca otro fuero imperativo.",
+      },
+    ],
+  },
+  cookies: {
+    eyebrow: "Legal",
+    title: "Política de cookies",
+    sub: "Qué guarda esta web en tu navegador (muy poco) y por qué no verás un banner de cookies.",
+    sections: [
+      {
+        title: "Qué es una cookie",
+        body: "Una cookie es un pequeño archivo que un sitio web guarda en tu navegador para recordar algo entre visitas: un idioma, una sesión iniciada, una preferencia. Existen también otras técnicas similares, como el almacenamiento local del navegador, que tratamos aquí del mismo modo.",
+      },
+      {
+        title: "Qué usamos en esta web",
+        body: "Solo elementos estrictamente necesarios para que la web funcione como esperas: la cookie técnica NEXT_LOCALE, que recuerda el idioma que has elegido (castellano o catalán) durante un año; y la preferencia de tema claro u oscuro (clave restora-theme), guardada en el almacenamiento local de tu navegador hasta que la borres. Ninguna de las dos identifica a personas ni sale de tu navegador.",
+      },
+      {
+        title: "Lo que no usamos",
+        body: "No utilizamos cookies de analítica, de publicidad, de seguimiento entre sitios ni de redes sociales, y no compartimos datos de navegación con terceros. Por eso no mostramos banner de consentimiento: las cookies estrictamente necesarias están exentas de él según el artículo 22.2 de la LSSI-CE y las guías de la Agencia Española de Protección de Datos.",
+      },
+      {
+        title: "Servicios de terceros que puedes activar tú",
+        body: "Algunas acciones te llevan a servicios externos con sus propias cookies: el botón de WhatsApp abre whatsapp.com, y el vídeo de presentación, cuando esté disponible, solo se carga desde la plataforma de vídeo si pulsas reproducir. Hasta ese momento no se descarga nada de esos dominios.",
+      },
+      {
+        title: "Cómo gestionar o borrar las cookies",
+        body: "Puedes eliminar la cookie de idioma y la preferencia de tema desde la configuración de tu navegador (apartado de privacidad, cookies y datos de sitios). Si lo haces, la web volverá a mostrarte el idioma por defecto y el tema de tu sistema. Cada navegador explica cómo hacerlo en su ayuda: Chrome, Firefox, Safari y Edge.",
+      },
+      {
+        title: "Si esto cambia",
+        body: "Si en el futuro incorporamos analítica u otra cookie no estrictamente necesaria, pediremos tu consentimiento previo mediante un banner, actualizaremos esta política y la fecha de última actualización.",
+      },
+    ],
+  },
   privacidad: {
     eyebrow: "Legal",
     title: "Política de privacidad",
@@ -112,10 +183,81 @@ const ca: LegalCopy = {
     "Responsable del tractament i dades de contacte",
     "Delegat de Protecció de Dades (si se'n designa)",
     "Termini de conservació concret de les dades",
+    "Crèdits i llicències de les fotografies",
   ],
   contactLine: "Per a qualsevol qüestió sobre les teves dades pots escriure'ns a hola@restoraapp.com.",
   contactCta: "Escriu-nos",
   updated: "Última actualització: pendent de la publicació definitiva.",
+  avisoLegal: {
+    eyebrow: "Legal",
+    title: "Avís legal",
+    sub: "Qui és el titular d'aquest web, per a què serveix i en quines condicions el pots fer servir (Llei 34/2002, LSSI-CE).",
+    sections: [
+      {
+        title: "Dades identificatives del titular",
+        body: "En compliment de l'article 10 de la Llei 34/2002, d'11 de juliol, de serveis de la societat de la informació i de comerç electrònic, s'informa que el titular de restoraapp.app és l'entitat responsable de RESTORA. La seva raó social, NIF, domicili i, si escau, dades d'inscripció registral figuren al bloc de dades pendents d'aquesta mateixa pàgina i es completaran abans de la publicació definitiva. Correu de contacte: hola@restoraapp.com.",
+      },
+      {
+        title: "Objecte del web",
+        body: "Aquest web presenta RESTORA, una eina de control de food cost i rendibilitat per a restaurants, i permet sol·licitar una demostració, enviar-nos un missatge o subscriure's a les nostres comunicacions. L'accés i la navegació impliquen l'acceptació d'aquest avís legal; si no hi estàs d'acord, et demanem que no utilitzis el lloc.",
+      },
+      {
+        title: "Condicions d'ús",
+        body: "Et compromets a fer servir el web i els seus formularis de manera lícita i de bona fe: sense enviar informació falsa o de tercers sense el seu consentiment, sense intentar accedir a àrees restringides ni alterar el funcionament del lloc. Els continguts són informatius i poden canviar sense avís previ; fem el possible per mantenir el web disponible, però no garantim l'absència d'interrupcions.",
+      },
+      {
+        title: "Propietat intel·lectual i industrial",
+        body: "La marca RESTORA, el logotip, els textos, el disseny, el codi i les captures del producte són titularitat de RESTORA o es fan servir amb llicència. Pots consultar i compartir el web amb finalitats informatives, però no reproduir, modificar ni explotar comercialment els seus continguts sense autorització prèvia per escrit. Les fotografies es publiquen amb les llicències que s'indicaran al bloc de dades pendents.",
+      },
+      {
+        title: "Enllaços a tercers",
+        body: "El web pot enllaçar a serveis de tercers (per exemple, WhatsApp o una plataforma de vídeo). No controlem aquests llocs ni responem dels seus continguts, les seves condicions o el seu tractament de dades; et recomanem revisar les seves polítiques en sortir de restoraapp.app.",
+      },
+      {
+        title: "Exclusió de responsabilitat",
+        body: "Les pantalles, xifres i exemples que apareixen al web són il·lustratius i serveixen per explicar el producte; els resultats reals depenen de les dades de cada restaurant. RESTORA no es fa responsable de decisions preses únicament a partir de la informació publicada aquí, ni de danys derivats de virus, indisponibilitat o usos no autoritzats del web aliens al nostre control.",
+      },
+      {
+        title: "Protecció de dades",
+        body: "El tractament de les dades que ens facilites a través dels formularis es regeix per la nostra política de privacitat i per la informació RGPD, disponibles en aquest mateix web.",
+      },
+      {
+        title: "Legislació aplicable i jurisdicció",
+        body: "Aquest avís legal es regeix per la legislació espanyola. Per a qualsevol controvèrsia seran competents els jutjats i tribunals que corresponguin al domicili del titular, llevat que la normativa de consumidors i usuaris estableixi un altre fur imperatiu.",
+      },
+    ],
+  },
+  cookies: {
+    eyebrow: "Legal",
+    title: "Política de galetes",
+    sub: "Què desa aquest web al teu navegador (molt poc) i per què no veuràs cap bàner de galetes.",
+    sections: [
+      {
+        title: "Què és una galeta",
+        body: "Una galeta (cookie) és un petit fitxer que un lloc web desa al teu navegador per recordar alguna cosa entre visites: un idioma, una sessió iniciada, una preferència. També hi ha altres tècniques similars, com l'emmagatzematge local del navegador, que tractem aquí de la mateixa manera.",
+      },
+      {
+        title: "Què fem servir en aquest web",
+        body: "Només elements estrictament necessaris perquè el web funcioni com esperes: la galeta tècnica NEXT_LOCALE, que recorda l'idioma que has triat (castellà o català) durant un any; i la preferència de tema clar o fosc (clau restora-theme), desada a l'emmagatzematge local del teu navegador fins que l'esborris. Cap de les dues identifica persones ni surt del teu navegador.",
+      },
+      {
+        title: "El que no fem servir",
+        body: "No utilitzem galetes d'analítica, de publicitat, de seguiment entre llocs ni de xarxes socials, i no compartim dades de navegació amb tercers. Per això no mostrem cap bàner de consentiment: les galetes estrictament necessàries n'estan exemptes segons l'article 22.2 de la LSSI-CE i les guies de l'Agència Espanyola de Protecció de Dades.",
+      },
+      {
+        title: "Serveis de tercers que pots activar tu",
+        body: "Algunes accions et porten a serveis externs amb les seves pròpies galetes: el botó de WhatsApp obre whatsapp.com, i el vídeo de presentació, quan estigui disponible, només es carrega des de la plataforma de vídeo si prems reproduir. Fins aleshores no es descarrega res d'aquells dominis.",
+      },
+      {
+        title: "Com gestionar o esborrar les galetes",
+        body: "Pots eliminar la galeta d'idioma i la preferència de tema des de la configuració del teu navegador (apartat de privacitat, galetes i dades de llocs). Si ho fas, el web et tornarà a mostrar l'idioma per defecte i el tema del teu sistema. Cada navegador explica com fer-ho a la seva ajuda: Chrome, Firefox, Safari i Edge.",
+      },
+      {
+        title: "Si això canvia",
+        body: "Si en el futur incorporem analítica o una altra galeta no estrictament necessària, demanarem el teu consentiment previ mitjançant un bàner, actualitzarem aquesta política i la data d'última actualització.",
+      },
+    ],
+  },
   privacidad: {
     eyebrow: "Legal",
     title: "Política de privacitat",

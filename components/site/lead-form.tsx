@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import type { SiteCopy } from "@/lib/site-copy";
 import { LEAD_ROLES, type Locale } from "@/lib/types";
+import { SecureLine } from "./trust-badges";
 
 type Status = "idle" | "loading" | "success" | "error";
 
-export function SiteLeadForm({ lead, locale }: { lead: SiteCopy["lead"]; locale: Locale }) {
+export function SiteLeadForm({ lead, trust, locale }: { lead: SiteCopy["lead"]; trust?: SiteCopy["trust"]; locale: Locale }) {
   const roleOptions = LEAD_ROLES.map((value, i) => ({ value, label: lead.roles[i] }));
 
   const [restaurant, setRestaurant] = useState("");
@@ -103,6 +104,7 @@ export function SiteLeadForm({ lead, locale }: { lead: SiteCopy["lead"]; locale:
         </Link>
         .
       </p>
+      {trust && <SecureLine trust={trust} style={{ justifyContent: "center", marginTop: 4 }} />}
     </form>
   );
 }

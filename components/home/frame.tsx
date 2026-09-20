@@ -11,6 +11,7 @@ export function Frame({
   alt,
   sizes,
   priority = false,
+  fetchPriority,
   focal,
   ratio,
   radius = 0,
@@ -26,6 +27,8 @@ export function Frame({
   alt: string;
   sizes: string;
   priority?: boolean;
+  /** "high" for the LCP image (hero) so the browser fetches it first. */
+  fetchPriority?: "high" | "low" | "auto";
   focal?: string;
   ratio?: string;
   radius?: number;
@@ -59,6 +62,7 @@ export function Frame({
         fill
         sizes={sizes}
         priority={priority}
+        fetchPriority={fetchPriority}
         className={["frame-img", focal].filter(Boolean).join(" ")}
       />
       {overlay}

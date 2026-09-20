@@ -42,7 +42,7 @@ const es = {
     items: [
       { q: "¿Hay permanencia?", a: "No. El plan es mensual y puedes dejarlo cuando quieras." },
       { q: "¿Hay coste de puesta en marcha?", a: "No cobramos alta. Te ayudamos a cargar tus recetas y proveedores durante la primera semana." },
-      { q: "¿Y si soy socio fundador?", a: "Mantienes las condiciones del programa de socios fundadores, las de la tarjeta de arriba, mientras sigas con nosotros." },
+      { q: "¿Y si soy socio fundador?", a: "Te quedas el plan Pro al precio del plan Base —89 €/mes— fijo de por vida mientras sigas con nosotros, aunque la tarifa general cambie." },
     ],
     linkLabel: "Ver todas las preguntas",
   },
@@ -91,7 +91,7 @@ const ca: PreciosCopy = {
     items: [
       { q: "Hi ha permanència?", a: "No. El pla és mensual i pots deixar-lo quan vulguis." },
       { q: "Hi ha cost de posada en marxa?", a: "No cobrem alta. T'ajudem a carregar les teves receptes i proveïdors durant la primera setmana." },
-      { q: "I si sóc soci fundador?", a: "Mantens les condicions del programa de socis fundadors, les de la targeta de dalt, mentre segueixis amb nosaltres." },
+      { q: "I si sóc soci fundador?", a: "Et quedes el pla Pro al preu del pla Base —89 €/mes— fix de per vida mentre segueixis amb nosaltres, encara que la tarifa general canviï." },
     ],
     linkLabel: "Veure totes les preguntes",
   },

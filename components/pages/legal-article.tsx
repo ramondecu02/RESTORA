@@ -5,20 +5,33 @@ import type { Locale } from "@/lib/types";
 import { PageHead } from "./page-head";
 
 type Doc = LegalCopy["privacidad"];
+type Related = { href: string; label: string };
+
+const LEGAL_SLUGS = ["aviso-legal", "privacidad", "cookies", "rgpd"] as const;
+type LegalSlug = (typeof LEGAL_SLUGS)[number];
+const DOC_KEY: Record<LegalSlug, keyof Pick<LegalCopy, "avisoLegal" | "privacidad" | "cookies" | "rgpd">> = {
+  "aviso-legal": "avisoLegal",
+  privacidad: "privacidad",
+  cookies: "cookies",
+  rgpd: "rgpd",
+};
+
+/** Links to the other legal documents (everything except the current one). */
+export function legalRelated(legal: LegalCopy, locale: Locale, current: LegalSlug): Related[] {
+  return LEGAL_SLUGS.filter((s) => s !== current).map((s) => ({ href: `/${locale}/${s}`, label: legal[DOC_KEY[s]].title }));
+}
 
 /** Clean, readable legal document with the outstanding company data flagged. */
 export function LegalArticle({
   doc,
   legal,
   locale,
-  otherHref,
-  otherLabel,
+  related,
 }: {
   doc: Doc;
   legal: LegalCopy;
   locale: Locale;
-  otherHref: string;
-  otherLabel: string;
+  related: Related[];
 }) {
   return (
     <>
@@ -72,9 +85,11 @@ export function LegalArticle({
             <p style={{ fontSize: 15, color: "var(--ink)", margin: 0 }}>{legal.contactLine}</p>
             <p className="mono" style={{ fontSize: 13, color: "var(--muted)", margin: "10px 0 0" }}>{legal.updated}</p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 22 }}>
-              <Link href={otherHref} className="btn btn-outline" style={{ padding: "12px 20px", fontSize: 14.5 }}>
-                {otherLabel}
-              </Link>
+              {related.map((r) => (
+                <Link key={r.href} href={r.href} className="btn btn-outline" style={{ padding: "12px 20px", fontSize: 14.5 }}>
+                  {r.label}
+                </Link>
+              ))}
               <Link href={`/${locale}/contacto`} className="btn btn-brand" style={{ padding: "12px 20px", fontSize: 14.5 }}>
                 {legal.contactCta}
               </Link>

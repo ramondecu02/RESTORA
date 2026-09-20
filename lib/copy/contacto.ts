@@ -7,6 +7,9 @@ const es = {
   emailLabel: "Escríbenos directamente",
   email: "hola@restoraapp.com",
   emailNote: "Te respondemos en 48 h, sin comercial de por medio.",
+  phoneLabel: "Llámanos",
+  whatsappLabel: "WhatsApp",
+  whatsappNote: "Abrir chat con un mensaje ya escrito",
   formTitle: "O cuéntanos tu caso",
   formSub: "Un minuto de formulario y te contactamos con algo concreto, no con un folleto.",
   next: {
@@ -31,6 +34,9 @@ const ca: ContactoCopy = {
   emailLabel: "Escriu-nos directament",
   email: "hola@restoraapp.com",
   emailNote: "Et responem en 48 h, sense comercial pel mig.",
+  phoneLabel: "Truca'ns",
+  whatsappLabel: "WhatsApp",
+  whatsappNote: "Obrir xat amb un missatge ja escrit",
   formTitle: "O explica'ns el teu cas",
   formSub: "Un minut de formulari i et contactem amb alguna cosa concreta, no amb un fullet.",
   next: {

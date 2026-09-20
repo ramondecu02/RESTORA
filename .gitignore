@@ -20,6 +20,8 @@
 # cloudflare export staging
 /.cf-stash/
 /.wrangler/
+# generated responsive image variants (scripts/gen-image-variants.mjs)
+/public/images/_w/
 
 # production
 /build

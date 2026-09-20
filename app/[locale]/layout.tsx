@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { Inter, Instrument_Serif } from "next/font/google";
 import "../globals.css";
 import { getSiteCopy } from "@/lib/site-copy";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { pageMetadata } from "@/lib/seo";
+import { FloatingActions } from "@/components/site/floating-actions";
 import { isLocale, LOCALES, type Locale } from "@/lib/types";
 
 const inter = Inter({
@@ -34,22 +37,13 @@ export async function generateMetadata(props: {
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await props.params;
-  const copy = getSiteCopy(isLocale(locale) ? locale : "es");
+  const typed = isLocale(locale) ? locale : "es";
+  const copy = getSiteCopy(typed);
   return {
-    metadataBase: new URL(
-      process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-    ),
-    title: copy.meta.title,
-    description: copy.meta.description,
-    alternates: {
-      languages: { es: "/es", ca: "/ca" },
-    },
-    openGraph: {
-      title: copy.meta.title,
-      description: copy.meta.description,
-      locale: locale === "ca" ? "ca_ES" : "es_ES",
-      type: "website",
-    },
+    // Absolute URLs for canonical/hreflang/OG come from here (never localhost).
+    metadataBase: new URL(SITE_URL),
+    applicationName: SITE_NAME,
+    ...pageMetadata(typed, "", copy.meta.title, copy.meta.description),
   };
 }
 
@@ -70,6 +64,7 @@ export default async function LocaleLayout(props: {
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {props.children}
+        <FloatingActions locale={typedLocale} labels={getSiteCopy(typedLocale).floating} />
       </body>
     </html>
   );

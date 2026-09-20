@@ -44,7 +44,7 @@ export function ThemeToggle() {
       onClick={toggle}
       title="Claro / Oscuro"
       aria-label={theme === "dark" ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
-      className="h-[34px] w-[38px] cursor-pointer rounded-full border border-line bg-transparent text-[15px] leading-none text-ink"
+      className="h-10 w-10 shrink-0 cursor-pointer rounded-full border border-line bg-transparent text-[15px] leading-none text-ink"
     >
       <span suppressHydrationWarning>{theme === "dark" ? "☀" : "☾"}</span>
     </button>

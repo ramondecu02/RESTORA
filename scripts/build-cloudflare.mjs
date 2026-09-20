@@ -30,6 +30,8 @@ function restore() {
 try {
   stash();
   rmSync("out", { recursive: true, force: true });
+  // Responsive image variants for the custom loader (lib/image-loader.ts).
+  execSync("node scripts/gen-image-variants.mjs", { stdio: "inherit" });
   execSync("next build", {
     stdio: "inherit",
     env: { ...process.env, CF_EXPORT: "1" },

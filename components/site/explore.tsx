@@ -57,6 +57,7 @@ export function SiteExplore({ copy, locale }: { copy: SiteCopy; locale: Locale }
                   alt={card.title}
                   radius={0}
                   focal={photo.focal ?? "center"}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 300px"
                   zoom
                   style={{ aspectRatio: "16 / 10", width: "100%", border: "none", borderBottom: "1px solid var(--hair)" }}
                 >

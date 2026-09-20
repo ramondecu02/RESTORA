@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { SiteCopy } from "@/lib/site-copy";
 import type { Locale } from "@/lib/types";
@@ -21,18 +22,9 @@ export function CtaBand({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
         }}
       >
         {/* Photo backdrop */}
-        <div
-          aria-hidden="true"
-          className="cta-kenburns"
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: 'url("/images/restaurante-cta.webp")',
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: 0.55,
-          }}
-        />
+        <div aria-hidden="true" style={{ position: "absolute", inset: 0, opacity: 0.55 }}>
+          <Image src="/images/restaurante-cta.webp" alt="" fill sizes="(max-width: 1176px) 100vw, 1120px" className="cta-kenburns" style={{ objectFit: "cover" }} />
+        </div>
         {/* Deep-green legibility overlay */}
         <div
           aria-hidden="true"

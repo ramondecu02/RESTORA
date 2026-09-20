@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Check, Sparkles } from "lucide-react";
@@ -8,11 +9,12 @@ import { isLocale } from "@/lib/types";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { PageHead } from "@/components/pages/page-head";
+import { SecureLine, TrustBadges } from "@/components/site/trust-badges";
 
 export async function generateMetadata(props: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await props.params;
   const c = getPrecios(isLocale(locale) ? locale : "es");
-  return { title: `${c.hero.eyebrow} · RESTORA`, description: c.hero.sub };
+  return pageMetadata(isLocale(locale) ? locale : "es", "precios", `${c.hero.eyebrow} · RESTORA`, c.hero.sub);
 }
 
 export default async function PreciosPage(props: {
@@ -81,6 +83,11 @@ export default async function PreciosPage(props: {
             </div>
           </div>
         </section>
+
+        <div className="reveal mx-auto max-w-[1080px]" style={{ padding: "0 28px clamp(40px, 5vw, 64px)", display: "flex", flexDirection: "column", gap: 14 }}>
+          <SecureLine trust={copy.trust} />
+          <TrustBadges trust={copy.trust} />
+        </div>
 
         {/* What's included */}
         <section style={{ background: "var(--surface)", borderTop: "1px solid var(--hair)", borderBottom: "1px solid var(--hair)", padding: "clamp(52px, 6.5vw, 92px) 28px" }}>

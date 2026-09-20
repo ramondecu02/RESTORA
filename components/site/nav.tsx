@@ -38,6 +38,7 @@ export function SiteNav({
     { href: `/${locale}/como-funciona`, label: copy.nav.how },
     { href: `/${locale}/precios`, label: copy.nav.pricing },
     { href: `/${locale}/preguntas`, label: copy.nav.faq },
+    { href: `/${locale}/sobre-nosotros`, label: copy.nav.about },
     { href: `/${locale}/contacto`, label: copy.nav.contact },
   ];
 
@@ -63,7 +64,7 @@ export function SiteNav({
     >
       <nav
         className="mx-auto flex max-w-[1280px] items-center"
-        style={{ padding: "16px clamp(16px, 3.4vw, 28px)", gap: "clamp(10px, 1.8vw, 26px)" }}
+        style={{ padding: "14px clamp(14px, 3.4vw, 28px)", gap: "clamp(8px, 1.8vw, 26px)" }}
       >
         <Link href={`/${locale}`} aria-label="RESTORA" style={{ display: "flex", alignItems: "center", color: "inherit" }}>
           <Logo markSize={28} wordmarkSize={19} />
@@ -86,7 +87,10 @@ export function SiteNav({
           })}
         </div>
         <LangSwitcher locale={locale} />
-        <ThemeToggle />
+        {/* On very narrow screens the theme toggle moves into the menu (see below). */}
+        <span className="hidden min-[480px]:inline-flex">
+          <ThemeToggle />
+        </span>
         <Link
           href={`/${locale}/contacto`}
           className="btn btn-brand hidden lg:inline-flex"
@@ -100,7 +104,7 @@ export function SiteNav({
           aria-label="Menú"
           aria-expanded={open}
           className="inline-flex lg:hidden"
-          style={{ alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 12, border: "1px solid var(--hair)", background: "var(--surface)", color: "var(--ink)", cursor: "pointer" }}
+          style={{ alignItems: "center", justifyContent: "center", width: 44, height: 44, flexShrink: 0, borderRadius: 12, border: "1px solid var(--hair)", background: "var(--surface)", color: "var(--ink)", cursor: "pointer" }}
         >
           {open ? <X size={18} strokeWidth={2} /> : <Menu size={18} strokeWidth={2} />}
         </button>
@@ -109,7 +113,7 @@ export function SiteNav({
       {open && (
         <div className="lg:hidden" style={{ borderTop: "1px solid var(--hair)", background: "var(--bg)" }}>
           <div className="mx-auto max-w-[1280px]" style={{ padding: "10px 20px 18px", display: "flex", flexDirection: "column", gap: 2 }}>
-            <Link href={`/${locale}`} onClick={() => setOpen(false)} style={{ padding: "12px 8px", fontSize: 16, fontWeight: pathname === `/${locale}` ? 700 : 500, color: "var(--ink)" }}>
+            <Link href={`/${locale}`} onClick={() => setOpen(false)} style={{ padding: "13px 8px", fontSize: 16, fontWeight: pathname === `/${locale}` ? 700 : 500, color: "var(--ink)" }}>
               {copy.nav.home}
             </Link>
             {links.map((link) => (
@@ -117,7 +121,7 @@ export function SiteNav({
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                style={{ padding: "12px 8px", fontSize: 16, fontWeight: isActive(link.href) ? 700 : 500, color: isActive(link.href) ? "var(--brand)" : "var(--ink)" }}
+                style={{ padding: "13px 8px", fontSize: 16, fontWeight: isActive(link.href) ? 700 : 500, color: isActive(link.href) ? "var(--brand)" : "var(--ink)" }}
               >
                 {link.label}
               </Link>
@@ -130,6 +134,10 @@ export function SiteNav({
             >
               {copy.nav.cta} →
             </Link>
+            <div className="min-[480px]:hidden" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 8px 4px", fontSize: 14, color: "var(--muted)" }}>
+              <span>{copy.nav.theme}</span>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       )}
