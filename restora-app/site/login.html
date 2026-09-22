@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>RESTORA · Acceso</title>
+<style>
+  :root { --bg:#f6f3ec; --surface:#fffefb; --ink:#17211b; --muted:#6a6559; --line:#e6ddcf; --brand:#1e3d2f; --accent:#3e8e6a; --down:#c66a4a; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#10130f; --surface:#171c15; --ink:#f0f0e8; --muted:#9da093; --line:#2b302a; --brand:#6fb894; --accent:#6fb894; }
+  }
+  * { box-sizing:border-box; }
+  html, body { height:100%; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .card { width:100%; max-width:380px; background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:32px 28px; box-shadow:0 30px 70px -40px rgba(20,32,26,.4); }
+  .brand { display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:6px; }
+  .brand span { font-weight:700; letter-spacing:.16em; font-size:18px; }
+  h1 { font-size:19px; text-align:center; margin:14px 0 4px; }
+  p.sub { text-align:center; color:var(--muted); font-size:13.5px; margin:0 0 22px; }
+  label { display:block; font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
+  input { width:100%; padding:13px 14px; border:1px solid var(--line); border-radius:12px; font-size:16px; background:var(--bg); color:var(--ink); outline:none; }
+  input:focus { border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+  button { width:100%; margin-top:16px; padding:14px; border:0; border-radius:999px; background:var(--brand); color:#fff; font-size:16px; font-weight:600; cursor:pointer; }
+  button:disabled { opacity:.6; cursor:default; }
+  .err { color:var(--down); font-size:13.5px; text-align:center; margin:14px 0 0; min-height:1em; }
+  .foot { text-align:center; color:var(--muted); font-size:11.5px; margin:20px 0 0; }
+</style>
+</head>
+<body>
+  <form class="card" id="f" autocomplete="on">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#3E8E6A"/><polyline points="17,42 27,35 35,38 46,22" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="22" r="4.4" fill="#fff"/></svg>
+      <span>RESTORA</span>
+    </div>
+    <h1>Entra en tu cocina</h1>
+    <p class="sub">Introduce la contraseña del restaurante.</p>
+    <label for="pw">Contraseña</label>
+    <input id="pw" name="password" type="password" autocomplete="current-password" required autofocus>
+    <button id="b" type="submit">Entrar</button>
+    <div class="err" id="err" role="alert"></div>
+    <p class="foot">Acceso privado · datos cifrados en tránsito (HTTPS)</p>
+  </form>
+<script>
+  const f = document.getElementById("f"), b = document.getElementById("b"), err = document.getElementById("err");
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    err.textContent = "";
+    b.disabled = true; b.textContent = "Entrando…";
+    try {
+      const r = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: document.getElementById("pw").value }),
+      });
+      if (r.ok) { location.href = "/"; return; }
+      if (r.status === 401) err.textContent = "Contraseña incorrecta.";
+      else if (r.status === 500) err.textContent = "La app aún no está configurada (falta la contraseña en Cloudflare).";
+      else err.textContent = "No se pudo entrar. Inténtalo de nuevo.";
+    } catch {
+      err.textContent = "Sin conexión. Inténtalo de nuevo.";
+    }
+    b.disabled = false; b.textContent = "Entrar";
+  });
+</script>
+</body>
+</html>

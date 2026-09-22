@@ -50,3 +50,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# app RESTORA: estado local de wrangler y secreto
+/restora-app/.wrangler/
+/restora-app/APP_SECRET.txt

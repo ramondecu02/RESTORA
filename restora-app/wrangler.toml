@@ -1,0 +1,16 @@
+# Proyecto de la APP (distinto del de la web de marketing).
+# Deploy manual (opcional):  npx wrangler pages deploy site
+name = "restora-app"
+compatibility_date = "2026-09-14"
+pages_build_output_dir = "site"
+
+# Binding de la base de datos D1. Pon el database_id real tras crearla
+# (o configúralo en el panel: Pages -> restora-app -> Settings -> Bindings).
+[[d1_databases]]
+binding = "DB"
+database_name = "restora-app-db"
+database_id = "PON_AQUI_EL_ID_DE_TU_BASE_D1"
+
+# Los secretos NO van aquí. Se ponen en el panel (Settings -> Variables and Secrets):
+#   APP_PASSWORD  -> la contraseña para entrar en la app
+#   APP_SECRET    -> una cadena aleatoria larga (firma las sesiones)
