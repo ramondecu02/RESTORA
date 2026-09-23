@@ -70,7 +70,9 @@ export function buildDraft(ocr: OcrAlbaran, ctx: { arts: ArtRef[]; catalog: CatR
     };
   });
   return {
-    proveedor: { nombreLeido: ocr.proveedor_nombre, cif: ocr.proveedor_cif, id: prov?.id ?? null, conf: ocr.confianza_proveedor, nuevo: !prov },
+    proveedor: { nombreLeido: ocr.proveedor_nombre, cif: ocr.proveedor_cif, id: prov?.id ?? null, conf: ocr.confianza_proveedor, nuevo: !prov, nombre: prov ? prov.name : prettyName(ocr.proveedor_nombre ?? "") },
+    tipoDocumento: ocr.tipo_documento,
+    duplicado: null,
     numero: ocr.numero, numeroAlt: ocr.numero_alternativo, confNumero: ocr.confianza_numero, numeroRevisado: ocr.confianza_numero === "alta",
     fecha: ocr.fecha, confFecha: ocr.confianza_fecha,
     total: ocr.total, confTotal: ocr.confianza_total,
@@ -91,6 +93,7 @@ export function lineImporte(l: DraftLine): number | null {
 }
 export function pendientes(l: DraftLine): string[] {
   const p: string[] = [];
+  if (l.ignorar) return p;
   if (!l.resuelto.articulo) p.push("articulo");
   if (!l.resuelto.cantidad) p.push("cantidad");
   if (!l.resuelto.unidad) p.push("unidad");
@@ -102,6 +105,7 @@ export function draftCheck(d: Draft) {
   const byRate = new Map<number, number>();
   for (const l of d.lineas) {
     const imp = lineImporte(l);
+    if (l.ignorar && imp != null && (l.iva ?? l.ivaLeido) == null) { base += imp; continue; }
     const rate = l.iva ?? l.ivaLeido ?? l.ivaEsperado;
     if (imp == null || rate == null) { incompleto = true; continue; }
     base += imp; cuota += imp * rate / 100;
@@ -128,3 +132,13 @@ export function needsEscalation(ocr: OcrAlbaran): boolean {
   return false;
 }
 export const CONF_ORDER: Record<Conf, number> = { alta: 0, media: 1, baja: 2 };
+
+/** "DISTRIBUCIONES MARTINEZ S.L." → "Distribuciones Martinez". */
+export function prettyName(s: string): string {
+  const t = s.replace(/\b(s\.?\s?l\.?u?|s\.?\s?a\.?|s\.?\s?c\.?\s?c\.?\s?l\.?|c\.?\s?b\.?|sccl)\.?$/i, "").trim().replace(/[.,]+$/, "");
+  return t.toLowerCase().replace(/(^|[\s-])([a-záéíóúñü])/g, (_m, a: string, b: string) => a + b.toUpperCase()).replace(/\b(De|Del|La|Las|Los|Y|El)\b/g, (w) => w.toLowerCase()).replace(/^./, (c) => c.toUpperCase());
+}
+/** "MIX GOURMET 125G" → "Mix gourmet 125 g" (nombre propuesto para un artículo nuevo). */
+export function prettyProduct(s: string): string {
+  return s.toLowerCase().replace(/(\d)\s?(kg|g|gr|l|ml|cl)\b/g, (_m, d: string, u: string) => d + " " + (u === "l" ? "L" : u === "gr" ? "g" : u)).replace(/\s+/g, " ").trim().replace(/^./, (c) => c.toUpperCase());
+}

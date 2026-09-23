@@ -73,13 +73,32 @@ export type DraftLine = {
   candidatos: { tipo: "tuyo" | "catalogo"; id: string; name: string; score: number }[];
   decisiones: { articulo: boolean; iva: boolean; cantidad: boolean; unidad: boolean };
   resuelto: { articulo: boolean; iva: boolean; cantidad: boolean; unidad: boolean };
+  /** Cargos que no son producto (portes, envases): cuentan para el total pero no crean compra. */
+  ignorar?: boolean;
+  /** Línea añadida a mano por el usuario. */
+  manual?: boolean;
 };
 export type Draft = {
-  proveedor: { nombreLeido: string | null; cif: string | null; id: string | null; conf: Conf; nuevo: boolean };
+  proveedor: { nombreLeido: string | null; cif: string | null; id: string | null; conf: Conf; nuevo: boolean; nombre?: string };
+  tipoDocumento?: "albaran" | "factura" | "ticket" | "otro";
+  duplicado?: { id: string; fecha: string | null } | null;
+  manual?: boolean;
+  resumen?: Resumen | null;
   numero: string | null; numeroAlt: string | null; confNumero: Conf; numeroRevisado: boolean;
   fecha: string | null; confFecha: Conf;
   total: number | null; confTotal: Conf;
   desglose: { tipo: number; base: number | null; cuota: number | null }[];
   lineas: DraftLine[];
   observaciones: string | null;
+};
+
+/** Lo que cambió al guardar un albarán (para la pantalla de guardado). */
+export type Resumen = {
+  lineas: number;
+  nuevos: { id: string; name: string }[];
+  cambios: { id: string; name: string; antes: number; ahora: number; variacion: number; unit: string }[];
+  primeros: { id: string; name: string; precio: number; unit: string }[];
+  recetas: { id: string; name: string; antes: number | null; ahora: number | null }[];
+  proveedorNuevo: boolean;
+  total: number;
 };
