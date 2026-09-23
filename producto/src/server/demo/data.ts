@@ -46,7 +46,7 @@ export const ARTS: A[] = [
   { key: "mostaza", name: "Mostaza", unit: "kg", rend: 100, cat: "condimento", catalog: "mostaza", prov: "mediterranea", hist: [4.0, 4.0, 4.1, 4.1, 4.2, 4.2] },
   { key: "vino_priorat", name: "Vino Priorat DOQ (botella)", unit: "ud", rend: 100, cat: "vino", catalog: null, prov: "bodega", hist: [9.2, 9.3, 9.5, 9.6, 9.7, 9.8] },
   { key: "cerveza_barril", name: "Cerveza barril 30 L", unit: "ud", rend: 100, cat: "cerveza", catalog: null, prov: "bodega", hist: [74, 75, 76, 77, 78, 78] },
-  { key: "refresco_caja", name: "Refrescos (caja 24)", unit: "ud", rend: 100, cat: "bebida", catalog: null, prov: "bodega", hist: [12.4, 12.6, 12.8, 13.0, 13.1, 13.2] },
+  { key: "refresco_caja", name: "Refrescos (caja 24)", unit: "ud", rend: 100, cat: "refresco", catalog: null, prov: "bodega", hist: [12.4, 12.6, 12.8, 13.0, 13.1, 13.2] },
   { key: "vino_blanco", name: "Vino blanco DO Penedès (botella)", unit: "ud", rend: 100, cat: "vino", catalog: null, prov: "bodega", hist: [6.0, 6.1, 6.2, 6.3, 6.35, 6.4] },
   { key: "cava", name: "Cava Brut Nature (botella)", unit: "ud", rend: 100, cat: "vino", catalog: null, prov: "bodega", hist: [8.4, 8.5, 8.6, 8.7, 8.8, 8.9] },
   { key: "agua_mineral", name: "Agua mineral (caja 12 × 1 L)", unit: "ud", rend: 100, cat: "bebida", catalog: null, prov: "bodega", hist: [5.0, 5.1, 5.2, 5.3, 5.35, 5.4] },

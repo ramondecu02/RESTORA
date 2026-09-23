@@ -1092,3 +1092,8 @@ a.barh-row:hover .barh-l, button.barh-row:hover .barh-l { color: var(--brand); t
   .member-acts { grid-column: auto; }
   .member-acts select { width: 200px; flex: none; }
 }
+
+/* Aviso del plan (prueba terminada, pago pendiente): informa, no bloquea */
+.planbar { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 8px 16px; background: var(--warn-soft); border-bottom: 1px solid var(--warn-line); font-size: 14px; font-weight: 600; color: var(--ink); }
+.planbar a { color: var(--warn); text-decoration: underline; text-underline-offset: 2px; }
+.planbar .muted { font-weight: 500; }

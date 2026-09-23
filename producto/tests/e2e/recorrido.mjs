@@ -1,6 +1,6 @@
 // Recorre todas las pantallas con los datos de ejemplo cargados, en móvil y escritorio.
 // Comprueba: respuesta HTTP, errores de consola, desbordamiento horizontal. Guarda capturas.
-import { BASE, SHOTS, launch, lastCode, sql, watch, noOverflow, tallShot } from "./lib.mjs";
+import { BASE, SHOTS, launch, watch, noOverflow, tallShot, signup, cargarDemo } from "./lib.mjs";
 import { existsSync, writeFileSync } from "node:fs";
 // REUSE=1 reutiliza la sesión de la última ejecución (sin registrarse ni cargar la demo otra vez).
 // ONLY=hoy,carta limita las pantallas. WIDTHS=390,1280 elige anchos.
@@ -13,39 +13,6 @@ const email = `recorrido+${Date.now()}@example.com`;
 const b = await launch();
 const errors = [];
 const results = [];
-
-async function signup(page) {
-  await sql("delete from rate_limits where key like 'reg:%'"); // el alta está limitada a 8/hora por IP
-  await page.goto(BASE + "/registro");
-  await page.getByLabel("Tu nombre").fill("Marta Pujol");
-  await page.getByLabel("Email de trabajo").fill(email);
-  await page.getByLabel("Nombre del restaurante").fill("Casa Pujol");
-  await page.getByLabel("Contraseña", { exact: true }).fill("una-clave-segura-2026");
-  await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Crear cuenta" }).click();
-  await page.waitForURL("**/verificar");
-  await page.getByLabel("Cifra 1 de 6").fill(await lastCode(email));
-  await page.getByRole("button", { name: "Verificar" }).click();
-  await page.waitForURL("**/bienvenida");
-  await page.getByRole("link", { name: /Empezar/ }).click();
-  await page.waitForURL("**/alta/briefing");
-  await page.getByRole("radio", { name: "Restaurante" }).click();
-  await page.getByRole("radio", { name: "15 a 40" }).click();
-  await page.getByRole("button", { name: "Siguiente" }).click();
-  await page.getByRole("radio", { name: /Excel/ }).click();
-  await page.getByRole("button", { name: "Siguiente" }).click();
-  await page.getByRole("radio", { name: "Propietario/a" }).click();
-  await page.getByRole("radio", { name: /qué platos ganan/ }).click();
-  await page.getByRole("button", { name: "Terminar" }).click();
-  await page.waitForURL("**/alta/local");
-  await page.getByLabel("Código postal").fill("43003");
-  await page.getByLabel("Ciudad").fill("Tarragona");
-  await page.getByRole("button", { name: "Guardar y seguir" }).click();
-  await page.waitForURL("**/alta/proveedores");
-  await page.getByRole("button", { name: "Ir a mi cocina" }).click();
-  await page.waitForURL("**/hoy**");
-  for (let i = 0; i < 4; i++) { const n = page.locator(".tour-next"); try { await n.waitFor({ timeout: 1500 }); await n.click(); } catch { break; } }
-}
 
 async function firstHref(page, path, re) {
   await page.goto(BASE + path);
@@ -71,12 +38,10 @@ try {
   const page = await ctxD.newPage();
   watch(page, errors);
   if (!REUSE) {
-    await signup(page);
+    await signup(page, { email });
     console.log("✓ alta");
-    await page.goto(BASE + "/cuenta");
     const t0 = Date.now();
-    await page.getByRole("button", { name: "Cargar datos de ejemplo" }).click();
-    await page.getByText("Cargados", { exact: true }).waitFor({ timeout: 60000 });
+    await cargarDemo(page);
     console.log("✓ demo cargada en", Date.now() - t0, "ms");
     writeFileSync(STATE, JSON.stringify(await ctxD.storageState()));
   }
@@ -106,7 +71,9 @@ try {
   }
   const bad = results.filter((r) => r.st !== 200 || r.ov.length || r.errs);
   console.log(`\n${results.length - bad.length}/${results.length} pantallas sin problemas`);
+  if (bad.length) process.exitCode = 1;
 } finally {
   console.log("errores:", errors.length ? errors.slice(0, 20) : "ninguno");
+  if (errors.length) process.exitCode = 1;
   await b.close();
 }

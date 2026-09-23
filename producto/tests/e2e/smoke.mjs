@@ -107,5 +107,6 @@ try {
   console.log("overflow:", JSON.stringify(await noOverflow(page)));
 } finally {
   console.log("errores:", errors.length ? errors : "ninguno");
+  if (errors.length) process.exitCode = 1;
   await b.close();
 }

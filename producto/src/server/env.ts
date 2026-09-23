@@ -11,13 +11,19 @@ export const env = {
     }
     return s;
   },
-  get appUrl() { return (v("APP_URL") || "http://localhost:3100").replace(/\/+$/, ""); },
+  get appUrl() {
+    const vercel = v("VERCEL_PROJECT_PRODUCTION_URL"); // lo pone Vercel; APP_URL manda si está definida
+    return (v("APP_URL") || (vercel ? "https://" + vercel : "http://localhost:3100")).replace(/\/+$/, "");
+  },
   get secureCookies() { return this.appUrl.startsWith("https://"); },
   get anthropicKey() { return v("ANTHROPIC_API_KEY"); },
-  get ocrProvider(): "anthropic" | "mock" {
+  /** "mock" (lecturas de ejemplo) solo si se pide expresamente o fuera de producción: en producción, sin clave,
+   *  la lectura queda desactivada ("off") en vez de rellenar albaranes reales con datos inventados. */
+  get ocrProvider(): "anthropic" | "mock" | "off" {
     const p = v("OCR_PROVIDER");
-    if (p === "mock" || p === "anthropic") return p;
-    return this.anthropicKey ? "anthropic" : "mock";
+    if (p === "mock") return "mock";
+    if (this.anthropicKey) return "anthropic";
+    return p === "anthropic" || this.isProd ? "off" : "mock";
   },
   get ocrModel() { return v("OCR_MODEL") || "claude-sonnet-5"; },
   get ocrEscalateModel() { return v("OCR_ESCALATE_MODEL") || "claude-opus-5"; },

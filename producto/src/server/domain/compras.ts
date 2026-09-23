@@ -174,6 +174,8 @@ export async function confirmarAlbaran(ctx: AppCtx, docId: string, input: Draft,
       const art = artCache.get(artId)!;
       if (l.texto && !l.manual) await aprenderAlias(c, artId, l.texto);
       const iva = (l.iva ?? l.ivaLeido ?? l.ivaEsperado)!;
+      // Si el usuario ha confirmado un IVA distinto del del artículo, el artículo lo aprende y no se vuelve a preguntar
+      if (l.decisiones.iva && l.iva != null) await c.query("update articulos set iva = $2 where id = $1 and iva <> $2", [artId, l.iva]);
       const lc = lineaCoste(l.cantidad!, l.precio!, l.descuento || 0, l.bonificadas || 0, l.factor!);
       await c.query(`insert into compra_lineas (tenant_id, documento_id, idx, texto, articulo_id, cantidad, unidad_compra, factor, precio, descuento, bonificadas, importe, iva, coste_unit)
         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,

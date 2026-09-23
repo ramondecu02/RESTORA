@@ -9,7 +9,11 @@ const safeKey = (key: string) => {
   if (!/^[a-zA-Z0-9/_.-]+$/.test(key) || key.includes("..")) throw new Error("Ruta de archivo no válida");
   return key;
 };
-const blobOn = () => !!env.blobToken;
+const blobOn = () => {
+  // En Vercel el disco es de solo lectura y efímero: sin Blob los archivos se perderían
+  if (!env.blobToken && process.env.VERCEL === "1") throw new Error("Falta BLOB_READ_WRITE_TOKEN: conecta un Blob store al proyecto.");
+  return !!env.blobToken;
+};
 
 export async function putFile(key: string, data: Buffer, contentType: string): Promise<void> {
   safeKey(key);

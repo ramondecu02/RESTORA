@@ -1,20 +1,23 @@
 // Lectura de documentos con la API de Claude (salida estructurada) o con datos de ejemplo.
 // Por defecto lee con Sonnet; si la lectura sale dudosa (muchas líneas poco seguras o totales
 // que no cuadran) repasa con Opus y se queda con esa lectura. Registra tokens, coste y tiempo.
+import { createHash } from "node:crypto";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { OcrAlbaran, OcrCarta } from "@/lib/ocr-types";
 import { needsEscalation } from "@/lib/draft";
 import { env } from "../env";
-import { MOCK_ALBARAN, MOCK_ALBARAN_GIL, MOCK_CARTA } from "./mock-data";
+import { MOCK_ALBARAN, MOCK_ALBARAN_GIL, MOCK_CARTA, SAMPLE_HASHES } from "./mock-data";
 
 export type OcrFile = { data: Buffer; mime: string; name: string };
 export type OcrUsage = { model: string; inputTokens: number; outputTokens: number; costUsd: number; ms: number; escalated: boolean };
 
-/** Precio de referencia en USD por millón de tokens (entrada / salida). Revisa la web de precios de Anthropic. */
+/** Precio de referencia en USD por millón de tokens (entrada / salida), para registrar el coste de cada lectura.
+ *  Si cambian los precios o usas otro modelo, ajusta la tabla o define OCR_PRICE_IN y OCR_PRICE_OUT. */
 const PRICES: Record<string, [number, number]> = {
-  "claude-sonnet-5": [3, 15],
+  "claude-sonnet-5": [2, 10],
   "claude-opus-5": [5, 25],
+  "claude-opus-5-5": [4, 20],
   "claude-haiku-4-5": [1, 5],
 };
 export function costOf(model: string, input: number, output: number): number {
@@ -73,13 +76,23 @@ async function callAlbaran(files: OcrFile[], model: string, effort: "low" | "med
   return { result: msg.parsed_output, model, inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens, ms: Date.now() - t0 };
 }
 
+/** ¿Es uno de los documentos de ejemplo? (una sola página con la misma huella). */
+function sampleOf(files: OcrFile[]) {
+  return files.length === 1 ? SAMPLE_HASHES[createHash("sha256").update(files[0].data).digest("hex")] ?? null : null;
+}
+const NO_USAGE = (model: string): OcrUsage => ({ model, inputTokens: 0, outputTokens: 0, costUsd: 0, ms: 0, escalated: false });
+const OFF = "La lectura automática no está disponible todavía. Puedes apuntar el documento a mano.";
+const pause = () => new Promise((r) => setTimeout(r, Number(process.env.OCR_MOCK_DELAY_MS ?? 1200)));
+
 export async function readAlbaran(files: OcrFile[], clienteNombre: string): Promise<{ ocr: OcrAlbaran; usage: OcrUsage }> {
-  if (env.ocrProvider === "mock") {
-    await new Promise((r) => setTimeout(r, Number(process.env.OCR_MOCK_DELAY_MS ?? 1200)));
-    const gil = files.some((f) => /gil|fg-/i.test(f.name));
+  const sample = sampleOf(files);
+  if (sample === "albaran" || sample === "albaran-gil" || env.ocrProvider === "mock") {
+    await pause();
+    const gil = sample ? sample === "albaran-gil" : files.some((f) => /gil|fg-/i.test(f.name));
     const ocr = OcrAlbaran.parse(JSON.parse(JSON.stringify(gil ? MOCK_ALBARAN_GIL : MOCK_ALBARAN)));
-    return { ocr, usage: { model: "mock", inputTokens: 0, outputTokens: 0, costUsd: 0, ms: 0, escalated: false } };
+    return { ocr, usage: NO_USAGE(sample ? "ejemplo" : "mock") };
   }
+  if (env.ocrProvider === "off") throw new Error(OFF);
   const first = await callAlbaran(files, env.ocrModel, env.ocrEffort, clienteNombre);
   let usage: OcrUsage = { model: first.model, inputTokens: first.inputTokens, outputTokens: first.outputTokens, costUsd: costOf(first.model, first.inputTokens, first.outputTokens), ms: first.ms, escalated: false };
   let ocr = first.result;
@@ -100,10 +113,12 @@ export async function readAlbaran(files: OcrFile[], clienteNombre: string): Prom
 }
 
 export async function readCarta(files: OcrFile[]): Promise<{ carta: OcrCarta; usage: OcrUsage }> {
-  if (env.ocrProvider === "mock") {
-    await new Promise((r) => setTimeout(r, Number(process.env.OCR_MOCK_DELAY_MS ?? 1200)));
-    return { carta: OcrCarta.parse(JSON.parse(JSON.stringify(MOCK_CARTA))), usage: { model: "mock", inputTokens: 0, outputTokens: 0, costUsd: 0, ms: 0, escalated: false } };
+  const sample = sampleOf(files);
+  if (sample === "carta" || env.ocrProvider === "mock") {
+    await pause();
+    return { carta: OcrCarta.parse(JSON.parse(JSON.stringify(MOCK_CARTA))), usage: NO_USAGE(sample ? "ejemplo" : "mock") };
   }
+  if (env.ocrProvider === "off") throw new Error(OFF);
   const t0 = Date.now();
   const model = env.ocrModel;
   const msg = await api().messages.parse({

@@ -82,3 +82,12 @@ export const MOCK_CARTA: OcrCarta = {
     { nombre: "Copa de Priorat DOQ", familia: "Vinos", descripcion: null, precio: 6.5, confianza: "media" },
   ],
 };
+
+/** Huella SHA-256 de los documentos de ejemplo de public/demo. Se leen siempre con su lectura grabada:
+ *  el tutorial de validación sale igual, no gasta tokens y funciona aunque la lectura real no esté configurada.
+ *  Si cambias esas imágenes, actualiza las huellas (lo comprueba tests/unit/samples.test.ts). */
+export const SAMPLE_HASHES: Record<string, "albaran" | "albaran-gil" | "carta"> = {
+  "2a7ec420933e34447962efa1f1afeda31761c2eea2cfc78d46239ea610261cfa": "albaran",
+  "2a862c0013158f437c8083aa17418242aab8fee955cb6aa0227625d36592f817": "albaran-gil",
+  "6e3abd99d86f9cf9ab1c457229e3668a0cd06778fb87eec62d8d80491aabddab": "carta",
+};

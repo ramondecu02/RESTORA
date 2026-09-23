@@ -25,7 +25,8 @@ export async function sendEmail(m: Msg): Promise<boolean> {
   }
   await sys((c) => c.query(
     "insert into outbox_emails (to_email, subject, body_text, body_html, provider, status, error) values ($1,$2,$3,$4,$5,$6,$7)",
-    [m.to, m.subject, m.text, provider === "dev" ? m.html : "", provider, status, error]));
+    // Con un proveedor real no guardamos el cuerpo: lleva códigos y enlaces de un solo uso
+    [m.to, m.subject, provider === "dev" ? m.text : "", provider === "dev" ? m.html : "", provider, status, error]));
   if (status === "error") console.error("[correo] fallo al enviar", error);
   return status !== "error";
 }

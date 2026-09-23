@@ -10,6 +10,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // La app vive en producto/ con su propio package-lock; sin esto Next toma como raíz el repositorio
+  // (hay otro lockfile en la web pública) y vigila y traza archivos de fuera.
+  turbopack: { root: __dirname },
+  outputFileTracingRoot: __dirname,
   // El indicador de desarrollo tapa la barra de pestañas en móvil; los errores se siguen mostrando.
   devIndicators: false,
   experimental: {

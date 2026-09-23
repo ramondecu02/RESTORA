@@ -45,24 +45,38 @@ export async function handleWebhook(raw: string, sig: string): Promise<{ ok: boo
   let ev: Stripe.Event;
   try { ev = stripe().webhooks.constructEvent(raw, sig, env.stripeWebhookSecret); }
   catch (e) { return { ok: false, status: 400, msg: "Firma no válida: " + (e as Error).message }; }
-  const fresh = await sys((c) => one(c, "insert into stripe_events (id, type) values ($1, $2) on conflict do nothing returning id", [ev.id, ev.type]));
-  if (!fresh) return { ok: true, status: 200, msg: "repetido" };
-  if (ev.type === "checkout.session.completed") {
-    const s = ev.data.object as Stripe.Checkout.Session;
-    const orgId = s.client_reference_id;
-    if (orgId) await sys((c) => c.query("update organizations set stripe_customer_id = coalesce(stripe_customer_id, $2), stripe_subscription_id = $3, plan_status = 'active' where id = $1",
-      [orgId, typeof s.customer === "string" ? s.customer : s.customer?.id ?? null, typeof s.subscription === "string" ? s.subscription : s.subscription?.id ?? null]));
-  }
-  if (ev.type.startsWith("customer.subscription.")) {
-    const sub = ev.data.object as Stripe.Subscription;
-    const status = ev.type === "customer.subscription.deleted" ? "canceled" : STATUS[sub.status] ?? "past_due";
-    const cust = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
-    await sys((c) => c.query("update organizations set plan_status = $2, stripe_subscription_id = $3 where stripe_customer_id = $1", [cust, status, sub.id]));
-  }
-  if (ev.type === "invoice.payment_failed") {
-    const inv = ev.data.object as Stripe.Invoice;
-    const cust = typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
-    if (cust) await sys((c) => c.query("update organizations set plan_status = 'past_due' where stripe_customer_id = $1", [cust]));
-  }
+  // Registrar el evento y aplicarlo en la misma transacción: si algo falla, Stripe lo reintenta
+  const dup = await sys(async (c) => {
+    const fresh = await one(c, "insert into stripe_events (id, type) values ($1, $2) on conflict do nothing returning id", [ev.id, ev.type]);
+    if (!fresh) return true;
+    if (ev.type === "checkout.session.completed") {
+      const s = ev.data.object as Stripe.Checkout.Session;
+      const orgId = s.client_reference_id;
+      if (orgId) await c.query("update organizations set stripe_customer_id = coalesce(stripe_customer_id, $2), stripe_subscription_id = $3, plan_status = 'active' where id = $1",
+        [orgId, typeof s.customer === "string" ? s.customer : s.customer?.id ?? null, typeof s.subscription === "string" ? s.subscription : s.subscription?.id ?? null]);
+    }
+    if (ev.type.startsWith("customer.subscription.")) {
+      const sub = ev.data.object as Stripe.Subscription;
+      const status = ev.type === "customer.subscription.deleted" ? "canceled" : STATUS[sub.status] ?? "past_due";
+      const cust = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
+      await c.query("update organizations set plan_status = $2, stripe_subscription_id = $3 where stripe_customer_id = $1", [cust, status, sub.id]);
+    }
+    if (ev.type === "invoice.payment_failed") {
+      const inv = ev.data.object as Stripe.Invoice;
+      const cust = typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
+      if (cust) await c.query("update organizations set plan_status = 'past_due' where stripe_customer_id = $1", [cust]);
+    }
+    return false;
+  });
+  if (dup) return { ok: true, status: 200, msg: "repetido" };
   return { ok: true, status: 200 };
+}
+
+/** Aviso del plan para la barra superior: solo cuando hay que hacer algo y los pagos están activados. */
+export function avisoPlan(org: { planStatus: string; trialEndsAt: string | null }): string | null {
+  if (!stripeOn()) return null;
+  if (org.planStatus === "past_due") return "No hemos podido cobrar tu suscripción.";
+  if (org.planStatus === "canceled") return "Tu suscripción está cancelada. Tus datos siguen aquí.";
+  if (org.planStatus === "trial" && org.trialEndsAt && new Date(org.trialEndsAt).getTime() < Date.now()) return "Tu prueba gratuita ha terminado.";
+  return null;
 }

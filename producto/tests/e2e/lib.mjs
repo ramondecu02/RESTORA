@@ -49,3 +49,43 @@ export async function tallShot(page, path) {
   await page.screenshot({ path, caret: "initial" });
   if (extra > 0) await page.setViewportSize(vp);
 }
+
+/** Alta completa por la interfaz (registro, código, briefing, local) hasta /hoy, cerrando el tour. */
+export async function signup(page, { email, nombre = "Marta Pujol", negocio = "Casa Pujol" }) {
+  await sql("delete from rate_limits where key like 'reg:%'"); // el alta está limitada a 8/hora por IP
+  await page.goto(BASE + "/registro");
+  await page.getByLabel("Tu nombre").fill(nombre);
+  await page.getByLabel("Email de trabajo").fill(email);
+  await page.getByLabel("Nombre del restaurante").fill(negocio);
+  await page.getByLabel("Contraseña", { exact: true }).fill("una-clave-segura-2026");
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Crear cuenta" }).click();
+  await page.waitForURL("**/verificar");
+  await page.getByLabel("Cifra 1 de 6").fill(await lastCode(email));
+  await page.getByRole("button", { name: "Verificar" }).click();
+  await page.waitForURL("**/bienvenida");
+  await page.getByRole("link", { name: /Empezar/ }).click();
+  await page.waitForURL("**/alta/briefing");
+  await page.getByRole("radio", { name: "Restaurante" }).click();
+  await page.getByRole("radio", { name: "15 a 40" }).click();
+  await page.getByRole("button", { name: "Siguiente" }).click();
+  await page.getByRole("radio", { name: /Excel/ }).click();
+  await page.getByRole("button", { name: "Siguiente" }).click();
+  await page.getByRole("radio", { name: "Propietario/a" }).click();
+  await page.getByRole("radio", { name: /qué platos ganan/ }).click();
+  await page.getByRole("button", { name: "Terminar" }).click();
+  await page.waitForURL("**/alta/local");
+  await page.getByLabel("Código postal").fill("43003");
+  await page.getByLabel("Ciudad").fill("Tarragona");
+  await page.getByRole("button", { name: "Guardar y seguir" }).click();
+  await page.waitForURL("**/alta/proveedores");
+  await page.getByRole("button", { name: "Ir a mi cocina" }).click();
+  await page.waitForURL("**/hoy**");
+  for (let i = 0; i < 4; i++) { const n = page.locator(".tour-next"); try { await n.waitFor({ timeout: 1500 }); await n.click(); } catch { break; } }
+}
+/** Carga los datos de ejemplo desde Cuenta. */
+export async function cargarDemo(page) {
+  await page.goto(BASE + "/cuenta");
+  await page.getByRole("button", { name: "Cargar datos de ejemplo" }).click();
+  await page.getByText("Cargados", { exact: true }).waitFor({ timeout: 60000 });
+}
