@@ -6,7 +6,7 @@ import { BarsH, Delta, Donut, Gauge, LineChart, PALETTE, Sparkline } from "@/com
 import { requireApp, hasPerm } from "@/server/ctx";
 import { one, sys } from "@/server/db";
 import { hoyData } from "@/server/queries/hoy";
-import { capitalize, eur, eur0, fechaLarga, kEur, pct, plural, qty } from "@/lib/format";
+import { capitalize, eur, eur0, fechaLarga, kEur, pct, plural, qty, lista, fcPar } from "@/lib/format";
 import { pvpParaFc } from "@/lib/costing";
 
 export const metadata = { title: "Hoy" };
@@ -44,9 +44,19 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
   const margenS = serie((h) => h.neto - h.coste, d.res.margen);
   const ventasS = serie((h) => h.neto, d.res.ingresos);
   const comHoy = ctx.local.comensales_dia;
-  const ticketS = serie((h) => (h.uds ? h.neto / h.uds : null), comHoy && d.res.ingresos ? d.res.ingresos / (comHoy * 30) : d.res.ticketUnidad);
+  // Con comensales: ticket por comensal (histórico con los comensales importados); sin ellos, ticket por plato vendido
+  const CT = new Map(d.com.map((h) => [h.mes, h.comensales]));
+  const ticketS = comHoy
+    ? months.map((m, i) => (i === 5 ? (d.res.ingresos ? d.res.ingresos / (comHoy * 30) : null) : H.has(m) && CT.get(m) ? H.get(m)!.neto / CT.get(m)! : null))
+    : serie((h) => (h.uds ? h.neto / h.uds : null), d.res.ticketUnidad);
   const comS = months.map((m, i) => (i === 5 ? comHoy : C.get(m) ?? null));
   const delta = (s: (number | null)[]) => { const v = s.filter((x): x is number => x != null); return v.length > 1 && v[v.length - 2] ? ((v[v.length - 1] - v[v.length - 2]) / Math.abs(v[v.length - 2])) * 100 : null; };
+  // Familias: las 5 que más margen dejan con color propio; el resto, juntas en «Otras»
+  const famTop = d.familias.slice(0, d.familias.length > 6 ? 5 : 6);
+  const famColor = (f: string) => { const i = famTop.findIndex((x) => x.familia === f); return i >= 0 ? PALETTE[i] : "var(--chart-otros)"; };
+  const resto = d.familias.slice(famTop.length);
+  const fams = [...famTop.map((f) => ({ label: f.familia, value: f.margen, color: famColor(f.familia) })),
+    ...(resto.length ? [{ label: `Otras familias (${resto.length})`, value: resto.reduce((s, f) => s + f.margen, 0), color: "var(--chart-otros)" }] : [])];
   const top = d.alerts[0];
   const salCls = d.salud.estado === "ok" ? "ok" : d.salud.estado === "warn" ? "warn" : "crit";
 
@@ -62,9 +72,9 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
   const pendientes = checklist.filter((x) => !x.done).length;
 
   const insights: { ic: IconName; cls?: string; t: string; p: string; a?: [string, string]; w: number }[] = [];
-  if (d.fuera.length) insights.push({ ic: "alert", cls: "bad", t: `${plural(d.fuera.length, "plato está", "platos están")} por encima de su food cost objetivo`, p: d.fuera.slice(0, 3).map((f) => f.name).join(", ") + (d.fuera.length > 3 ? "…" : "") + ". Revisa su precio o sus cantidades.", a: ["Ver escandallos", "/escandallos?f=fuera"], w: obj === "margen" || obj === "carta" ? 3 : 2 });
+  if (d.fuera.length) insights.push({ ic: "alert", cls: "bad", t: `${plural(d.fuera.length, "plato está", "platos están")} por encima de su food cost objetivo`, p: lista(d.fuera.map((f) => f.name)) + ". Revisa su precio o sus cantidades.", a: ["Ver escandallos", "/escandallos?f=fuera"], w: obj === "margen" || obj === "carta" ? 3 : 2 });
   if (d.alerts.length > 1) insights.push({ ic: "trendUp", cls: "warn", t: `${plural(d.alerts.length, "subida de precio afecta", "subidas de precio afectan")} a tus platos`, p: `Suman ${eur0(d.alerts.reduce((s, a) => s + a.impactoMes, 0))} más al mes si no haces nada.`, a: ["Ver avisos", "/hoy/avisos"], w: obj === "prov" ? 3 : 2 });
-  if (d.bajos.length) insights.push({ ic: "cart", cls: "warn", t: `${plural(d.bajos.length, "producto bajo mínimo", "productos bajo mínimo")}`, p: d.bajos.slice(0, 3).map((b) => b.name).join(", ") + ". Prepara el pedido desde el inventario.", a: ["Preparar pedido", "/inventario"], w: 1 });
+  if (d.bajos.length) insights.push({ ic: "cart", cls: "warn", t: `${plural(d.bajos.length, "producto bajo mínimo", "productos bajo mínimo")}`, p: lista(d.bajos.map((b) => b.name)) + ". Prepara el pedido desde el inventario.", a: ["Preparar pedido", "/inventario"], w: 1 });
   const sinPvp = d.stats.filter((s) => !s.pvp).length;
   if (sinPvp) insights.push({ ic: "tag", t: `${plural(sinPvp, "plato sin precio", "platos sin precio")} de carta`, p: "Sin PVP no podemos calcular su food cost ni su margen.", a: ["Poner precios", "/escandallos"], w: obj === "carta" ? 3 : 1 });
   insights.sort((a, b) => b.w - a.w);
@@ -120,8 +130,8 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
                   const cur = s[5];
                   return (
                     <div className="tile" key={l}>
-                      <div className="tile-top"><span className="tile-lab">{l}</span><Delta value={delta([...s])} /></div>
-                      <span className="tile-val">{cur != null ? f(cur) : "—"}</span>
+                      <span className="tile-lab">{l}</span>
+                      <div className="tile-mid"><span className="tile-val">{cur != null ? f(cur) : "—"}</span><Delta value={delta([...s])} /></div>
                       <Sparkline values={s.filter((x): x is number => x != null)} label={`${l}: evolución`} />
                     </div>
                   );
@@ -139,7 +149,7 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
                 <p className="ins-p">Pasa de {eur(top.antes)} a {eur(top.ahora)}/{top.unit}{top.proveedor ? ` en ${top.proveedor}` : ""}. Afecta a {plural(top.platos.length, "plato", "platos")}. {top.salen.length ? `${top.salen.map((x) => x.name).join(", ")} ${top.salen.length === 1 ? "pasa" : "pasan"} de tu objetivo.` : "Ningún plato se sale del objetivo con esta subida."}</p>
                 <div className="ins-figs">
                   <div className="ins-fig"><small>Coste extra al mes</small><b>{eur(top.impactoMes)}</b></div>
-                  <div className="ins-fig"><small>Food cost de la carta</small><b>{pct(top.fcAntes)} → {pct(top.fcDespues)}</b></div>
+                  <div className="ins-fig"><small>Food cost de la carta</small><b>{fcPar(top.fcAntes, top.fcDespues)}</b></div>
                 </div>
                 <div className="ins-acts"><Link className="btn btn-2 btn-xs" href={`/escandallos/${top.platos[0].id}`}>Valorar {top.platos[0].name}</Link><Link className="btn btn-3 btn-xs" href="/hoy/avisos">Ver todos los avisos</Link></div>
               </div>
@@ -147,14 +157,14 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
           ) : null}
 
           {dashboard ? (
-            <div className="two">
-              <section className="card" aria-labelledby="h-fc">
+            <div className="two two-eq">
+              <section className="card card-fill" aria-labelledby="h-fc">
                 <div className="card-h"><h2 className="h3" id="h-fc">Food cost de la carta</h2><span className="muted small">6 meses</span></div>
-                <LineChart values={fcSerie} labels={months.map(mLabel)} unit="%" target={fcObj} fmt={(n) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 }) + " %"} />
+                <LineChart fill values={fcSerie} labels={months.map(mLabel)} unit="%" target={fcObj} fmt={(n) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 }) + " %"} />
               </section>
               <section className="card" aria-labelledby="h-fam">
                 <div className="card-h"><h2 className="h3" id="h-fam">Margen por familia</h2><span className="muted small">al mes</span></div>
-                <Donut items={d.familias.map((f, i) => ({ label: f.familia, value: f.margen, color: PALETTE[i % PALETTE.length] }))} fmt={eur0} centerTop={kEur(d.res.margen)} centerSub="margen al mes" label="Margen por familia de la carta" />
+                <Donut items={fams} fmt={eur0} centerTop={kEur(d.res.margen)} centerSub="margen al mes" label="Margen por familia de la carta" />
               </section>
             </div>
           ) : null}
@@ -162,7 +172,7 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
           {dashboard && d.aporta.length ? (
             <section className="card" aria-labelledby="h-ap">
               <div className="card-h"><h2 className="h3" id="h-ap">Aportación por plato</h2><span className="muted small">Margen al mes · toca para abrirlo</span></div>
-              <BarsH fmt={eur0} rows={d.aporta.map((a) => ({ label: a.name, value: a.value, href: `/escandallos/${a.id}`, color: PALETTE[d.familias.findIndex((f) => f.familia === a.familia) % PALETTE.length] }))} />
+              <BarsH fmt={eur0} rows={d.aporta.map((a) => ({ label: a.name, value: a.value, href: `/escandallos/${a.id}`, color: famColor(a.familia) }))} />
             </section>
           ) : null}
 
@@ -198,7 +208,7 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
             <div className="card-h"><h2 className="h3" id="h-stock">Stock que pide atención</h2><Link className="linkbtn" href="/inventario">Inventario <Icon name="arrowR" size={16} /></Link></div>
             {d.bajos.length ? <div className="list">{d.bajos.slice(0, 5).map((b) => (
               <Link key={b.id} className="li" href="/inventario"><span className="li-ic bad"><Icon name="alert" /></span>
-                <span className="li-main"><b>{b.name}</b><small>Quedan {qty(b.stock)} {b.unit} · mínimo {qty(b.min)}</small></span>
+                <span className="li-main"><b>{b.name}</b><small>Quedan {qty(b.stock, 1)} {b.unit} · mínimo {qty(b.min, 1)}</small></span>
                 <span className="li-end"><b>{b.dias >= 99 ? "—" : `${qty(b.dias, 0)} d`}</b><small>cobertura</small></span></Link>))}</div>
               : <p className="muted small">Todo por encima del mínimo.</p>}
             <div className="stats" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>

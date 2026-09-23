@@ -7,7 +7,7 @@ import { rebuildArticulo } from "../domain/articulos";
 import { loadCostContext, recomputeCosts } from "../domain/costs";
 import { recetaCost } from "@/lib/costing";
 import { isoDate } from "@/lib/format";
-import { ALTERNATIVAS, ARTS, COMENSALES, COMPRA_MES, ELABS, INVENTARIO, MENU, PLATOS, PROVS, REVENTA } from "./data";
+import { ALTERNATIVAS, ARTS, COMENSALES_BASE, COMENSALES_REL, COMPRA_MES, ELABS, INVENTARIO, MENU, PLATOS, PROVS, REVENTA } from "./data";
 
 const monthDate = (monthsAgo: number, day: number) => {
   const d = new Date();
@@ -28,7 +28,11 @@ export async function cargarDemo(ctx: AppCtx) {
     const ya = await one(c, "select 1 from proveedores where local_id = $1 and demo limit 1", [ctx.local.id]);
     if (ya) throw new UserError("Ya tienes cargados los datos de ejemplo.");
     await c.query(`update locales set ciudad = case when ciudad = '' then 'Tarragona' else ciudad end, lema = case when lema = '' then 'Cocina de mercado' else lema end,
-      comensales_dia = coalesce(comensales_dia, 62), postal_code = case when postal_code = '' then '43003' else postal_code end where id = $1`, [ctx.local.id]);
+      comensales_dia = coalesce(comensales_dia, $2), postal_code = case when postal_code = '' then '43003' else postal_code end where id = $1`, [ctx.local.id, COMENSALES_BASE]);
+    // Las ventas de ejemplo se escalan a los comensales que declaró el local, para que el ticket medio salga razonable
+    const cd = (await one<{ c: number | null }>(c, "select comensales_dia as c from locales where id = $1", [ctx.local.id]))?.c ?? COMENSALES_BASE;
+    const escala = cd / COMENSALES_BASE;
+    const vm = (n: number) => Math.max(1, Math.round(n * escala));
     // Proveedores
     const prov = new Map<string, string>();
     for (const p of PROVS) {
@@ -72,12 +76,15 @@ export async function cargarDemo(ctx: AppCtx) {
           const importe = Math.round(cantidad * precio * 100) / 100;
           const iva = ivaCat.get(a.cat) ?? 10;
           base += importe; cuota += importe * iva / 100;
+          // Todo redondeado a 3 decimales, igual que en la base de datos, para que el recuento final cuadre exacto
+          const r3 = (n: number) => Math.round(n * 1000) / 1000;
           const s0 = stock.get(aid) ?? 0;
-          if (s0 > 0) {
+          const consumo = r3(s0 * 0.85);
+          if (consumo > 0) {
             await c.query("insert into stock_movimientos (tenant_id, local_id, articulo_id, tipo, cantidad, ref_tipo, nota, fecha) values ($1,$2,$3,'venta',$4,'demo','Consumo',$5)",
-              [ctx.tenantId, ctx.local.id, aid, -Math.round(s0 * 0.85 * 1000) / 1000, new Date(fechaTs.getTime() - 864e5)]);
+              [ctx.tenantId, ctx.local.id, aid, -consumo, new Date(fechaTs.getTime() - 864e5)]);
           }
-          stock.set(aid, s0 * 0.15 + unidades);
+          stock.set(aid, r3(s0 - consumo + r3(unidades)));
           await c.query(`insert into compra_lineas (tenant_id, documento_id, idx, texto, articulo_id, cantidad, unidad_compra, factor, precio, descuento, bonificadas, importe, iva, coste_unit)
             values ($1,$2,$3,$4,$5,$6,$7,$8,$9,0,0,$10,$11,$12)`, [ctx.tenantId, doc, idx++, a.name.toUpperCase(), aid, cantidad, ucompra, factor, precio, importe, iva, precioUd]);
           await c.query(`insert into stock_movimientos (tenant_id, local_id, articulo_id, tipo, cantidad, coste_unit, ref_tipo, ref_id, fecha) values ($1,$2,$3,'compra',$4,$5,'documento',$6,$7)`,
@@ -131,17 +138,17 @@ export async function cargarDemo(ctx: AppCtx) {
     for (const p of PLATOS) {
       const id = (await one<{ id: string }>(c, `insert into recetas (tenant_id, local_id, tipo, name, familia, pvp, ventas_mes, foto_key, descripcion, estado, en_carta, orden, demo)
         values ($1,$2,'plato',$3,$4,$5,$6,$7,$8,'activo',true,$9,true) returning id`,
-        [ctx.tenantId, ctx.local.id, p.name, p.familia, p.pvp, p.ventas, p.foto ? `demo/${p.foto}.webp` : null, p.desc ?? "", orden++]))!.id;
+        [ctx.tenantId, ctx.local.id, p.name, p.familia, p.pvp, vm(p.ventas), p.foto ? `demo/${p.foto}.webp` : null, p.desc ?? "", orden++]))!.id;
       rec.set(p.key, id);
       await addLines(id, p.lineas);
     }
     for (const r of REVENTA) {
       const id = (await one<{ id: string }>(c, `insert into recetas (tenant_id, local_id, tipo, name, familia, pvp, ventas_mes, reventa, coste_manual, margen_objetivo, estado, en_carta, orden, demo)
-        values ($1,$2,'plato',$3,$4,$5,$6,true,$7,$8,'activo',true,$9,true) returning id`, [ctx.tenantId, ctx.local.id, r.name, r.familia, r.pvp, r.ventas, r.coste, r.margen, orden++]))!.id;
+        values ($1,$2,'plato',$3,$4,$5,$6,true,$7,$8,'activo',true,$9,true) returning id`, [ctx.tenantId, ctx.local.id, r.name, r.familia, r.pvp, vm(r.ventas), r.coste, r.margen, orden++]))!.id;
       rec.set(r.key, id);
     }
     const menu = (await one<{ id: string }>(c, `insert into recetas (tenant_id, local_id, tipo, name, familia, pvp, ventas_mes, estado, en_carta, orden, demo, descripcion)
-      values ($1,$2,'menu',$3,$4,$5,$6,'activo',true,$7,true,'Entrante, principal y postre. Pan y bebida aparte.') returning id`, [ctx.tenantId, ctx.local.id, MENU.name, MENU.familia, MENU.pvp, MENU.ventas, orden++]))!.id;
+      values ($1,$2,'menu',$3,$4,$5,$6,'activo',true,$7,true,'Entrante, principal y postre. Pan y bebida aparte.') returning id`, [ctx.tenantId, ctx.local.id, MENU.name, MENU.familia, MENU.pvp, vm(MENU.ventas), orden++]))!.id;
     await addLines(menu, MENU.lineas.map((k) => ["@" + k, 1, "ud"] as [string, number, string]));
     await recomputeCosts(c, ctx.local.id);
     // Cinco meses de ventas (histórico para los gráficos de Hoy)
@@ -149,11 +156,11 @@ export async function cargarDemo(ctx: AppCtx) {
     const dishes = [...PLATOS.map((p) => ({ key: p.key, name: p.name, pvp: p.pvp, ventas: p.ventas })), ...REVENTA.map((r) => ({ key: r.key, name: r.name, pvp: r.pvp, ventas: r.ventas })), { key: "menu", name: MENU.name, pvp: MENU.pvp, ventas: MENU.ventas }];
     rec.set("menu", menu);
     for (let m = 5; m >= 1; m--) {
-      const k = COMENSALES[5 - m] / 62;
+      const k = COMENSALES_REL[5 - m] * escala;
       const desde = monthDate(m, 1), hasta = monthDate(m, 31);
       const dias = Math.round((new Date(hasta).getTime() - new Date(desde).getTime()) / 864e5) + 1;
       const imp = (await one<{ id: string }>(c, `insert into ventas_importes (tenant_id, local_id, fuente, filename, desde, hasta, filas, total, comensales, demo) values ($1,$2,'demo',$3,$4,$5,0,0,$6,true) returning id`,
-        [ctx.tenantId, ctx.local.id, `ventas-${desde.slice(0, 7)}.csv`, desde, hasta, Math.round(COMENSALES[5 - m] * dias)]))!.id;
+        [ctx.tenantId, ctx.local.id, `ventas-${desde.slice(0, 7)}.csv`, desde, hasta, Math.round(COMENSALES_REL[5 - m] * cd * dias)]))!.id;
       let total = 0, filas = 0;
       for (const d of dishes) {
         const rid = rec.get(d.key)!;
@@ -181,9 +188,13 @@ export async function quitarDemo(ctx: AppCtx) {
     await c.query("delete from documentos where id = any($1::uuid[])", [docs]);
     await c.query("delete from ventas_importes where id = any($1::uuid[])", [imps]);
     await c.query("delete from pedidos where local_id = $1 and demo", [L]);
-    // Recetas de ejemplo que alguna receta tuya usa: se quedan como tuyas
-    await c.query(`update recetas set demo = false where local_id = $1 and demo and id in (
-      select rl.subreceta_id from receta_lineas rl join recetas r on r.id = rl.receta_id where not r.demo and rl.subreceta_id is not null)`, [L]);
+    // Recetas de ejemplo que alguna receta tuya usa (directa o indirectamente): se quedan como tuyas
+    for (let i = 0; i < 10; i++) {
+      const r = await c.query(`update recetas set demo = false where local_id = $1 and demo and id in (
+        select rl.subreceta_id from receta_lineas rl join recetas r on r.id = rl.receta_id where not r.demo and rl.subreceta_id is not null)`, [L]);
+      if (!r.rowCount) break;
+    }
+    await c.query("delete from receta_lineas where receta_id in (select id from recetas where local_id = $1 and demo)", [L]);
     await c.query("delete from recetas where local_id = $1 and demo", [L]);
     // Artículos: se borran salvo que los uses en compras, recetas o pedidos tuyos
     await c.query(`update articulos set demo = false where local_id = $1 and demo and (

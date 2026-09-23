@@ -118,7 +118,7 @@ export default async function Compras({ searchParams }: { searchParams: Promise<
                 <div key={t.id} className="stack-xs">
                   <div className="row-sb"><Link className="link" href={`/articulos/${t.id}`}>{t.name}</Link><Delta value={delta} goodWhenUp={false} /></div>
                   <span className="muted xs">{known.length > 1 ? `${eur(known[0])} → ${eur(known[known.length - 1])}/${t.unit}` : `${eur(known[0])}/${t.unit}`}</span>
-                  <LineChart values={vals} labels={months.map(mLabel)} w={340} h={110} unit="€" color={up ? "var(--bad)" : "var(--ok)"} fmt={(n) => eur(n) + "/" + t.unit} />
+                  <LineChart values={vals} labels={months.map(mLabel)} h={120} unit="€" color={up ? "var(--bad)" : "var(--ok)"} fmt={(n) => eur(n) + "/" + t.unit} />
                 </div>
               );
             }) : <p className="muted small">Cuando guardes albaranes verás aquí cómo cambian los precios de lo que más compras.</p>}

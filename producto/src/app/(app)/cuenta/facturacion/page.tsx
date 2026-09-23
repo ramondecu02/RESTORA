@@ -27,7 +27,7 @@ export default async function Facturacion({ searchParams }: { searchParams: Prom
         {st === "past_due" ? <p>No hemos podido cobrar el último recibo. Actualiza la tarjeta para no perder el acceso.</p> : null}
         {st === "canceled" ? <p>Tu suscripción está cancelada. Tus datos siguen aquí: suscríbete de nuevo cuando quieras.</p> : null}
         {stripeOn() ? <Pagar activo={st === "active" || st === "past_due"} tieneCliente={!!ctx.org.stripeCustomerId} />
-          : <div className="note"><Icon name="info" /><p>Los pagos todavía no están activados en esta instalación. Quien la administre debe configurar STRIPE_SECRET_KEY, STRIPE_PRICE_ID y STRIPE_WEBHOOK_SECRET (ver la guía de despliegue).</p></div>}
+          : <div className="note"><Icon name="info" /><p>Todavía no se puede pagar desde aquí. Te avisaremos antes de que termine tu prueba y, mientras tanto, tienes acceso completo.</p></div>}
       </section>
       <section className="card">
         <div className="card-h"><h2 className="h3">Qué incluye</h2></div>

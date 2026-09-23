@@ -71,7 +71,10 @@ export async function guardarRecetaTx(c: Db, ctx: AppCtx, id: string, input: Rec
     if (rend != null && rend !== a.rend) await c.query("update articulos set rend = $2 where id = $1", [p.articuloId, rend]);
   }
   // Comprobar ciclos con los datos ya guardados
-  const [arts, recs, lins] = await Promise.all([loadArticulos(c, ctx.local.id), loadRecetas(c, ctx.local.id), loadLineas(c, ctx.local.id)]);
+  // Secuencial: una sola conexión (transacción) no admite consultas en paralelo
+  const arts = await loadArticulos(c, ctx.local.id);
+  const recs = await loadRecetas(c, ctx.local.id);
+  const lins = await loadLineas(c, ctx.local.id);
   const cc = buildContext(arts, recs, lins);
   if (recetaCost(id, cc).cycle) throw new UserError("Esa combinación crea un bucle: una elaboración acaba conteniéndose a sí misma.");
   await recomputeCosts(c, ctx.local.id);

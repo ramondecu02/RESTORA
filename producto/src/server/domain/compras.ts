@@ -16,14 +16,13 @@ import type { BaseUnit } from "@/lib/units";
 
 export async function loadRefs(c: Db, localId: string, provId: string | null) {
   const { cats, items } = await getCatalog();
-  const [arts, provs, packs] = await Promise.all([
-    all<{ id: string; name: string; aliases: string[]; unit: BaseUnit; category_id: string; iva: number; rend: number }>(c,
-      "select id, name, aliases, unit, category_id, iva, rend from articulos where local_id = $1 and not archived", [localId]),
-    all<{ id: string; name: string; cif: string }>(c, "select id, name, cif from proveedores where local_id = $1 and not archived", [localId]),
-    all<{ articulo_id: string; unidad_compra: string; factor: number }>(c, `select distinct on (ap.articulo_id) ap.articulo_id, ap.unidad_compra, ap.factor
+  // Secuencial: una sola conexión (transacción) no admite consultas en paralelo
+  const arts = await all<{ id: string; name: string; aliases: string[]; unit: BaseUnit; category_id: string; iva: number; rend: number }>(c,
+      "select id, name, aliases, unit, category_id, iva, rend from articulos where local_id = $1 and not archived", [localId]);
+  const provs = await all<{ id: string; name: string; cif: string }>(c, "select id, name, cif from proveedores where local_id = $1 and not archived", [localId]);
+  const packs = await all<{ articulo_id: string; unidad_compra: string; factor: number }>(c, `select distinct on (ap.articulo_id) ap.articulo_id, ap.unidad_compra, ap.factor
       from articulo_proveedor ap join articulos a on a.id = ap.articulo_id where a.local_id = $1 and ap.origen = 'albaran'
-      order by ap.articulo_id, (ap.proveedor_id = $2) desc, ap.fecha desc nulls last`, [localId, provId]),
-  ]);
+      order by ap.articulo_id, (ap.proveedor_id = $2) desc, ap.fecha desc nulls last`, [localId, provId]);
   const artRefs: ArtRef[] = arts.map((a) => ({ id: a.id, name: a.name, aliases: a.aliases, unit: a.unit, categoryId: a.category_id, iva: a.iva, rend: a.rend }));
   const catalog: CatRef[] = items.map((i) => ({ id: i.id, name: i.name, aliases: i.aliases, unit: i.unit, categoryId: i.category_id, rend: i.rend }));
   const catIva = new Map(cats.map((c) => [c.id, c.iva]));

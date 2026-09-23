@@ -18,15 +18,17 @@ export function Equipo({ me, miembros, invit, roles }: { me: string; miembros: M
         <section className="card" aria-labelledby="h-eq">
           <div className="card-h"><h2 className="h3" id="h-eq">Tu equipo</h2><span className="tag">{miembros.length}</span></div>
           <div className="list">{miembros.map((m) => (
-            <div className="li" key={m.id}>
+            <div className="member" key={m.id}>
               <span className="avatar" aria-hidden="true">{initials(m.name)}</span>
               <span className="li-main"><b>{m.name}{m.id === me ? " (tú)" : ""}</b><small>{m.email}</small></span>
-              <select className="inp inp-sm" style={{ maxWidth: 190 }} value={m.role} aria-label={`Rol de ${m.name}`} disabled={pending}
-                onChange={(e) => start(async () => { const r = await cambiarRol(m.id, e.target.value); if (r.ok) toast(r.msg ?? "Hecho"); else toastError(r.error); })}>
-                {roles.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
-              </select>
-              {m.id !== me ? <button type="button" className="iconbtn iconbtn-sm iconbtn-danger" aria-label={`Quitar a ${m.name}`} disabled={pending}
-                onClick={() => start(async () => { const r = await quitarMiembro(m.id); if (r.ok) toast(r.msg ?? "Hecho"); else toastError(r.error); })}><Icon name="close" size={16} /></button> : null}
+              <div className="member-acts">
+                <select className="inp inp-sm" value={m.role} aria-label={`Rol de ${m.name}`} disabled={pending}
+                  onChange={(e) => start(async () => { const r = await cambiarRol(m.id, e.target.value); if (r.ok) toast(r.msg ?? "Hecho"); else toastError(r.error); })}>
+                  {roles.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+                </select>
+                {m.id !== me ? <button type="button" className="iconbtn iconbtn-sm iconbtn-danger" aria-label={`Quitar a ${m.name}`} disabled={pending}
+                  onClick={() => start(async () => { const r = await quitarMiembro(m.id); if (r.ok) toast(r.msg ?? "Hecho"); else toastError(r.error); })}><Icon name="close" size={16} /></button> : null}
+              </div>
             </div>))}</div>
         </section>
         {invit.length ? (

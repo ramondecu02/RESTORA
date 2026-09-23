@@ -97,5 +97,7 @@ export const ALTERNATIVAS: [string, string, number, string][] = [
   ["lubina", "atlantico", 16.95, "Pieza de 400–600 g"], ["atun", "mediterranea", 39.8, "Lomo congelado a bordo"],
   ["setas", "mediterranea", 19.4, "Mezcla estándar"], ["parmesano", "mediterranea", 22.8, "18 meses"],
 ];
-/** Evolución de comensales por mes (los 5 anteriores); el actual es el del local. */
-export const COMENSALES = [57, 58, 60, 60, 61];
+/** Comensales al día con los que están calibradas las ventas de ejemplo (ticket medio ≈ 25 € sin IVA). */
+export const COMENSALES_BASE = 17;
+/** Comensales de los 5 meses anteriores, relativos al mes actual. */
+export const COMENSALES_REL = [0.92, 0.94, 0.96, 0.97, 0.98];

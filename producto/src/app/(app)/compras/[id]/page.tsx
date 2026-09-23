@@ -6,7 +6,7 @@ import { all, isUuid, one, withTenant } from "@/server/db";
 import { requireApp, hasPerm } from "@/server/ctx";
 import { getCatalog } from "@/server/queries/catalog";
 import { plantillasConCoste } from "@/server/queries/plantillas";
-import { eur, fecha, fechaNum, pct, plural, qty } from "@/lib/format";
+import { eur, fecha, fechaNum, pct, plural, qty, lista } from "@/lib/format";
 import { pvpParaFc } from "@/lib/costing";
 import type { Draft } from "@/lib/ocr-types";
 import type { BaseUnit } from "@/lib/units";
@@ -99,7 +99,7 @@ export default async function DocPage({ params, searchParams }: { params: Promis
             <span className="okmark"><Icon name="check" /></span>
             <div className="saved-h"><h2>{title} guardado</h2><p className="muted">{doc.proveedor} · {fecha(doc.fecha)} · {plural(det.lineas.length, "línea", "líneas")} · {eur(doc.total)}</p></div>
             {res?.proveedorNuevo ? <div className="note note-ok"><Icon name="truck" /><p>{doc.proveedor} se ha añadido a tus proveedores.</p></div> : null}
-            {res?.nuevos.length ? <div className="note note-ok"><Icon name="box" /><p>{plural(res.nuevos.length, "artículo nuevo", "artículos nuevos")} en tu lista: {res.nuevos.slice(0, 4).map((n) => n.name).join(", ")}{res.nuevos.length > 4 ? "…" : ""}.</p></div> : null}
+            {res?.nuevos.length ? <div className="note note-ok"><Icon name="box" /><p>{plural(res.nuevos.length, "artículo nuevo", "artículos nuevos")} en tu lista: {lista(res.nuevos.map((n) => n.name), 4)}.</p></div> : null}
           </div>
           <div className="saved-ins stack">
             {subidas.length ? (

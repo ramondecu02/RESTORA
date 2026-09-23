@@ -40,3 +40,12 @@ export async function noOverflow(page) {
     return out;
   });
 }
+
+/** Captura la pantalla completa aunque el scroll esté dentro de .content (shell de la app). */
+export async function tallShot(page, path) {
+  const vp = page.viewportSize();
+  const extra = await page.evaluate(() => { const el = document.querySelector(".content, .auth-main, .onb-main"); return el ? el.scrollHeight - el.clientHeight : 0; });
+  if (extra > 0) { await page.setViewportSize({ width: vp.width, height: Math.min(vp.height + extra, 12000) }); await page.waitForTimeout(150); }
+  await page.screenshot({ path, caret: "initial" });
+  if (extra > 0) await page.setViewportSize(vp);
+}

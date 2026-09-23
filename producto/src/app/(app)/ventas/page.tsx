@@ -17,7 +17,7 @@ export default async function Ventas() {
   const data = await withTenant(ctx.tenantId, async (c) => {
     const s = await dishStats(c, ctx.local);
     const imps = await all<{ id: string; filename: string; desde: string | null; hasta: string | null; filas: number; total: number; created_at: Date; demo: boolean }>(c,
-      "select id, filename, desde, hasta, filas, total, created_at, demo from ventas_importes where local_id = $1 order by created_at desc limit 12", [ctx.local.id]);
+      "select id, filename, desde, hasta, filas, total, created_at, demo from ventas_importes where local_id = $1 order by desde desc nulls last, created_at desc limit 12", [ctx.local.id]);
     return { stats: s.stats.filter((x) => x.en_carta), imps };
   });
   return (

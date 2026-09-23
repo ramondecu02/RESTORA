@@ -50,33 +50,43 @@ export function Gauge({ value, max = 48, target, caption }: { value: number | nu
   );
 }
 
-export function LineChart({ values, labels, unit = "", target, color = "var(--accent)", w = 560, h = 220, fmt }: {
-  values: (number | null)[]; labels: string[]; unit?: string; target?: number; color?: string; w?: number; h?: number; fmt?: (n: number) => string;
+/** Línea con etiquetas en HTML: el trazo se estira al ancho disponible y el texto no se encoge nunca. */
+export function LineChart({ values, labels, unit = "", target, color = "var(--accent)", h = 220, fill = false, fmt, maxLabels = 6 }: {
+  values: (number | null)[]; labels: string[]; unit?: string; target?: number; color?: string; w?: number; h?: number; fill?: boolean; fmt?: (n: number) => string; maxLabels?: number;
 }) {
   const f = fmt ?? ((n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 2 }) + (unit ? " " + unit : ""));
-  const pad = { l: 44, r: 12, t: 12, b: 26 };
   const vals = values.filter((x): x is number => x != null && Number.isFinite(x));
   if (!vals.length) return <p className="muted small">Aún no hay datos suficientes.</p>;
   const lo = Math.min(...vals, target ?? Infinity), hi = Math.max(...vals, target ?? -Infinity);
   const top = niceTop(hi), bottom = lo > 0 && lo > top * 0.5 ? Math.floor(lo * 0.9) : 0;
-  const X = (i: number) => pad.l + (values.length === 1 ? (w - pad.l - pad.r) / 2 : (i / (values.length - 1)) * (w - pad.l - pad.r));
-  const Y = (v: number) => pad.t + (1 - (v - bottom) / (top - bottom || 1)) * (h - pad.t - pad.b);
-  const pts = values.map((v, i) => (v == null ? null : [X(i), Y(v)] as const));
+  const n = values.length;
+  const X = (i: number) => (n === 1 ? 50 : (i / (n - 1)) * 100);
+  const Y = (v: number) => (1 - (v - bottom) / (top - bottom || 1)) * 100;
+  const pts = values.map((v, i) => (v == null || !Number.isFinite(v) ? null : ([X(i), Y(v)] as const)));
   const segs: string[] = [];
   let cur = "";
-  pts.forEach((p) => { if (!p) { if (cur) segs.push(cur); cur = ""; } else cur += (cur ? " L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); });
+  pts.forEach((p) => { if (!p) { if (cur) segs.push(cur); cur = ""; } else cur += (cur ? " L" : "M") + p[0].toFixed(2) + " " + p[1].toFixed(2); });
   if (cur) segs.push(cur);
   const grid = [0, 0.5, 1].map((k) => bottom + (top - bottom) * k);
   const valid = pts.filter(Boolean) as (readonly [number, number])[];
+  const step = Math.max(1, Math.ceil(n / Math.max(2, maxLabels)));
+  const showLabel = (i: number) => i === n - 1 || (i % step === 0 && n - 1 - i >= step / 2);
+  const num = (g: number) => g.toLocaleString("es-ES", { maximumFractionDigits: 1 });
   return (
-    <svg className="chart" viewBox={`0 0 ${w} ${h}`} role="img" aria-label={`Evolución: ${values.map((v, i) => `${labels[i]} ${v == null ? "sin dato" : f(v)}`).join(", ")}`}>
-      {grid.map((g) => <g key={g}><line className="grid" x1={pad.l} x2={w - pad.r} y1={Y(g)} y2={Y(g)} /><text x={pad.l - 6} y={Y(g) + 4} textAnchor="end">{g.toLocaleString("es-ES", { maximumFractionDigits: 1 })}</text></g>)}
-      {target != null ? <g><line className="obj" x1={pad.l} x2={w - pad.r} y1={Y(target)} y2={Y(target)} /><text x={w - pad.r} y={Y(target) - 6} textAnchor="end">objetivo {target}{unit ? " " + unit : ""}</text></g> : null}
-      {valid.length > 1 ? <path d={`${segs.join(" ")} L${valid[valid.length - 1][0]} ${h - pad.b} L${valid[0][0]} ${h - pad.b} Z`} fill={color} opacity=".08" /> : null}
-      {segs.map((d, i) => <path key={i} d={d} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />)}
-      {pts.map((p, i) => p ? <circle key={i} className="pt" cx={p[0]} cy={p[1]} r="4.5" fill="var(--surface)" stroke={color} strokeWidth="2.5" data-tip={`${labels[i]}|${f(values[i]!)}`} /> : null)}
-      {labels.map((l, i) => <text key={i} x={X(i)} y={h - 6} textAnchor="middle">{l}</text>)}
-    </svg>
+    <div className={fill ? "lc lc-fill" : "lc"} style={{ height: fill ? undefined : h, minHeight: fill ? h : undefined, ["--c" as string]: color }} role="img" aria-label={`Evolución: ${values.map((v, i) => `${labels[i]} ${v == null ? "sin dato" : f(v)}`).join(", ")}`}>
+      <div className="lc-plot">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          {grid.map((g) => <line key={g} className="grid" x1="0" x2="100" y1={Y(g)} y2={Y(g)} vectorEffect="non-scaling-stroke" />)}
+          {target != null ? <line className="obj" x1="0" x2="100" y1={Y(target)} y2={Y(target)} vectorEffect="non-scaling-stroke" /> : null}
+          {valid.length > 1 ? <path d={`${segs.join(" ")} L${valid[valid.length - 1][0]} 100 L${valid[0][0]} 100 Z`} fill={color} opacity=".08" /> : null}
+          {segs.map((d, i) => <path key={i} d={d} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />)}
+        </svg>
+        {grid.map((g) => <span key={g} className="lc-y" style={{ top: `${Y(g)}%` }} aria-hidden="true">{num(g)}</span>)}
+        {target != null ? <span className="lc-obj" style={{ top: `${Y(target)}%` }} aria-hidden="true">objetivo {num(target)}{unit ? " " + unit : ""}</span> : null}
+        {pts.map((p, i) => (p ? <span key={i} className="lc-pt" style={{ left: `${p[0]}%`, top: `${p[1]}%` }} data-tip={`${labels[i]}|${f(values[i]!)}`} aria-hidden="true" /> : null))}
+      </div>
+      <div className="lc-x" aria-hidden="true">{labels.map((l, i) => (showLabel(i) ? <span key={i} style={{ left: `${X(i)}%` }}>{l}</span> : null))}</div>
+    </div>
   );
 }
 
@@ -131,35 +141,30 @@ export function BarsH({ rows, fmt }: { rows: { label: string; value: number; hre
 export const QUAD_COLOR: Record<string, string> = { estrella: "var(--q-estrella)", caballo: "var(--q-caballo)", enigma: "var(--q-enigma)", perro: "var(--q-perro)" };
 
 /** Ingeniería de menú: unidades (x) frente a margen por unidad (y), con las medias como cruz. */
-export function Scatter({ items, mV, mM, fmt }: { items: { id: string; name: string; ventas: number; margen: number; aporta: number; quad: string; quadLabel: string }[]; mV: number; mM: number; fmt: (n: number) => string }) {
-  const w = 520, h = 340, pad = { l: 46, r: 14, t: 14, b: 34 };
+export function Scatter({ items, mV, mM, fmt, h = 320 }: { items: { id: string; name: string; ventas: number; margen: number; aporta: number; quad: string; quadLabel: string }[]; mV: number; mM: number; fmt: (n: number) => string; h?: number }) {
   if (!items.length) return <p className="muted small">Añade precios de venta y unidades para ver la ingeniería de menú.</p>;
   const xmax = niceTop(Math.max(...items.map((i) => i.ventas), mV, 1));
   const ylo = Math.min(0, ...items.map((i) => i.margen));
   const ymax = niceTop(Math.max(...items.map((i) => i.margen), mM, 1));
-  const X = (v: number) => pad.l + (v / xmax) * (w - pad.l - pad.r);
-  const Y = (v: number) => pad.t + (1 - (v - ylo) / (ymax - ylo || 1)) * (h - pad.t - pad.b);
+  const X = (v: number) => (v / xmax) * 100;
+  const Y = (v: number) => (1 - (v - ylo) / (ymax - ylo || 1)) * 100;
+  const mx = X(mV), my = Y(mM);
+  const q = (l: number, t: number, w: number, hh: number, c: string) => <span className="sc-q" style={{ left: `${l}%`, top: `${t}%`, width: `${w}%`, height: `${hh}%`, background: c }} />;
   return (
-    <svg className="chart" viewBox={`0 0 ${w} ${h}`} role="img" aria-label="Mapa de rentabilidad de la carta: unidades vendidas frente a margen por unidad">
-      <rect x={X(mV)} y={pad.t} width={w - pad.r - X(mV)} height={Y(mM) - pad.t} fill="var(--q-estrella)" opacity=".06" />
-      <rect x={pad.l} y={pad.t} width={X(mV) - pad.l} height={Y(mM) - pad.t} fill="var(--q-enigma)" opacity=".06" />
-      <rect x={X(mV)} y={Y(mM)} width={w - pad.r - X(mV)} height={h - pad.b - Y(mM)} fill="var(--q-caballo)" opacity=".06" />
-      <rect x={pad.l} y={Y(mM)} width={X(mV) - pad.l} height={h - pad.b - Y(mM)} fill="var(--q-perro)" opacity=".06" />
-      <line className="axis" x1={pad.l} x2={w - pad.r} y1={h - pad.b} y2={h - pad.b} />
-      <line className="axis" x1={pad.l} x2={pad.l} y1={pad.t} y2={h - pad.b} />
-      <line className="obj" x1={X(mV)} x2={X(mV)} y1={pad.t} y2={h - pad.b} />
-      <line className="obj" x1={pad.l} x2={w - pad.r} y1={Y(mM)} y2={Y(mM)} />
-      {[0, 0.5, 1].map((k) => <text key={"x" + k} x={X(xmax * k)} y={h - pad.b + 16} textAnchor="middle">{Math.round(xmax * k)}</text>)}
-      {[0, 0.5, 1].map((k) => <text key={"y" + k} x={pad.l - 6} y={Y(ylo + (ymax - ylo) * k) + 4} textAnchor="end">{(ylo + (ymax - ylo) * k).toFixed(0)} €</text>)}
-      <text x={w - pad.r} y={h - 4} textAnchor="end">unidades al mes →</text>
-      <text x={pad.l + 4} y={pad.t + 10}>↑ margen por unidad</text>
-      {items.map((it) => (
-        <a key={it.id} href={`/escandallos/${it.id}`} aria-label={`${it.name}: ${it.quadLabel}`}>
-          <circle className="pt" cx={X(it.ventas)} cy={Y(it.margen)} r="8" fill={QUAD_COLOR[it.quad]} stroke="var(--surface)" strokeWidth="2"
+    <div className="sc" style={{ height: h }} role="img" aria-label="Mapa de rentabilidad de la carta: unidades vendidas frente a margen por unidad">
+      <div className="sc-plot">
+        {q(mx, 0, 100 - mx, my, "var(--q-estrella)")}{q(0, 0, mx, my, "var(--q-enigma)")}{q(mx, my, 100 - mx, 100 - my, "var(--q-caballo)")}{q(0, my, mx, 100 - my, "var(--q-perro)")}
+        <span className="sc-mx" style={{ left: `${mx}%` }} /><span className="sc-my" style={{ top: `${my}%` }} />
+        {[0, 0.5, 1].map((k) => <span key={"y" + k} className="lc-y" style={{ top: `${Y(ylo + (ymax - ylo) * k)}%` }} aria-hidden="true">{(ylo + (ymax - ylo) * k).toFixed(0)} €</span>)}
+        {[0, 0.5, 1].map((k) => <span key={"x" + k} className="sc-xl" style={{ left: `${X(xmax * k)}%` }} aria-hidden="true">{Math.round(xmax * k)}</span>)}
+        <span className="sc-ax sc-ax-y" aria-hidden="true">↑ margen por unidad</span>
+        <span className="sc-ax sc-ax-x" aria-hidden="true">unidades al mes →</span>
+        {items.map((it) => (
+          <Link key={it.id} href={`/escandallos/${it.id}`} className="sc-pt" aria-label={`${it.name}: ${it.quadLabel}`} style={{ left: `${X(it.ventas)}%`, top: `${Y(it.margen)}%`, background: QUAD_COLOR[it.quad] }}
             data-tip={`${it.name}|${it.quadLabel}|${Math.round(it.ventas)} uds · ${fmt(it.margen)} de margen|Aporta ${fmt(it.aporta)} al mes`} />
-        </a>
-      ))}
-    </svg>
+        ))}
+      </div>
+    </div>
   );
 }
 

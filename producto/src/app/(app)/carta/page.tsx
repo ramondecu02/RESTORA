@@ -13,8 +13,9 @@ import { eur, pct, qty, plural, fecha } from "@/lib/format";
 
 export const metadata = { title: "Carta" };
 
-export default async function Carta() {
+export default async function Carta({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
   const ctx = await requireApp();
+  const sp = await searchParams;
   const data = await withTenant(ctx.tenantId, async (c) => {
     const s = await dishStats(c, ctx.local);
     const ref = await one<{ id: string; created_at: Date; storage_key: string; mime: string }>(c, `select d.id, d.created_at, a.storage_key, a.mime from documentos d join documento_archivos a on a.documento_id = d.id
@@ -25,6 +26,9 @@ export default async function Carta() {
   for (const s of data.stats) fams.set(s.familia || "Otros", [...(fams.get(s.familia || "Otros") ?? []), s]);
   const orden = [...fams.keys()].sort((a, b) => famRank(a) - famRank(b) || a.localeCompare(b));
   const canEsc = hasPerm(ctx, "escandallos");
+  const fam = sp.f && fams.has(sp.f) ? sp.f : null;
+  const byOrden = (a: (typeof data.stats)[number], b: (typeof data.stats)[number]) => a.orden - b.orden || a.name.localeCompare(b.name);
+  const shown = fam ? [...fams.get(fam)!].sort(byOrden) : orden.flatMap((f) => [...fams.get(f)!].sort(byOrden));
   return (
     <Screen title="Carta" sub="Tu carta, con la rentabilidad de cada plato" fab>
       <EscNav cur="carta" />
@@ -46,11 +50,16 @@ export default async function Carta() {
           <span className="li-main"><b>Carta subida el {fecha(new Date(data.ref.created_at).toISOString(), { day: "numeric", month: "long" })}</b><small>Referencia para transcribir · toca para abrirla</small></span>
         </a>
       ) : null}
-      {orden.length ? orden.map((fam) => (
-        <section key={fam} className="stack-sm">
-          <div className="fam-h"><h2>{fam}</h2><small>{plural(fams.get(fam)!.length, "producto", "productos")}</small></div>
+      {orden.length ? (
+        <section className="stack-sm" aria-label="Productos de la carta">
+          {orden.length > 1 ? (
+            <div className="chips" role="list" aria-label="Filtrar por familia">
+              <Link role="listitem" className={`chip ${!fam ? "is-on" : ""}`} href="/carta" aria-current={!fam ? "page" : undefined}>Toda la carta <span className="cnt">{data.stats.length}</span></Link>
+              {orden.map((f) => <Link role="listitem" key={f} className={`chip ${fam === f ? "is-on" : ""}`} href={`/carta?f=${encodeURIComponent(f)}`} aria-current={fam === f ? "page" : undefined}>{f} <span className="cnt">{fams.get(f)!.length}</span></Link>)}
+            </div>
+          ) : null}
           <div className="dishgrid">
-            {fams.get(fam)!.sort((a, b) => a.orden - b.orden || a.name.localeCompare(b.name)).map((s) => {
+            {shown.map((s) => {
               const fc = foodCost(s.coste, s.pvp, ctx.local.iva_venta);
               const est = estadoFC(fc, s.fcObjetivo);
               const m = s.pvp ? neto(s.pvp, ctx.local.iva_venta) - s.coste : null;
@@ -75,7 +84,7 @@ export default async function Carta() {
             })}
           </div>
         </section>
-      )) : (
+      ) : (
         <div className="card"><div className="empty"><span className="li-ic"><Icon name="grid" /></span><b>Tu carta está vacía</b>
           <p>Sube una foto de tu carta y creamos los platos con su precio, o añádelos uno a uno.</p>
           <div className="empty-actions"><Link className="btn" href="/carta/subir"><Icon name="image" size={18} /> Subir carta</Link><Link className="btn btn-2" href="/escandallos/nuevo">Nuevo producto</Link></div></div></div>

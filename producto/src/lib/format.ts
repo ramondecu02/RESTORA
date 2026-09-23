@@ -1,5 +1,6 @@
 // Formato es-ES para toda la app.
-const nf = (d: number) => new Intl.NumberFormat("es-ES", { minimumFractionDigits: d, maximumFractionDigits: d });
+// Agrupamos siempre los miles (8.901 €), también con cuatro cifras, para que las cifras se lean igual en toda la app.
+const nf = (d: number) => new Intl.NumberFormat("es-ES", { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: "always" });
 const nfCache = new Map<number, Intl.NumberFormat>();
 function fmtN(n: number, d = 2): string {
   let f = nfCache.get(d);
@@ -15,7 +16,7 @@ export const pct = (x: number | null | undefined, d = 1) => (x == null || !Numbe
 export const pctN = (x: number | null | undefined, d = 0) => (x == null || !Number.isFinite(x) ? "—" : fmtN(x, d) + " %");
 export const qty = (n: number | null | undefined, maxD = 3) => {
   if (n == null || !Number.isFinite(n)) return "—";
-  return new Intl.NumberFormat("es-ES", { maximumFractionDigits: maxD }).format(Math.round(n * 1000) / 1000);
+  return new Intl.NumberFormat("es-ES", { maximumFractionDigits: maxD, useGrouping: "always" }).format(Math.round(n * 1000) / 1000);
 };
 export const kEur = (n: number) => (Math.abs(n) >= 1000 ? fmtN(n / 1000, 1) + " k€" : fmtN(n, 0) + " €");
 /** Convierte texto con coma o punto decimal a número. "1.234,56" → 1234.56; "0.25" → 0.25. */
@@ -42,3 +43,11 @@ export function isoDate(d: Date = new Date()): string {
 export function initials(name: string) {
   return (name || "?").trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 }
+/** "A, B y C" · "A, B, C y 5 más". */
+export function lista(items: string[], max = 3): string {
+  if (items.length > max) return items.slice(0, max).join(", ") + ` y ${items.length - max} más`;
+  return items.length > 1 ? items.slice(0, -1).join(", ") + " y " + items[items.length - 1] : (items[0] ?? "");
+}
+/** "28,4 → 28,7 %" (antes y después, como fracciones). */
+export const fcPar = (antes: number | null | undefined, despues: number | null | undefined) =>
+  antes == null || !Number.isFinite(antes) ? pct(despues) : `${fmtN(antes * 100, 1)} → ${pct(despues)}`;

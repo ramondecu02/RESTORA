@@ -15,7 +15,10 @@ export default async function EscandalloPage({ params }: { params: Promise<{ id:
   if (!isUuid(id)) notFound();
   const { cats, items } = await getCatalog();
   const data = await withTenant(ctx.tenantId, async (c) => {
-    const [arts, recs, lins] = await Promise.all([loadArticulos(c, ctx.local.id), loadRecetas(c, ctx.local.id), loadLineas(c, ctx.local.id)]);
+    // Secuencial: una sola conexión (transacción) no admite consultas en paralelo
+  const arts = await loadArticulos(c, ctx.local.id);
+  const recs = await loadRecetas(c, ctx.local.id);
+  const lins = await loadLineas(c, ctx.local.id);
     const r = recs.find((x) => x.id === id);
     if (!r) return null;
     const own = await all<{ articulo_id: string | null; subreceta_id: string | null; cantidad: number; unidad: LineUnit }>(c, "select articulo_id, subreceta_id, cantidad, unidad from receta_lineas where receta_id = $1 order by idx", [id]);

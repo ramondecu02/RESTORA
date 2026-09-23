@@ -51,7 +51,10 @@ export function buildContext(arts: ArtRow[], recetas: RecetaRow[], lineas: Linea
 }
 
 export async function loadCostContext(c: Db, localId: string) {
-  const [arts, recetas, lineas] = await Promise.all([loadArticulos(c, localId), loadRecetas(c, localId), loadLineas(c, localId)]);
+  // Secuencial: una sola conexión (transacción) no admite consultas en paralelo
+  const arts = await loadArticulos(c, localId);
+  const recetas = await loadRecetas(c, localId);
+  const lineas = await loadLineas(c, localId);
   return { arts, recetas, lineas, ctx: buildContext(arts, recetas, lineas) };
 }
 

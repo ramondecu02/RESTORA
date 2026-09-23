@@ -10,6 +10,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // El indicador de desarrollo tapa la barra de pestañas en móvil; los errores se siguen mostrando.
+  devIndicators: false,
   experimental: {
     serverActions: { bodySizeLimit: "2mb" },
   },

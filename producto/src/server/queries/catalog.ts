@@ -8,10 +8,10 @@ export type CatItem = { id: string; name: string; category_id: string; unit: Bas
 let cache: { cats: CatCategory[]; items: CatItem[]; at: number } | null = null;
 export async function getCatalog() {
   if (cache && Date.now() - cache.at < 10 * 60_000) return cache;
-  const [cats, items] = await sys(async (c) => Promise.all([
-    all<CatCategory>(c, "select id, name, singular, iva, kind, orden from catalog_categories order by orden, name"),
-    all<CatItem>(c, "select id, name, category_id, unit, rend, aliases from catalog_items order by name"),
-  ]));
+  const [cats, items] = await sys(async (c) => [
+    await all<CatCategory>(c, "select id, name, singular, iva, kind, orden from catalog_categories order by orden, name"),
+    await all<CatItem>(c, "select id, name, category_id, unit, rend, aliases from catalog_items order by name"),
+  ] as const);
   cache = { cats, items, at: Date.now() };
   return cache;
 }
