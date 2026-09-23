@@ -6,9 +6,9 @@ import { LineChart } from "@/components/charts";
 import { all, isUuid, one, withTenant } from "@/server/db";
 import { requireApp, hasPerm } from "@/server/ctx";
 import { getCatalog } from "@/server/queries/catalog";
-import { toArtCost, type ArtRow } from "@/server/domain/costs";
+import { loadCostContext, toArtCost, type ArtRow } from "@/server/domain/costs";
 import { consumoAnual } from "@/server/domain/consumo";
-import { dishStats } from "@/server/domain/carta";
+import { computeStats } from "@/server/domain/carta";
 import { costeBase, costeNeto } from "@/lib/costing";
 import { resumenCarta } from "@/lib/menu";
 import { eur, fecha, fechaNum, pct, qty } from "@/lib/format";
@@ -40,12 +40,11 @@ export default async function Articulo({ params }: { params: Promise<{ id: strin
       where l.articulo_id = $1 and not r.archived order by r.name`, [id]);
     const consumo = (await consumoAnual(c, ctx.local.id)).get(id) ?? null;
     // Food cost de la carta con cada precio alternativo (para "Cambiar a este")
-    const base = await dishStats(c, ctx.local);
-    const fcNow = resumenCarta(base.stats.filter((s) => s.en_carta)).fc;
+    const loaded = await loadCostContext(c, ctx.local.id);
+    const fcNow = resumenCarta(computeStats(loaded.recetas, loaded.ctx, ctx.local).filter((s) => s.en_carta)).fc;
     const alt: Record<string, number | null> = {};
     for (const p of provs) if (p.precio_unit != null) {
-      const s = await dishStats(c, ctx.local, new Map([[id, p.precio_unit]]));
-      alt[p.proveedor_id] = resumenCarta(s.stats.filter((x) => x.en_carta)).fc;
+      alt[p.proveedor_id] = resumenCarta(computeStats(loaded.recetas, loaded.ctx, ctx.local, new Map([[id, p.precio_unit]])).filter((x) => x.en_carta)).fc;
     }
     return { a, compras, provs, allProvs, usos, consumo, fcNow, alt };
   });

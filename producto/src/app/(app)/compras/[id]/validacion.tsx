@@ -8,7 +8,7 @@ import { TaskScreen } from "@/components/shell/task-screen";
 import { Tour } from "@/components/shell/tour";
 import { NumInput } from "@/components/ui/num-input";
 import { Confirm, Sheet } from "@/components/ui/sheet";
-import { toast, toastError } from "@/components/ui/toast";
+import { toastError } from "@/components/ui/toast";
 import { draftCheck, lineImporte, pendientes, prettyProduct } from "@/lib/draft";
 import { eur, fecha as fFecha, plural, qty } from "@/lib/format";
 import { bestMatches, norm } from "@/lib/fuzzy";
@@ -282,6 +282,11 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
   );
 }
 
+
+function Done({ txt, onUndo }: { txt: string; onUndo: () => void }) {
+  return <div className="done-row"><span className="tag tag-ok"><Icon name="check" size={14} sw={3} /> {txt}</span><button type="button" className="linkbtn" onClick={onUndo}>Cambiar</button></div>;
+}
+
 function LineCard({ l, base, catName, cats, manual, defaultCat, editing, setEditing, creating, setCreating, onPickCand, onNuevo, onFind, onUndo, onChange, onRemove }: {
   l: DraftLine; base: Base | null; catName: Map<string, string>; cats: Cat[]; manual: boolean; defaultCat: string;
   editing: boolean; setEditing: (on: boolean) => void; creating: boolean; setCreating: (on: boolean) => void;
@@ -307,9 +312,6 @@ function LineCard({ l, base, catName, cats, manual, defaultCat, editing, setEdit
   if (!l.ignorar && !l.decisiones.iva && l.iva != null && l.ivaEsperado != null && l.iva === l.ivaEsperado && !manual) tags.push(<span key="i" className="tag tag-ok">IVA {l.iva} % · coincide</span>);
   if (l.ignorar) tags.push(<span key="x" className="tag">No es un producto · solo cuenta para el total</span>);
 
-  const Done = ({ txt, onUndo: u }: { txt: string; onUndo: () => void }) => (
-    <div className="done-row"><span className="tag tag-ok"><Icon name="check" size={14} sw={3} /> {txt}</span><button type="button" className="linkbtn" onClick={u}>Cambiar</button></div>
-  );
   const expected = l.importe != null && l.precio ? l.importe / (l.precio * (1 - (l.descuento || 0) / 100)) : null;
   const rates = [...new Set([l.ivaEsperado, l.ivaLeido, ...RATES].filter((x): x is number => x != null))];
 

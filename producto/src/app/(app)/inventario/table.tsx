@@ -46,7 +46,7 @@ export function InvTable({ rows: initial, untracked, catalog, cats, local, pedid
   const counts = new Map<string, number>();
   for (const r of calc) counts.set(r.categoryId, (counts.get(r.categoryId) ?? 0) + 1);
   const catsPresent = [...new Map(calc.map((r) => [r.categoryId, r])).values()].sort((a, b) => a.orden - b.orden);
-  const shown = (cat === "todas" ? calc : calc.filter((r) => r.categoryId === cat)).sort((a, b) => (cat === "todas" ? a.orden - b.orden : 0) || a.dias - b.dias);
+  const shown = (cat === "todas" ? [...calc] : calc.filter((r) => r.categoryId === cat)).sort((a, b) => (cat === "todas" ? a.orden - b.orden : 0) || a.dias - b.dias);
 
   const upd = (id: string, patch: Partial<Row>) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   const onStock = (r: Row, n: number | null) => { if (n == null || n < 0) return; upd(r.id, { stock: n }); };
@@ -58,15 +58,13 @@ export function InvTable({ rows: initial, untracked, catalog, cats, local, pedid
   });
   const openPedido = () => { setPed(Object.fromEntries(sugerido.map((r) => [r.id, r.pedir]))); setPedidoOpen(true); };
   const pedLineas = () => Object.entries(ped).filter(([, q]) => q > 0).map(([articuloId, cantidad]) => ({ articuloId, cantidad }));
-  const porProv = useMemo(() => {
-    const m = new Map<string, { name: string; phone: string; email: string; rows: (typeof calc)[number][] }>();
-    for (const r of calc.filter((x) => ped[x.id] > 0)) {
-      const k = r.proveedorId ?? "";
-      const g = m.get(k) ?? { name: r.proveedor ?? "Sin proveedor", phone: r.phone, email: r.email, rows: [] };
-      g.rows.push(r); m.set(k, g);
-    }
-    return [...m.values()];
-  }, [calc, ped]);
+  const porProvMap = new Map<string, { name: string; phone: string; email: string; rows: (typeof calc)[number][] }>();
+  for (const r of calc.filter((x) => ped[x.id] > 0)) {
+    const k = r.proveedorId ?? "";
+    const g = porProvMap.get(k) ?? { name: r.proveedor ?? "Sin proveedor", phone: r.phone, email: r.email, rows: [] };
+    g.rows.push(r); porProvMap.set(k, g);
+  }
+  const porProv = [...porProvMap.values()];
   const texto = (g: (typeof porProv)[number]) => `Hola, soy de ${local}. Pedido:\n` + g.rows.map((r) => `- ${r.name}: ${qty(ped[r.id])} ${r.unit}`).join("\n") + "\nGracias.";
 
   const statRow = (

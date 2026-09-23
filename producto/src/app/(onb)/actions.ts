@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { all, one, sys, withTenant } from "@/server/db";
+import { one, sys, withTenant } from "@/server/db";
 import { requireOnboarding, UserError } from "@/server/ctx";
 import { run, type Result } from "@/server/action";
 import { setFlash } from "@/server/session";

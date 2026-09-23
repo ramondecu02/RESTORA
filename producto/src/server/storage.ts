@@ -9,11 +9,11 @@ const safeKey = (key: string) => {
   if (!/^[a-zA-Z0-9/_.-]+$/.test(key) || key.includes("..")) throw new Error("Ruta de archivo no válida");
   return key;
 };
-const useBlob = () => !!env.blobToken;
+const blobOn = () => !!env.blobToken;
 
 export async function putFile(key: string, data: Buffer, contentType: string): Promise<void> {
   safeKey(key);
-  if (useBlob()) {
+  if (blobOn()) {
     await put(key, data, { access: "private", contentType, allowOverwrite: true, token: env.blobToken });
     return;
   }
@@ -25,7 +25,7 @@ export async function putFile(key: string, data: Buffer, contentType: string): P
 
 export async function readFileBytes(key: string): Promise<{ data: Buffer; contentType: string } | null> {
   safeKey(key);
-  if (useBlob()) {
+  if (blobOn()) {
     const r = await get(key, { access: "private", token: env.blobToken });
     if (!r || r.statusCode !== 200) return null;
     const data = Buffer.from(await new Response(r.stream).arrayBuffer());
@@ -42,7 +42,7 @@ export async function readFileBytes(key: string): Promise<{ data: Buffer; conten
 
 export async function openFile(key: string): Promise<{ body: ReadableStream<Uint8Array> | Buffer; contentType: string; size: number | null } | null> {
   safeKey(key);
-  if (useBlob()) {
+  if (blobOn()) {
     const r = await get(key, { access: "private", token: env.blobToken });
     if (!r || r.statusCode !== 200) return null;
     return { body: r.stream, contentType: r.blob.contentType, size: r.blob.size };
@@ -60,7 +60,7 @@ export async function openFile(key: string): Promise<{ body: ReadableStream<Uint
 export async function deleteFile(key: string): Promise<void> {
   safeKey(key);
   try {
-    if (useBlob()) await del(key, { token: env.blobToken });
+    if (blobOn()) await del(key, { token: env.blobToken });
     else { const f = path.join(LOCAL_DIR, key); await rm(f, { force: true }); await rm(f + ".type", { force: true }); }
   } catch (e) {
     console.error("[archivos] no se pudo borrar", key, (e as Error).message);
