@@ -55,4 +55,24 @@ for (const [name, data] of [["albaran-ejemplo", A], ["albaran-gil", G]]) {
   await page.screenshot({ path: here + `public/demo/${name}.jpg`, type: "jpeg", quality: 78, fullPage: false });
   console.log("ok", name);
 }
+// Carta de ejemplo (coincide con la lectura simulada)
+const carta = `<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:M;src:url(data:font/woff2;base64,${mono})}
+body{margin:0;width:1400px;height:1900px;background:#6f6a5f;display:grid;place-items:center;font-family:Georgia,serif}
+.c{width:1060px;padding:90px 100px;background:#fbf7ee;color:#2b2a26;transform:rotate(0.7deg);box-shadow:0 30px 70px rgba(0,0,0,.35)}
+h1{text-align:center;font-size:54px;letter-spacing:.08em;margin:0 0 6px} .sub{text-align:center;letter-spacing:.3em;font-size:18px;color:#7a735f;margin-bottom:50px}
+h2{font-size:24px;letter-spacing:.3em;text-transform:uppercase;color:#3E6B55;text-align:center;margin:40px 0 18px}
+.it{display:flex;align-items:baseline;gap:12px;font-size:28px;margin:12px 0} .it i{flex:1;border-bottom:2px dotted #b9b19c} .d{font-size:19px;color:#6e6b5f;font-style:italic;margin:-6px 0 8px}
+</style></head><body><div class="c"><h1>CARTA</h1><div class="sub">COCINA DE MERCADO</div>
+<h2>Entrantes</h2><div class="it"><span>Croquetas de jamón ibérico</span><i></i><b>9,50</b></div><div class="d">Ocho unidades, cremosas</div>
+<div class="it"><span>Ensalada de temporada</span><i></i><b>9,50</b></div><div class="d">Burrata, aguacate y tomate de rama</div>
+<h2>Pescados</h2><div class="it"><span>Lubina a la brasa</span><i></i><b>24,00</b></div><div class="d">Con patata confitada y salsa de la casa</div>
+<h2>Arroces</h2><div class="it"><span>Arroz de carabineros</span><i></i><b>26,50</b></div><div class="d">Mínimo dos personas, precio por ración</div>
+<h2>Carnes</h2><div class="it"><span>Canelón de rustido</span><i></i><b>14,50</b></div>
+<h2>Postres</h2><div class="it"><span>Crema catalana</span><i></i><b>6,50</b></div>
+<h2>Vinos</h2><div class="it"><span>Copa de Priorat DOQ</span><i></i><b>6,50</b></div>
+</div></body></html>`;
+await page.setContent(carta, { waitUntil: "load" });
+await page.screenshot({ path: here + "public/demo/carta-ejemplo.jpg", type: "jpeg", quality: 78 });
+console.log("ok carta-ejemplo");
 await browser.close();

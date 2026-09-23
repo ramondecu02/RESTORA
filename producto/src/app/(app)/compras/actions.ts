@@ -43,7 +43,7 @@ export async function borrar(docId: string): Promise<Result> {
   return r;
 }
 
-export async function descartar(docId: string): Promise<Result> {
+export async function descartar(docId: string, to: "/compras" | "/carta" = "/compras"): Promise<Result> {
   const r = await run(async () => {
     const ctx = await requireApp();
     requirePerm(ctx, "compras");
@@ -53,7 +53,7 @@ export async function descartar(docId: string): Promise<Result> {
     if (d.status === "guardado") throw new UserError("Este albarán ya está guardado. Bórralo desde su ficha.");
     await borrarDocumento(ctx, docId);
   });
-  if (r.ok) { await setFlash("Documento descartado."); redirect("/compras"); }
+  if (r.ok) { await setFlash("Documento descartado."); redirect(to === "/carta" ? "/carta" : "/compras"); }
   return r;
 }
 
