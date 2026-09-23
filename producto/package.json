@@ -1,0 +1,43 @@
+{
+  "name": "restora-producto",
+  "version": "0.1.0",
+  "private": true,
+  "description": "RESTORA: control de costes para cocinas (app de producto).",
+  "engines": {
+    "node": ">=20.9"
+  },
+  "scripts": {
+    "dev": "next dev --port 3100",
+    "build": "node scripts/migrate.mjs && next build",
+    "build:app": "next build",
+    "start": "next start --port 3100",
+    "migrate": "node scripts/migrate.mjs",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "e2e": "node tests/e2e/run.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
+    "@vercel/blob": "^2.8.0",
+    "next": "16.3.5",
+    "papaparse": "^5.7.0",
+    "pg": "^8.23.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "stripe": "^22.6.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "@types/papaparse": "^5.5.2",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.5",
+    "playwright-core": "^1.63.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.1"
+  }
+}

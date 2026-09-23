@@ -17,6 +17,7 @@ const eslintConfig = defineConfig([
     ".cf-stash/**",
     "cloudflare/**",
     "restora-app/**",
+    "producto/**",
   ]),
 ]);
 
