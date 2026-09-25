@@ -5,7 +5,7 @@ import { ComprasNav } from "@/components/subnav";
 import { BarsH, Delta, LineChart } from "@/components/charts";
 import { all, one, withTenant } from "@/server/db";
 import { requireApp, hasPerm } from "@/server/ctx";
-import { eur, eur0, fecha, plural } from "@/lib/format";
+import { eur, eur0, fecha, plural, ultimosMeses } from "@/lib/format";
 
 export const metadata = { title: "Albaranes y facturas" };
 const PAGE = 20;
@@ -47,7 +47,7 @@ export default async function Compras({ searchParams }: { searchParams: Promise<
   const more = data.docs.length > PAGE;
   const docs = data.docs.slice(0, PAGE);
   const months: string[] = [];
-  for (let i = 5; i >= 0; i--) { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i); months.push(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }
+  months.push(...ultimosMeses(6));
   const mLabel = (m: string) => new Date(m + "-15T12:00:00").toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
   const gTotal = data.gasto.reduce((s, g) => s + g.total, 0);
   const canUpload = hasPerm(ctx, "compras");

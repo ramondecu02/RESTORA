@@ -57,3 +57,10 @@ export function lista(items: string[], max = 3): string {
 /** "28,4 → 28,7 %" (antes y después, como fracciones). */
 export const fcPar = (antes: number | null | undefined, despues: number | null | undefined) =>
   antes == null || !Number.isFinite(antes) ? pct(despues) : `${fmtN(antes * 100, 1)} → ${pct(despues)}`;
+/** Los últimos n meses (AAAA-MM) hasta el actual en hora de Madrid, del más antiguo al actual. */
+export function ultimosMeses(n: number, hoy: string = isoDate()): string[] {
+  const [y, m] = hoy.split("-").map(Number);
+  const out: string[] = [];
+  for (let i = n - 1; i >= 0; i--) { const t = y * 12 + (m - 1) - i; out.push(`${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, "0")}`); }
+  return out;
+}

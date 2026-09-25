@@ -51,7 +51,8 @@ export async function withTenant<T>(tenantId: string, fn: (c: Db) => Promise<T>)
   if (!isUuid(tenantId)) throw new Error("Negocio no válido");
   return sys(async (c) => {
     await c.query("set local role restora_app");
-    await c.query("select set_config('app.tenant_id', $1, true)", [tenantId]);
+    // current_date y date_trunc en hora de los restaurantes (el servidor de base de datos va en UTC)
+    await c.query("select set_config('app.tenant_id', $1, true), set_config('timezone', 'Europe/Madrid', true)", [tenantId]);
     return fn(c);
   });
 }

@@ -86,7 +86,10 @@ export function buildDraft(ocr: OcrAlbaran, ctx: { arts: ArtRef[]; catalog: CatR
     const ivaRaro = l.iva_pct != null && tipoIva(l.iva_pct) == null;
     const ivaLeido = tipoIva(l.iva_pct) ?? singleRate ?? null;
     // Con descuento, el importe ya viene rebajado: cantidad y precio se deducen deshaciéndolo
-    const kDesc = 1 - (l.descuento_pct || 0) / 100;
+    // Una lectura rara (descuento fuera de 0–100 %, bonificadas negativas) se deja en un valor válido y editable
+    const descuento = Math.min(100, Math.max(0, l.descuento_pct || 0));
+    const bonificadas = Math.max(0, l.bonificadas || 0);
+    const kDesc = 1 - descuento / 100;
     const cantidad = l.cantidad ?? (l.importe != null && l.precio_unitario && kDesc > 0 ? round(l.importe / (l.precio_unitario * kDesc), 3) : null);
     const precio = l.precio_unitario ?? (l.importe != null && cantidad && kDesc > 0 ? round(l.importe / (cantidad * kDesc), 4) : null);
     const decisiones = {
@@ -98,7 +101,7 @@ export function buildDraft(ocr: OcrAlbaran, ctx: { arts: ArtRef[]; catalog: CatR
     const duda = ivaRaro ? [l.duda, `En la línea pone IVA ${String(l.iva_pct).replace(".", ",")} %, que no es un tipo de IVA (¿recargo de equivalencia?)`].filter(Boolean).join(" · ") : l.duda;
     return {
       id: lid(i), texto, cantidad, cantidadTexto: l.cantidad_texto || (l.cantidad != null ? String(l.cantidad) : ""), unidadCompra: unidadCompra || (base?.unit ?? ""),
-      factor, factorFuente, precio, descuento: l.descuento_pct || 0, bonificadas: l.bonificadas || 0, importe: l.importe,
+      factor, factorFuente, precio, descuento, bonificadas, importe: l.importe,
       ivaLeido, iva: decisiones.iva ? null : ivaLeido, ivaEsperado,
       conf: { linea: l.confianza, cantidad: l.confianza_cantidad, precio: l.confianza_precio }, duda,
       match, nuevo: null, candidatos, decisiones,

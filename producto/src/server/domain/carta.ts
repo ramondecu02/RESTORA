@@ -6,7 +6,7 @@ import { resumenCarta, type DishStat } from "@/lib/menu";
 import { loadCostContext, type RecetaRow } from "./costs";
 
 export const fcObj = (r: Pick<RecetaRow, "fc_objetivo" | "reventa" | "margen_objetivo">, local: Pick<Local, "fc_objetivo">) =>
-  r.fc_objetivo ?? (r.reventa && r.margen_objetivo != null ? 100 - r.margen_objetivo : local.fc_objetivo);
+  r.fc_objetivo ?? (r.reventa && r.margen_objetivo != null ? Math.round((100 - r.margen_objetivo) * 100) / 100 : local.fc_objetivo);
 
 export type Stat = DishStat & { tipo: string; foto_key: string | null; en_carta: boolean; orden: number; estado: string; missing: number; descripcion: string };
 

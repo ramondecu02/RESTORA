@@ -12,6 +12,7 @@ import { ALTERNATIVAS, ARTS, COMENSALES_BASE, COMENSALES_REL, COMPRA_MES, ELABS,
 
 const monthDate = (monthsAgo: number, day: number) => {
   const d = new Date();
+  d.setHours(12, 0, 0, 0); // a mediodía: el día no cambia al pasarlo a hora de Madrid
   d.setDate(1);
   d.setMonth(d.getMonth() - monthsAgo);
   const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();

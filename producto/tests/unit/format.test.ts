@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { capitalize, fecha, fechaLarga, fechaNum, isoDate } from "@/lib/format";
+import { capitalize, fecha, fechaLarga, fechaNum, isoDate, ultimosMeses } from "@/lib/format";
 import { decodeFlash } from "@/components/ui/toast";
 
 describe("fechas en hora de Madrid", () => {
@@ -52,5 +52,12 @@ describe("aviso tras redirección (rs_flash)", () => {
 
   it("una cookie corrupta no muestra nada", () => {
     expect(decodeFlash("%E0%A4%A")).toBeNull();
+  });
+});
+
+describe("ultimosMeses", () => {
+  it("cuenta hacia atrás cruzando el año", () => {
+    expect(ultimosMeses(6, "2026-02-15")).toEqual(["2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02"]);
+    expect(ultimosMeses(1, "2026-12-31")).toEqual(["2026-12"]);
   });
 });

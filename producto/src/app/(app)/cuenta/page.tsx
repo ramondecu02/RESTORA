@@ -6,6 +6,7 @@ import { requireApp, hasPerm } from "@/server/ctx";
 import { ROLE_LABEL } from "@/server/rbac";
 import { demoCargado } from "@/server/demo/seed";
 import { salir } from "../../(auth)/actions";
+import { Negocios } from "../negocios";
 import { LocalForm, PerfilForm, PasswordForm, TemaForm, DemoCard, OtrasSesiones, EliminarNegocio } from "./forms";
 
 export const metadata = { title: "Mi local" };
@@ -25,7 +26,7 @@ export default async function Cuenta() {
           {/* La clave rehace el formulario cuando cambian los datos guardados: nunca se edita (ni se guarda) una copia antigua */}
           <LocalForm key={JSON.stringify(local)} canEdit={canLocal} l={local} />
           <section className="card">
-            <div className="card-h"><h2 className="h3">Tu negocio</h2><Link className="linkbtn" href="/alta/briefing?editar=1">Cambiar respuestas</Link></div>
+            <div className="card-h"><h2 className="h3">Tu negocio</h2>{ctx.role === "propietario" ? <Link className="linkbtn" href="/alta/briefing?editar=1">Cambiar respuestas</Link> : null}</div>
             <p className="muted small">Tipo de negocio, cómo llevas las compras, tu papel y tu objetivo. Ordenan lo que te enseñamos en Hoy.</p>
           </section>
           {hasPerm(ctx, "demo") ? <DemoCard cargado={demo} /> : null}
@@ -39,6 +40,7 @@ export default async function Cuenta() {
           ) : null}
         </div>
         <div className="stack">
+          <Negocios userId={ctx.userId} actual={ctx.org.id} />
           <PerfilForm name={ctx.name} email={ctx.email} />
           <PasswordForm />
           <TemaForm actual={ctx.prefs.theme ?? "system"} />

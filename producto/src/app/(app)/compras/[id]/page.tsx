@@ -43,7 +43,7 @@ export default async function DocPage({ params, searchParams }: { params: Promis
   if (doc.status === "subido" || doc.status === "leyendo") {
     return <Leyendo id={doc.id} kind={doc.kind} name={files[0]?.name || "Documento"} pages={doc.pages || files.length} thumb={files.find((f) => f.mime.startsWith("image/"))?.url ?? null} />;
   }
-  if (doc.status === "error") return <ErrorDoc id={doc.id} error={doc.ocr_error} canRetry={doc.source === "ocr" && files.length > 0} />;
+  if (doc.status === "error") return <ErrorDoc id={doc.id} error={doc.ocr_error} canRetry={doc.source === "ocr" && files.length > 0 && files.length >= (doc.pages ?? 0)} />;
   if (doc.status === "descartado") redirect("/compras");
   if (doc.kind === "carta") redirect(`/carta/subir/${doc.id}`);
 

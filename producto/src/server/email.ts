@@ -62,7 +62,8 @@ export function resetEmail(name: string, code: string): Omit<Msg, "to"> {
 }
 export function inviteEmail(org: string, from: string, role: string, link: string): Omit<Msg, "to"> {
   return {
-    subject: `${from} te invita a ${org} en RESTORA`,
+    // El asunto no lleva nombres escritos por usuarios: así una invitación no sirve para mandar textos engañosos
+    subject: "Te han invitado a un negocio en RESTORA",
     text: `${from} te ha invitado a unirte a ${org} en RESTORA con el rol «${role}».\n\nAcepta la invitación aquí: ${link}\n\nEl enlace caduca en 7 días.`,
     html: layout(`Te invitan a ${org}`, p(`${esc(from)} te ha invitado a unirte a <b>${esc(org)}</b> en RESTORA con el rol «${esc(role)}».`) + btn(link, "Aceptar la invitación") + p("El enlace caduca en 7 días.")),
   };

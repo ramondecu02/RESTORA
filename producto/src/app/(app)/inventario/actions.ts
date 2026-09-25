@@ -88,9 +88,10 @@ export async function anadirReferencia(input: { tipo: "tuyo" | "catalogo"; id: s
       if (a.track_stock && !nuevo) throw new UserError("Ya está en tu inventario: cambia su stock, mínimo o consumo en la tabla.");
       await c.query("update articulos set track_stock = true, stock_min = $2, consumo_semanal = $3 where id = $1", [id, input.minimo, input.consumo]);
       if (input.stock != null) {
-        const diff = Math.round((input.stock - a.stock) * 1000) / 1000;
-        if (diff) {
-          await c.query("insert into stock_movimientos (tenant_id, local_id, articulo_id, tipo, cantidad, nota, created_by) values ($1,$2,$3,'inicial',$4,'Stock inicial',$5)", [ctx.tenantId, ctx.local.id, id, diff, ctx.userId]);
+        const contado = Math.round(input.stock * 1000) / 1000;
+        if (contado !== Math.round(a.stock * 1000) / 1000) {
+          // Como en un recuento: se guarda lo contado, no la diferencia con lo que había
+          await c.query("insert into stock_movimientos (tenant_id, local_id, articulo_id, tipo, cantidad, nota, created_by) values ($1,$2,$3,'recuento',$4,'Stock inicial',$5)", [ctx.tenantId, ctx.local.id, id, contado, ctx.userId]);
           await rebuildArticulo(c, id);
         }
       }

@@ -6,7 +6,7 @@ import { BarsH, Delta, Donut, Gauge, LineChart, PALETTE, Sparkline } from "@/com
 import { requireApp, hasPerm } from "@/server/ctx";
 import { one, sys } from "@/server/db";
 import { hoyData } from "@/server/queries/hoy";
-import { capitalize, eur, eur0, fechaLarga, kEur, pct, plural, qty, lista, fcPar } from "@/lib/format";
+import { capitalize, eur, eur0, fechaLarga, kEur, pct, plural, qty, lista, fcPar, ultimosMeses, fecha, isoDate } from "@/lib/format";
 import { pvpParaFc } from "@/lib/costing";
 
 export const metadata = { title: "Hoy" };
@@ -37,7 +37,7 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
 
   // Serie de 6 meses: histórico real (ventas importadas) + mes actual calculado con la carta
   const months: string[] = [];
-  for (let i = 5; i >= 0; i--) { const x = new Date(); x.setDate(1); x.setMonth(x.getMonth() - i); months.push(x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0")); }
+  months.push(...ultimosMeses(6));
   const mLabel = (m: string) => capitalize(new Date(m + "-15T12:00:00").toLocaleDateString("es-ES", { month: "short" }).replace(".", ""));
   const H = new Map(d.hist.map((h) => [h.mes, h]));
   const C = new Map(d.com.map((h) => [h.mes, h.comensales / Math.max(1, h.dias)]));
@@ -122,7 +122,7 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
                 <Gauge value={d.res.fc != null ? d.res.fc * 100 : null} target={fcObj} caption={`La marca negra es tu objetivo del ${fcObj} %`} />
                 <div className="dash-copy">
                   <span className={`salud ${salCls}`}><Icon name={salCls === "ok" ? "check" : "alert"} size={14} /> {salCls === "ok" ? "Todo bajo control" : salCls === "warn" ? "Requiere seguimiento" : "Requiere acción"}</span>
-                  <p className="eyebrow">Situación general · {capitalize(new Date().toLocaleDateString("es-ES", { month: "long", year: "numeric" }))}</p>
+                  <p className="eyebrow">Situación general · {capitalize(fecha(isoDate(), { month: "long", year: "numeric" }))}</p>
                   <h2 id="h-sit">{d.salud.title}</h2>
                   <p>{plural(d.fuera.length, "plato fuera de objetivo", "platos fuera de objetivo")} y {plural(d.bajos.length, "producto bajo mínimo", "productos bajo mínimo")}. El resto, en orden.</p>
                 </div>
@@ -219,7 +219,7 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
             </div>
           </section>
           <section className="card" aria-labelledby="h-cfg">
-            <div className="card-h"><h2 className="h3" id="h-cfg">Tu configuración</h2><Link className="linkbtn" href="/alta/briefing?editar=1">Cambiar</Link></div>
+            <div className="card-h"><h2 className="h3" id="h-cfg">Tu configuración</h2>{ctx.role === "propietario" ? <Link className="linkbtn" href="/alta/briefing?editar=1">Cambiar</Link> : null}</div>
             <dl className="cfg">
               <div><dt>Food cost objetivo</dt><dd>{fcObj} %</dd></div>
               <div><dt>IVA de venta</dt><dd>{iva} %</dd></div>

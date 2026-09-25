@@ -132,9 +132,13 @@ export async function setReventa(id: string, v: { coste: number | null; margen: 
     const coste = opt(v.coste, 0, 100000, "Precio de compra no válido.");
     // El margen llega calculado desde el PVP: si el PVP no cubre el coste sería negativo, y se deja en 0.
     const margen = v.margen == null ? null : Math.min(99, Math.max(0, opt(v.margen, -1e7, 1e7, "Margen no válido.")!));
-    const pvp = opt(v.pvp, 0, 100000, "Precio no válido.");
+    // Un PVP de 0 € no es un precio: se trata como «sin precio»
+    const pvp0 = opt(v.pvp, 0, 100000, "Precio no válido.");
+    const pvp = pvp0 != null && pvp0 > 0 ? pvp0 : null;
     await withTenant(ctx.tenantId, async (c) => {
-      const r = await c.query("update recetas set coste_manual = coalesce($2, coste_manual), margen_objetivo = $3, pvp = $4 where id = $1 and local_id = $5 and reventa and not archived",
+      // Si el producto está enlazado a artículos, su coste sale de ellos: el precio de compra escrito a mano no se usa
+      const r = await c.query(`update recetas set coste_manual = case when exists (select 1 from receta_lineas l where l.receta_id = recetas.id) then coste_manual else coalesce($2, coste_manual) end,
+        margen_objetivo = $3, pvp = $4 where id = $1 and local_id = $5 and reventa and not archived`,
         [id, coste, margen, pvp, ctx.local.id]);
       if (!r.rowCount) throw new UserError("Producto no encontrado.");
       await recomputeCosts(c, ctx.local.id);

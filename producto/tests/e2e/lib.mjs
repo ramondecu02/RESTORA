@@ -52,7 +52,7 @@ export async function tallShot(page, path) {
 
 /** Alta completa por la interfaz (registro, código, briefing, local) hasta /hoy, cerrando el tour. */
 export async function signup(page, { email, nombre = "Marta Pujol", negocio = "Casa Pujol" }) {
-  await sql("delete from rate_limits where key like 'reg:%'"); // el alta está limitada a 8/hora por IP
+  await sql("delete from rate_limits"); // alta, verificación y demás están limitadas por IP: las pruebas crean muchas cuentas seguidas
   await page.goto(BASE + "/registro");
   await page.getByLabel("Tu nombre").fill(nombre);
   await page.getByLabel("Email de trabajo").fill(email);

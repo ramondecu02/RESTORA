@@ -1,5 +1,5 @@
 // Motor de costes: artículo → elaboración → plato → menú, recursivo y con detección de ciclos.
-import type { BaseUnit, LineUnit } from "./units";
+import { compatible, type BaseUnit, type LineUnit } from "./units";
 
 export type ArtCost = {
   id: string;
@@ -78,8 +78,10 @@ export function recetaCost(id: string, ctx: CostContext, stack: Set<string> = ne
       const sub = ctx.recetas.get(l.subrecetaId);
       const sc = recetaCost(l.subrecetaId, ctx, stack);
       if (sc.cycle) cycle = true;
-      // Una subreceta sin ingredientes no tiene coste: cuenta como línea sin precio, no como 0 €
-      const uc = sub && !sc.cycle && !sc.vacio ? sc.perUnit : null;
+      // Una subreceta sin ingredientes no tiene coste: cuenta como línea sin precio, no como 0 €.
+      // Tampoco una elaboración usada en una unidad que ya no casa con su rinde (p. ej. se cambió de kg a L).
+      const unidadOk = !sub || sub.tipo !== "elaboracion" || compatible(sub.rindeUnit, l.unidad);
+      const uc = sub && !sc.cycle && !sc.vacio && unidadOk ? sc.perUnit : null;
       const cost = uc == null ? null : uc * l.cantidad;
       if (cost == null) missing++; else total += cost;
       if (sc.missing && !sc.vacio) missing += sc.missing;

@@ -95,20 +95,35 @@ export async function importarVentas(ctx: AppCtx, input: ImportIn): Promise<Impo
     await c.query("update ventas_importes set filas = $2, total = $3 where id = $1", [imp!.id, L.length, Math.round(total * 100) / 100]);
     let articulos = 0;
     if (input.descontarStock === true) {
-      const consumo = new Map<string, number>();
-      for (const [recId, uds] of unidadesPorReceta) {
-        if (uds <= 0) continue; // más devoluciones que ventas: no se devuelve género al almacén
-        // explode da cantidades netas (aprovechables); el stock está en lo comprado, así que se divide por el rendimiento.
-        for (const [aid, q] of explode(recId, cc)) consumo.set(aid, (consumo.get(aid) ?? 0) + (q / (Math.max(1, cc.arts.get(aid)?.rend ?? 100) / 100)) * uds);
-      }
+      // Un movimiento por artículo y día de venta: un recuento hecho a mitad del periodo no se ve afectado por lo vendido antes
+      const porDia = new Map<string, Map<string, number>>();
+      for (const l of L) { const m = porDia.get(l.fecha) ?? new Map<string, number>(); m.set(l.receta, (m.get(l.receta) ?? 0) + l.uds); porDia.set(l.fecha, m); }
       const tracked = new Set((await all<{ id: string }>(c, "select id from articulos where local_id = $1 and track_stock", [ctx.local.id])).map((a) => a.id));
-      for (const [aid, q] of consumo) {
-        if (!tracked.has(aid) || q <= 0) continue;
-        await c.query("insert into stock_movimientos (tenant_id, local_id, articulo_id, tipo, cantidad, ref_tipo, ref_id, fecha, nota, created_by) values ($1,$2,$3,'venta',$4,'ventas',$5,$6,'Ventas importadas',$7)",
-          [ctx.tenantId, ctx.local.id, aid, -Math.round(q * 1000) / 1000, imp!.id, new Date(hasta + "T20:00:00Z"), ctx.userId]);
-        await rebuildArticulo(c, aid);
-        articulos++;
+      const tocados = new Set<string>();
+      const movs: { aid: string; q: number; fecha: string }[] = [];
+      for (const [fecha, recetas] of porDia) {
+        const consumo = new Map<string, number>();
+        for (const [recId, uds] of recetas) {
+          if (uds <= 0) continue; // más devoluciones que ventas ese día: no se devuelve género al almacén
+          // explode da cantidades netas (aprovechables); el stock está en lo comprado, así que se divide por el rendimiento.
+          for (const [aid, q] of explode(recId, cc)) consumo.set(aid, (consumo.get(aid) ?? 0) + (q / (Math.max(1, cc.arts.get(aid)?.rend ?? 100) / 100)) * uds);
+        }
+        for (const [aid, q] of consumo) {
+          const r = Math.round(q * 1000) / 1000;
+          if (!tracked.has(aid) || r <= 0) continue;
+          movs.push({ aid, q: -r, fecha });
+          tocados.add(aid);
+        }
       }
+      for (let k = 0; k < movs.length; k += 1000) {
+        const b = movs.slice(k, k + 1000);
+        await c.query(`insert into stock_movimientos (tenant_id, local_id, articulo_id, tipo, cantidad, ref_tipo, ref_id, fecha, nota, created_by)
+          select $1::uuid, $2::uuid, x.a, 'venta', x.q, 'ventas', $3::uuid, (x.f + time '20:00') at time zone 'Europe/Madrid', 'Ventas importadas', $4::uuid
+          from unnest($5::uuid[], $6::numeric[], $7::date[]) as x(a, q, f)`,
+          [ctx.tenantId, ctx.local.id, imp!.id, ctx.userId, b.map((m) => m.aid), b.map((m) => m.q), b.map((m) => m.fecha)]);
+      }
+      for (const aid of tocados) await rebuildArticulo(c, aid);
+      articulos = tocados.size;
       // Ventas con fecha pasada cambian el PMP de compras posteriores: la caché de coste de las recetas se rehace
       if (articulos) await recomputeCosts(c, ctx.local.id);
     }
