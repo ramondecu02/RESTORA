@@ -4,10 +4,9 @@ import { cache } from "react";
 import { one, sys } from "./db";
 import { env } from "./env";
 import { randomToken, sha256 } from "./crypto";
+import { SESSION_MAX_AGE, cookieBase, sessionCookieName } from "./session-cookie";
 
-const MAX_AGE = 30 * 24 * 3600;
-export const sessionCookieName = () => (env.secureCookies ? "__Host-rs_sess" : "rs_sess");
-export const cookieBase = () => ({ httpOnly: true, secure: env.secureCookies, sameSite: "lax" as const, path: "/" });
+export { cookieBase, sessionCookieName };
 
 export type Prefs = { theme?: "light" | "dark" | "system"; seen?: Record<string, boolean>; hideChecklist?: boolean };
 export type SessionData = {
@@ -27,7 +26,7 @@ export async function createSession(userId: string, orgId: string | null): Promi
   await sys((c) => c.query(
     "insert into sessions (user_id, org_id, token_hash, expires_at, user_agent) values ($1, $2, $3, now() + interval '30 days', $4)",
     [userId, orgId, sha256(token), ua]));
-  (await cookies()).set(sessionCookieName(), token, { ...cookieBase(), maxAge: MAX_AGE });
+  (await cookies()).set(sessionCookieName(), token, { ...cookieBase(), maxAge: SESSION_MAX_AGE });
 }
 
 export const getSession = cache(async (): Promise<SessionData | null> => {
@@ -53,7 +52,8 @@ export async function destroySession(): Promise<void> {
   const jar = await cookies();
   const token = jar.get(sessionCookieName())?.value;
   if (token) await sys((c) => c.query("delete from sessions where token_hash = $1", [sha256(token)]));
-  jar.delete(sessionCookieName());
+  // Con los mismos atributos con que se creó: sin Secure, el navegador ignora el borrado de una cookie __Host-.
+  jar.set(sessionCookieName(), "", { ...cookieBase(), maxAge: 0 });
 }
 
 /** Cierra todas las sesiones de un usuario (al cambiar la contraseña), menos la actual si se indica. */
@@ -61,8 +61,21 @@ export async function destroyUserSessions(userId: string, keepSessionId?: string
   await sys((c) => c.query("delete from sessions where user_id = $1 and ($2::uuid is null or id <> $2)", [userId, keepSessionId ?? null]));
 }
 
+/** Cambia el negocio de la sesión y lo recuerda como el último elegido (para la próxima vez que entre). */
 export async function setSessionOrg(sessionId: string, orgId: string) {
-  await sys((c) => c.query("update sessions set org_id = $2 where id = $1", [sessionId, orgId]));
+  await sys(async (c) => {
+    const r = await one<{ user_id: string }>(c, "update sessions set org_id = $2 where id = $1 returning user_id", [sessionId, orgId]);
+    if (r) await c.query("update users set last_org_id = $2 where id = $1", [r.user_id, orgId]);
+  });
+}
+
+/** Negocio con el que se abre una sesión nueva: el último que eligió el usuario, si sigue siendo miembro;
+ *  si no, aquel al que se unió más recientemente (p. ej. el que le acaba de invitar). */
+export async function pickOrg(userId: string): Promise<string | null> {
+  const m = await sys((c) => one<{ org_id: string }>(c,
+    `select m.org_id from memberships m join users u on u.id = m.user_id
+      where m.user_id = $1 order by (m.org_id = u.last_org_id) desc nulls last, m.created_at desc limit 1`, [userId]));
+  return m?.org_id ?? null;
 }
 
 /** Mensaje de un solo uso para mostrar tras una redirección. */

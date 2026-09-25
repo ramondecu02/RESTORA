@@ -38,7 +38,11 @@ export default async function Invitacion({ params }: { params: Promise<{ token: 
       <>
         {head}
         <div className="note note-warn"><Icon name="alert" /><p>Has entrado como <b>{s.email}</b>, pero la invitación es para <b>{inv.email}</b>.</p></div>
-        <form action={salir}><button className="btn btn-2 btn-block" type="submit">Salir y entrar con {inv.email}</button></form>
+        <form action={salir}>
+          <input type="hidden" name="next" value={`/invitacion/${encodeURIComponent(token)}`} />
+          <input type="hidden" name="email" value={inv.email} />
+          <button className="btn btn-2 btn-block" type="submit">Salir y entrar con {inv.email}</button>
+        </form>
       </>
     );
   }

@@ -1,7 +1,7 @@
 // Contexto de la petición: sesión → negocio → local. Con guardas que redirigen.
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { one, sys, withTenant } from "./db";
+import { all, one, sys, withTenant } from "./db";
 import { getSession, type SessionData } from "./session";
 import { can, type Perm, type Role } from "./rbac";
 
@@ -37,6 +37,12 @@ export const getOrg = cache(async (): Promise<{ s: SessionData; org: OrgInfo | n
     },
   };
 });
+
+/** Negocios a los que pertenece el usuario (para cambiar de uno a otro en Más). */
+export async function userOrgs(userId: string) {
+  return sys((c) => all<{ id: string; name: string; role: Role }>(c,
+    "select o.id, o.name, m.role from memberships m join organizations o on o.id = m.org_id where m.user_id = $1 order by lower(o.name), o.id", [userId]));
+}
 
 export async function loadLocal(tenantId: string): Promise<Local | null> {
   return withTenant(tenantId, (c) => one<Local>(c,
