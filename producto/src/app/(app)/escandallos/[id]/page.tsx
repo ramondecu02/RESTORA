@@ -28,18 +28,18 @@ export default async function EscandalloPage({ params }: { params: Promise<{ id:
   if (!data) notFound();
   const { r } = data;
   const cc = buildContext(data.arts, data.recs, data.lins);
-  const arts: FichaArt[] = data.arts.map((a) => ({ ...cc.arts.get(a.id)!, categoryId: a.category_id, aliases: a.aliases }));
+  const arts: FichaArt[] = data.arts.map((a) => ({ ...cc.arts.get(a.id)!, categoryId: a.category_id, aliases: a.aliases, catalogId: a.catalog_item_id }));
   const recetas: FichaRec[] = data.recs.map((x) => ({ ...cc.recetas.get(x.id)!, familia: x.familia }));
   return (
     <Ficha id={r.id} tipo={r.tipo} reventa={r.reventa} fotoUrl={fotoUrl(r.foto_key)} iva={ctx.local.iva_venta} fcLocal={ctx.local.fc_objetivo}
-      canPrecios={hasPerm(ctx, "carta:precios")} canArts={hasPerm(ctx, "compras")}
+      canPrecios={hasPerm(ctx, "carta:precios")} canArts={hasPerm(ctx, "compras")} canVentas={hasPerm(ctx, "ventas")}
       initial={{
         name: r.name, familia: r.familia, raciones: r.raciones, rinde: r.rinde, rindeUnit: r.rinde_unit, pvp: r.pvp, fcObjetivo: r.fc_objetivo, ventasMes: r.ventas_mes,
         enCarta: r.en_carta, estado: r.estado, descripcion: r.descripcion, notas: r.notas, costeManual: r.coste_manual, margenObjetivo: r.margen_objetivo,
         lineas: data.own.map((l) => ({ articuloId: l.articulo_id, subrecetaId: l.subreceta_id, cantidad: l.cantidad, unidad: l.unidad })),
       }}
       arts={arts} recetas={recetas}
-      catalog={items.map((i) => ({ id: i.id, name: i.name, unit: i.unit, categoryId: i.category_id, aliases: i.aliases }))}
+      catalog={items.map((i) => ({ id: i.id, name: i.name, unit: i.unit, rend: i.rend, categoryId: i.category_id, aliases: i.aliases }))}
       cats={cats.map((c) => ({ id: c.id, name: c.name }))} />
   );
 }

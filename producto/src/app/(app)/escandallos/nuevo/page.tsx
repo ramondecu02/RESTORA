@@ -11,10 +11,12 @@ export default async function Nuevo({ searchParams }: { searchParams: Promise<{ 
   const sp = await searchParams;
   const tpls = await withTenant(ctx.tenantId, (c) => plantillasConCoste(c, ctx.local.id));
   const tipo = sp.tipo === "elaboracion" ? "elaboracion" : sp.tipo === "reventa" ? "reventa" : sp.tipo === "menu" ? "menu" : "plato";
+  const canPrecios = hasPerm(ctx, "carta:precios");
+  const pvp = sp.pvp ? Number(String(sp.pvp).replace(",", ".")) : NaN;
   return (
     <TaskScreen title={tipo === "elaboracion" ? "Nueva elaboración" : "Nuevo producto"} back={tipo === "elaboracion" ? "/escandallos/elaboraciones" : "/escandallos"}>
-      <NuevaReceta tipoInicial={tipo} plantilla={sp.plantilla ?? null} tpls={tpls} iva={ctx.local.iva_venta} canPrecios={hasPerm(ctx, "carta:precios")}
-        nombre={sp.nombre ?? ""} familia={sp.familia ?? ""} pvp={sp.pvp ? Number(sp.pvp) : null} />
+      <NuevaReceta tipoInicial={tipo} plantilla={sp.plantilla ?? null} tpls={tpls} iva={ctx.local.iva_venta} canPrecios={canPrecios}
+        nombre={sp.nombre ?? ""} familia={sp.familia ?? ""} pvp={canPrecios && pvp >= 0 && pvp < 100000 ? pvp : null} />
     </TaskScreen>
   );
 }
