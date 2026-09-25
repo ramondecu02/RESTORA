@@ -19,13 +19,17 @@ export default async function Escandallos({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const { stats } = await withTenant(ctx.tenantId, (c) => dishStats(c, ctx.local));
   const q = (sp.q ?? "").toLowerCase().trim();
-  const rows = stats.map((s) => {
-    const fc = foodCost(s.coste, s.pvp, ctx.local.iva_venta);
-    return { ...s, fc, est: estadoFC(fc, s.fcObjetivo), margen: s.pvp ? neto(s.pvp, ctx.local.iva_venta) - s.coste : null };
-  }).filter((r) => (!q || r.name.toLowerCase().includes(q)) && (sp.f !== "fuera" || r.est.estado === "warn" || r.est.estado === "crit") && (sp.f !== "borrador" || !r.en_carta))
+  // Sin escandallo (o sin coste de compra en reventa) no hay food cost: no se muestra un 0 % «En objetivo»
+  const filas = stats.map((s) => {
+    const fc = s.sinCoste ? null : foodCost(s.coste, s.pvp, ctx.local.iva_venta);
+    const est = s.sinCoste && s.pvp ? { estado: "none" as const, label: s.reventa ? "Sin coste" : s.missing ? "Faltan precios" : "Sin escandallo" } : estadoFC(fc, s.fcObjetivo);
+    return { ...s, fc, est, margen: s.pvp && !s.sinCoste ? neto(s.pvp, ctx.local.iva_venta) - s.coste : null };
+  });
+  const esFuera = (r: (typeof filas)[number]) => r.en_carta && (r.est.estado === "warn" || r.est.estado === "crit");
+  const rows = filas.filter((r) => (!q || r.name.toLowerCase().includes(q)) && (sp.f !== "fuera" || esFuera(r)) && (sp.f !== "borrador" || !r.en_carta))
     .sort((a, b) => famRank(a.familia) - famRank(b.familia) || a.familia.localeCompare(b.familia) || a.name.localeCompare(b.name));
   const res = resumenCarta(stats.filter((s) => s.en_carta));
-  const fuera = stats.filter((s) => { const e = estadoFC(foodCost(s.coste, s.pvp, ctx.local.iva_venta), s.fcObjetivo).estado; return s.en_carta && (e === "warn" || e === "crit"); }).length;
+  const fuera = filas.filter(esFuera).length;
   const sinPvp = stats.filter((s) => s.en_carta && !s.pvp).length;
   const tagCls = (e: string) => (e === "ok" ? "tag-ok" : e === "warn" ? "tag-warn" : e === "crit" ? "tag-bad" : "tag-none");
   const f = (k?: string) => `/escandallos${k ? `?f=${k}` : ""}`;
@@ -58,7 +62,7 @@ export default async function Escandallos({ searchParams }: { searchParams: Prom
                   <span className="li-ic">{fotoUrl(r.foto_key) ? <img src={fotoUrl(r.foto_key)!} alt="" /> : <Icon name={r.reventa ? "tag" : r.tipo === "menu" ? "layers" : "book"} size={18} />}</span>
                   <span><b className="link">{r.name}</b><small>{r.familia}{r.reventa ? " · reventa" : r.tipo === "menu" ? " · menú" : ""}{!r.en_carta ? " · fuera de carta" : ""}{r.missing ? " · faltan precios" : ""}</small></span>
                 </Link></td>
-                <td className="r">{eur(r.coste)}</td><td className="r">{eur(r.pvp)}</td>
+                <td className="r">{r.sinCoste ? "—" : eur(r.coste)}</td><td className="r">{eur(r.pvp)}</td>
                 <td className="r"><b className={r.est.estado === "crit" ? "bad-t" : r.est.estado === "warn" ? "warn-t" : r.est.estado === "ok" ? "ok-t" : ""}>{pct(r.fc)}</b></td>
                 <td className="r">{eur(r.margen)}</td><td className="r">{qty(r.ventas, 0)}</td>
                 <td><span className={`tag ${tagCls(r.est.estado)}`}>{r.est.label}</span></td>
@@ -67,8 +71,8 @@ export default async function Escandallos({ searchParams }: { searchParams: Prom
           <div className="list only-narrow">{rows.map((r) => (
             <Link key={r.id} className="li" href={`/escandallos/${r.id}`}>
               <span className="li-ic">{fotoUrl(r.foto_key) ? <img src={fotoUrl(r.foto_key)!} alt="" /> : <Icon name={r.reventa ? "tag" : "book"} />}</span>
-              <span className="li-main"><b>{r.name}</b><small>{r.familia} · coste {eur(r.coste)} · PVP {eur(r.pvp)}</small></span>
-              <span className="li-end"><span className={`tag ${tagCls(r.est.estado)}`}>{r.fc != null ? pct(r.fc) : "Sin PVP"}</span><small>{r.est.label}</small></span>
+              <span className="li-main"><b>{r.name}</b><small>{r.familia} · coste {r.sinCoste ? "—" : eur(r.coste)} · PVP {eur(r.pvp)}</small></span>
+              <span className="li-end"><span className={`tag ${tagCls(r.est.estado)}`}>{r.fc != null ? pct(r.fc) : r.pvp ? "—" : "Sin PVP"}</span><small>{r.est.label}</small></span>
             </Link>))}</div>
         </> : (
           <div className="empty"><span className="li-ic"><Icon name="book" /></span><b>{stats.length ? "Nada con ese filtro" : "Aún no tienes escandallos"}</b>

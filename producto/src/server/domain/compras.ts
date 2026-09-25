@@ -182,6 +182,8 @@ export async function confirmarAlbaran(ctx: AppCtx, docId: string, input: Draft,
         [ctx.tenantId, docId, idx++, l.texto.slice(0, 200), artId, l.cantidad, (l.unidadCompra || art.unit).slice(0, 40), l.factor, l.precio, l.descuento || 0, l.bonificadas || 0, lc.importe, iva, lc.costeUnit]);
       await c.query(`insert into stock_movimientos (tenant_id, local_id, articulo_id, tipo, cantidad, coste_unit, ref_tipo, ref_id, fecha, created_by)
         values ($1,$2,$3,'compra',$4,$5,'documento',$6,$7,$8)`, [ctx.tenantId, ctx.local.id, artId, lc.unidades, lc.costeUnit, docId, fechaTs, ctx.userId]);
+      // Una compra que se registra ahora es posterior a cualquier precio puesto a mano: ese precio deja de mandar
+      await c.query("update articulos set precio_manual = null, precio_manual_at = null where id = $1 and precio_manual is not null", [artId]);
       await c.query(`insert into articulo_proveedor (tenant_id, articulo_id, proveedor_id, unidad_compra, factor, precio, precio_unit, fecha, documento_id, origen, nota)
         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,'albaran','')
         on conflict (articulo_id, proveedor_id) do update set unidad_compra = excluded.unidad_compra, factor = excluded.factor, precio = excluded.precio,

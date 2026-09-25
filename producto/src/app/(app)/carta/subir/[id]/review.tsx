@@ -10,11 +10,13 @@ import { eur } from "@/lib/format";
 import type { OcrCarta } from "@/lib/ocr-types";
 import { importarCarta, type CartaItem } from "../../actions";
 
-export function CartaReview({ docId, carta, recetas, files }: { docId: string; carta: OcrCarta; recetas: { id: string; name: string; pvp: number | null }[]; files: { url: string; mime: string }[] }) {
+export function CartaReview({ docId, carta, recetas, files, canPrecios }: { docId: string; carta: OcrCarta; recetas: { id: string; name: string; pvp: number | null }[]; files: { url: string; mime: string }[]; canPrecios: boolean }) {
+  // Sin permiso de precios (cocina): los platos nuevos se crean sin precio y los que ya tienes no se tocan
   const initial = useMemo<(CartaItem & { conf: string; match: string | null })[]>(() => carta.platos.map((p) => {
     const m = bestMatches(p.nombre, recetas, (r) => [r.name], 0.8, 1)[0];
-    return { nombre: p.nombre, familia: p.familia ?? "Otros", precio: p.precio, descripcion: p.descripcion ?? "", accion: m ? "actualizar" : "crear", recetaId: m?.item.id ?? null, conf: p.confianza, match: m?.item.name ?? null };
-  }), [carta, recetas]);
+    return { nombre: p.nombre, familia: p.familia ?? "Otros", precio: canPrecios ? p.precio : null, descripcion: p.descripcion ?? "", accion: m ? (canPrecios ? "actualizar" : "ignorar") : "crear",
+      recetaId: m?.item.id ?? null, conf: p.confianza, match: m?.item.name ?? null };
+  }), [carta, recetas, canPrecios]);
   const [items, setItems] = useState(initial);
   const [pending, start] = useTransition();
   const upd = (i: number, patch: Partial<CartaItem>) => setItems((xs) => xs.map((x, j) => (j === i ? { ...x, ...patch } : x)));
@@ -26,18 +28,19 @@ export function CartaReview({ docId, carta, recetas, files }: { docId: string; c
       <div className={files.length ? "val-grid" : "stack"}>
         {files.length ? <aside className="docpane"><div className="docpane-h"><b>Original</b></div><div className="docimg">{files.map((f, i) => f.mime === "application/pdf" ? <iframe key={i} src={f.url} title="Carta" /> : <img key={i} src={f.url} alt="Carta original" />)}</div></aside> : null}
         <div className="val-col">
-          <div className="note"><Icon name="info" /><p>Revisa nombres, grupos y precios. Los que ya tienes se actualizan; los nuevos se crean sin ingredientes: luego añades su escandallo para saber lo que cuestan.</p></div>
+          <div className="note"><Icon name="info" /><p>{canPrecios ? "Revisa nombres, grupos y precios. Los que ya tienes se actualizan; los nuevos se crean sin ingredientes: luego añades su escandallo para saber lo que cuestan."
+            : "Revisa nombres y grupos. Los nuevos se crean sin precio y sin ingredientes; los que ya tienes no se tocan. Tu rol no cambia precios de carta."}</p></div>
           <div className="lns">{items.map((it, i) => (
             <article key={i} className={`ln ${it.conf === "baja" ? "is-dec" : ""}`}>
               <div className="ln-h"><span className={`conf conf-${it.conf}`}><span className="sr">Confianza {it.conf}</span></span>
                 <div className="ln-n"><input className="inp inp-sm" value={it.nombre} onChange={(e) => upd(i, { nombre: e.target.value })} aria-label="Nombre" /></div></div>
               <div className="ln-edit">
                 <div className="fld"><label>Grupo</label><input className="inp inp-sm" list="cr-fams" value={it.familia} onChange={(e) => upd(i, { familia: e.target.value })} /></div>
-                <div className="fld"><label>Precio con IVA</label><NumInput className="inp inp-sm" decimals={2} value={it.precio} onValue={(n) => upd(i, { precio: n })} /></div>
+                <div className="fld"><label>Precio con IVA</label><NumInput className="inp inp-sm" decimals={2} value={it.precio} disabled={!canPrecios} onValue={(n) => upd(i, { precio: n })} /></div>
                 <div className="fld" style={{ gridColumn: "span 2" }}><label>Qué hacer</label>
                   <select className="inp inp-sm" value={it.accion === "actualizar" ? "a" : it.accion === "ignorar" ? "i" : "c"} onChange={(e) => upd(i, { accion: e.target.value === "a" ? "actualizar" : e.target.value === "i" ? "ignorar" : "crear" })}>
                     <option value="c">Crear producto nuevo</option>
-                    {it.recetaId ? <option value="a">Actualizar el precio de «{it.match}»</option> : null}
+                    {it.recetaId && canPrecios ? <option value="a">Actualizar el precio de «{it.match}»</option> : null}
                     <option value="i">No añadir</option>
                   </select></div>
               </div>

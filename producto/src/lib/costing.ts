@@ -13,12 +13,14 @@ export type ArtCost = {
   precioManualAt: string | null;
 };
 
-/** Precio de compra vigente (€/unidad base, sin IVA). El precio manual manda hasta que llega un albarán posterior. */
+/**
+ * Precio de compra vigente (€/unidad base, sin IVA). El precio manual manda mientras exista: guardar un albarán
+ * con el artículo lo borra (confirmarAlbaran). No se compara con last_purchase_at, que es la fecha del documento
+ * y no el momento en que se registró la compra.
+ */
 export function costeBase(a: ArtCost): number | null {
-  if (a.precioManual != null) {
-    if (!a.lastPurchaseAt || (a.precioManualAt && new Date(a.precioManualAt) >= new Date(a.lastPurchaseAt))) return a.precioManual;
-  }
-  return a.pmp ?? a.lastPrice ?? a.precioManual ?? null;
+  if (a.precioManual != null) return a.precioManual;
+  return a.pmp ?? a.lastPrice ?? null;
 }
 /** Coste por unidad aprovechable: precio / rendimiento. Equivale al precioNeto del prototipo: precio / (1 − merma). */
 export function costeNeto(a: ArtCost, override?: number): number | null {
@@ -55,12 +57,13 @@ export type LineCost = {
   unitCost: number | null; // €/unidad base neta
   cost: number | null;
 };
-export type RecetaCost = { total: number; perUnit: number; lines: LineCost[]; missing: number; cycle: boolean };
+/** vacio: la receta no tiene ingredientes (ni coste manual si es reventa), así que su coste 0 no significa nada. */
+export type RecetaCost = { total: number; perUnit: number; lines: LineCost[]; missing: number; cycle: boolean; vacio: boolean };
 
 export function recetaCost(id: string, ctx: CostContext, stack: Set<string> = new Set()): RecetaCost {
   const r = ctx.recetas.get(id);
-  if (!r) return { total: 0, perUnit: 0, lines: [], missing: 1, cycle: false };
-  if (stack.has(id)) return { total: 0, perUnit: 0, lines: [], missing: 1, cycle: true };
+  if (!r) return { total: 0, perUnit: 0, lines: [], missing: 1, cycle: false, vacio: false };
+  if (stack.has(id)) return { total: 0, perUnit: 0, lines: [], missing: 1, cycle: true, vacio: false };
   stack.add(id);
   const lines: LineCost[] = [];
   let total = 0, missing = 0, cycle = false;
@@ -75,20 +78,21 @@ export function recetaCost(id: string, ctx: CostContext, stack: Set<string> = ne
       const sub = ctx.recetas.get(l.subrecetaId);
       const sc = recetaCost(l.subrecetaId, ctx, stack);
       if (sc.cycle) cycle = true;
-      const uc = sub && !sc.cycle ? sc.perUnit : null;
-      const cost = uc == null || sc.missing ? (uc == null ? null : uc * l.cantidad) : uc * l.cantidad;
+      // Una subreceta sin ingredientes no tiene coste: cuenta como línea sin precio, no como 0 €
+      const uc = sub && !sc.cycle && !sc.vacio ? sc.perUnit : null;
+      const cost = uc == null ? null : uc * l.cantidad;
       if (cost == null) missing++; else total += cost;
-      if (sc.missing) missing += sc.missing;
+      if (sc.missing && !sc.vacio) missing += sc.missing;
       lines.push({ idx, kind: sub?.tipo === "elaboracion" ? "elaboracion" : "plato", refId: l.subrecetaId, name: sub?.name ?? "Receta eliminada", cantidad: l.cantidad, unidad: l.unidad, unitCost: uc, cost });
     }
   });
   stack.delete(id);
   if (r.reventa && r.lineas.length === 0) {
     const c = r.costeManual ?? 0;
-    return { total: c, perUnit: c, lines, missing: r.costeManual == null ? 1 : 0, cycle };
+    return { total: c, perUnit: c, lines, missing: r.costeManual == null ? 1 : 0, cycle, vacio: r.costeManual == null };
   }
   const div = r.tipo === "elaboracion" ? r.rinde : r.raciones;
-  return { total, perUnit: div > 0 ? total / div : 0, lines, missing, cycle };
+  return { total, perUnit: div > 0 ? total / div : 0, lines, missing, cycle, vacio: r.lineas.length === 0 };
 }
 
 /** Cantidades netas de cada artículo por unidad de receta (ración o unidad de rinde), explotando subrecetas. */

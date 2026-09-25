@@ -1,7 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
 import { isUuid, one, withTenant } from "@/server/db";
-import { requireApp, requirePerm, UserError } from "@/server/ctx";
+import { hasPerm, requireApp, requirePerm, UserError } from "@/server/ctx";
 import { run, type Result } from "@/server/action";
 import { audit } from "@/server/audit";
 import { setFlash } from "@/server/session";
@@ -16,13 +16,18 @@ export async function importarCarta(docId: string, items: CartaItem[]): Promise<
     requirePerm(ctx, "escandallos");
     if (!isUuid(docId)) throw new UserError("Documento no válido.");
     if (items.length > 300) throw new UserError("Demasiados platos de una vez.");
+    // Los precios de carta solo los pone quien tiene permiso (cocina crea los platos sin precio y no cambia los que hay)
+    const precios = hasPerm(ctx, "carta:precios");
     const n = await withTenant(ctx.tenantId, async (c) => {
       const d = await one<{ status: string; kind: string }>(c, "select status, kind from documentos where id = $1 and local_id = $2 for update", [docId, ctx.local.id]);
       if (!d || d.kind !== "carta") throw new UserError("Documento no encontrado.");
+      // Segundo envío (otra pestaña, reintento): la carta ya se guardó y no se vuelve a importar
+      if (d.status === "guardado") return null;
+      if (d.status !== "revisar") throw new UserError("Esta carta no está lista para guardar.");
       let creados = 0, actualizados = 0, orden = 0;
       for (const it of items) {
         const nombre = it.nombre.trim().slice(0, 100);
-        const precio = it.precio != null && it.precio >= 0 && it.precio < 10000 ? Math.round(it.precio * 100) / 100 : null;
+        const precio = precios && it.precio != null && it.precio >= 0 && it.precio < 10000 ? Math.round(it.precio * 100) / 100 : null;
         if (it.accion === "ignorar" || nombre.length < 2) continue;
         if (it.accion === "actualizar" && it.recetaId && isUuid(it.recetaId)) {
           await c.query("update recetas set pvp = coalesce($2, pvp), familia = case when familia = '' then $3 else familia end, descripcion = case when descripcion = '' then $4 else descripcion end, en_carta = true where id = $1 and local_id = $5",
@@ -39,7 +44,8 @@ export async function importarCarta(docId: string, items: CartaItem[]): Promise<
       await audit(c, ctx.tenantId, ctx.userId, "importar_carta", "documento", docId, { creados, actualizados });
       return { creados, actualizados };
     });
-    await setFlash(`${n.creados ? `${n.creados} platos creados` : ""}${n.creados && n.actualizados ? " y " : ""}${n.actualizados ? `${n.actualizados} precios actualizados` : ""}. Añade los ingredientes para ver su coste.`);
+    if (!n) await setFlash("Esta carta ya estaba guardada.");
+    else await setFlash(`${n.creados ? `${n.creados} platos creados` : ""}${n.creados && n.actualizados ? " y " : ""}${n.actualizados ? `${n.actualizados} ${precios ? "precios actualizados" : "platos actualizados"}` : ""}. Añade los ingredientes para ver su coste.`);
   });
   if (r.ok) redirect("/carta");
   return r;

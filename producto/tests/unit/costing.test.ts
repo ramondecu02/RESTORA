@@ -1,6 +1,13 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { costeBase, costeNeto, estadoFC, explode, foodCost, pvpParaFc, recetaCost, revMargen, revPvp, type ArtCost, type CostContext, type RecetaNode } from "@/lib/costing";
-import { cuadrantes, resumenCarta, salud, type DishStat } from "@/lib/menu";
+import { aporta, cuadrantes, margenPorFamilia, margenUnit, resumenCarta, salud, type DishStat } from "@/lib/menu";
+import { PLANTILLAS } from "@/lib/plantillas";
+import { compatible, type BaseUnit } from "@/lib/units";
+import { buildContext, type ArtRow, type LineaRow, type RecetaRow } from "@/server/domain/costs";
+import { computeStats } from "@/server/domain/carta";
+import { efectoCambio } from "@/server/domain/avisos";
+import type { Local } from "@/server/ctx";
 
 // Datos del prototipo anterior (precio de compra y merma) para comprobar el motor de costes.
 const P: Record<string, [string, "kg" | "L" | "ud", number, number]> = {
@@ -81,10 +88,44 @@ describe("precio de venta y food cost (sobre venta neta)", () => {
     expect(estadoFC(0.34, 30).estado).toBe("crit");
     expect(estadoFC(null, 30).estado).toBe("none");
   });
-  it("precio manual manda hasta que llega una compra posterior", () => {
-    const a = { ...art("lubina"), precioManual: 20, precioManualAt: "2026-05-10T10:00:00Z", lastPurchaseAt: "2026-05-01T10:00:00Z" };
+  it("precio manual manda mientras exista (la compra que se registra después lo borra)", () => {
+    const a = { ...art("lubina"), precioManual: 20, precioManualAt: "2026-05-10T10:00:00Z", lastPurchaseAt: "2026-05-01T12:00:00Z" };
     expect(costeBase(a)).toBe(20);
-    expect(costeBase({ ...a, lastPurchaseAt: "2026-05-12T10:00:00Z" })).toBe(18.65);
+    // Puesto a las 08:00 del mismo día que el albarán (fecha del documento a las 12:00 UTC): sigue mandando
+    expect(costeBase({ ...a, precioManualAt: "2026-05-12T08:00:00Z", lastPurchaseAt: "2026-05-12T12:00:00Z" })).toBe(20);
+    // Albarán con fecha futura guardado antes del precio manual: tampoco lo pisa
+    expect(costeBase({ ...a, precioManualAt: "2026-05-12T08:00:00Z", lastPurchaseAt: "2026-05-14T12:00:00Z" })).toBe(20);
+    expect(costeBase({ ...a, precioManual: null, precioManualAt: null })).toBe(18.65);
+    expect(costeBase({ ...art("lubina"), pmp: null })).toBe(18.65);
+    expect(costeBase({ ...art("lubina"), pmp: null, lastPrice: null })).toBeNull();
+  });
+});
+
+describe("recetas sin ingredientes", () => {
+  it("un plato sin líneas no tiene coste (vacío), no un 0 € completo", () => {
+    const cc = ctx();
+    cc.recetas.set("croquetas", { id: "croquetas", tipo: "plato", name: "Croquetas", raciones: 1, rinde: 1, rindeUnit: "ud", reventa: false, costeManual: null, lineas: [] });
+    const r = recetaCost("croquetas", cc);
+    expect(r.vacio).toBe(true);
+    expect(r.perUnit).toBe(0);
+    expect(recetaCost("lubina", cc).vacio).toBe(false);
+  });
+  it("reventa sin coste manual está vacía; con coste manual, no", () => {
+    const cc = ctx();
+    cc.recetas.set("refresco", { id: "refresco", tipo: "plato", name: "Refresco", raciones: 1, rinde: 1, rindeUnit: "ud", reventa: true, costeManual: null, lineas: [] });
+    expect(recetaCost("refresco", cc).vacio).toBe(true);
+    expect(recetaCost("refresco", cc).missing).toBe(1);
+    expect(recetaCost("vino_copa", cc).vacio).toBe(false);
+  });
+  it("una elaboración vacía usada en un plato cuenta como línea sin precio", () => {
+    const cc = ctx();
+    cc.recetas.set("salsa_v", { id: "salsa_v", tipo: "elaboracion", name: "Salsa", raciones: 1, rinde: 1, rindeUnit: "kg", reventa: false, costeManual: null, lineas: [] });
+    cc.recetas.set("p", { id: "p", tipo: "plato", name: "P", raciones: 1, rinde: 1, rindeUnit: "ud", reventa: false, costeManual: null,
+      lineas: [{ articuloId: "mantequilla", cantidad: 0.1, unidad: "g" }, { subrecetaId: "salsa_v", cantidad: 0.05, unidad: "g" }] });
+    const r = recetaCost("p", cc);
+    expect(r.missing).toBe(1);
+    expect(r.vacio).toBe(false);
+    expect(r.perUnit).toBeCloseTo(0.96, 6);
   });
 });
 
@@ -114,5 +155,64 @@ describe("carta: resumen, cuadrantes y salud", () => {
     expect(salud(0.2564, 4, 3, 30).estado).toBe("warn");
     expect(salud(0.25, 1, 0, 30).estado).toBe("ok");
     expect(salud(0.36, 6, 5, 30).estado).toBe("crit");
+  });
+  it("sin ventas no se dice que el local va bien", () => {
+    expect(salud(null, 2, 0, 30)).toEqual({ estado: "warn", title: "Faltan ventas para valorar el mes" });
+    expect(salud(null, 0, 5, 30).estado).toBe("crit");
+  });
+  it("los platos sin coste no bajan el food cost ni suman margen", () => {
+    const base: DishStat[] = [{ id: "a", name: "a", familia: "x", reventa: false, pvp: 11, iva: 10, coste: 3, ventas: 100, fcObjetivo: 30 }];
+    const conVacio: DishStat[] = [...base, { id: "b", name: "b", familia: "y", reventa: false, pvp: 22, iva: 10, coste: 0, ventas: 100, fcObjetivo: 30, sinCoste: true }];
+    const r0 = resumenCarta(base), r1 = resumenCarta(conVacio);
+    expect(r1.fc).toBeCloseTo(0.3, 6);
+    expect(r1.fc).toBeCloseTo(r0.fc!, 6);
+    expect(r1.margen).toBeCloseTo(r0.margen, 6);
+    expect(r1.ingresos).toBeCloseTo(3000, 6); // las ventas sí cuentan
+    expect(margenUnit(conVacio[1])).toBe(0);
+    expect(aporta(conVacio[1])).toBe(0);
+    expect(margenPorFamilia(conVacio).map((f) => f.familia)).toEqual(["x"]);
+    expect(cuadrantes(conVacio).items.map((i) => i.id)).toEqual(["a"]);
+  });
+});
+
+describe("plantillas", () => {
+  // Unidad de cada elemento del catálogo base, leída de la migración que lo crea
+  const sql = readFileSync(new URL("../../db/migrations/0002_catalog.sql", import.meta.url), "utf8");
+  const unidades = new Map([...sql.matchAll(/\('([a-z0-9-]+)', '[^']*', '[a-z_]+', '(kg|L|ud)', /g)].map((m) => [m[1], m[2] as BaseUnit]));
+  it("el catálogo se ha leído", () => expect(unidades.size).toBeGreaterThan(100));
+  for (const p of PLANTILLAS) {
+    it(`${p.name}: cada línea encaja con la unidad del artículo del catálogo`, () => {
+      for (const l of p.lineas) {
+        const u = unidades.get(l.cat);
+        expect(u, l.cat).toBeDefined();
+        expect(compatible(u!, l.u), `${l.cat}: ${l.u} con artículo en ${u}`).toBe(true);
+      }
+    });
+  }
+});
+
+describe("avisos de subida de precio", () => {
+  // Aceite: compras a 8, 10 y 11 €/L (PMP 9,667). Último cambio de 10 a 11 (+10 %).
+  const local = { id: "l", iva_venta: 10, fc_objetivo: 30 } as Local;
+  const artRow = { id: "aceite", name: "Aceite", unit: "L", rend: 100, pmp: 9.666667, last_price: 11, last_purchase_at: null, precio_manual: null, precio_manual_at: null } as ArtRow;
+  const receta = (id: string, pvp: number, ventas: number): RecetaRow => ({ id, tipo: "plato", name: id, familia: "Principales", raciones: 1, rinde: 1, rinde_unit: "kg",
+    fc_objetivo: null, pvp, reventa: false, coste_manual: null, margen_objetivo: null, ventas_mes: ventas, en_carta: true, orden: 0, estado: "activo",
+    foto_key: null, descripcion: "", notas: "", coste_cache: null, demo: false, updated_at: new Date() });
+  const recetas = [receta("plato", 10, 300), receta("justo", 19.25, 100)];
+  const lineas: LineaRow[] = [{ receta_id: "plato", idx: 0, articulo_id: "aceite", subreceta_id: null, cantidad: 500, unidad: "ml" },
+    { receta_id: "justo", idx: 0, articulo_id: "aceite", subreceta_id: null, cantidad: 500, unidad: "ml" }];
+  const cc = buildContext([artRow], recetas, lineas);
+  it("el coste extra al mes compara precio anterior con precio nuevo, no con el PMP", () => {
+    const ef = efectoCambio(recetas, cc, local, "aceite", 10, 11, new Set(["plato", "justo"]));
+    expect(ef.impactoMes).toBeCloseTo((11 - 10) * 0.5 * 400, 6);
+    expect(ef.fcDespues!).toBeGreaterThan(ef.fcAntes!);
+    // «justo»: 5 € de coste sobre 17,50 € netos (28,6 %) pasa a 5,50 € (31,4 %): se sale del objetivo del 30 %
+    expect(ef.salen.map((s) => s.id)).toEqual(["justo"]);
+    expect(ef.platos).toHaveLength(2);
+  });
+  it("con los precios de hoy el plato cuesta el PMP (la comparación antigua daba un impacto negativo)", () => {
+    const hoy = computeStats(recetas, cc, local).find((s) => s.id === "plato")!;
+    expect(hoy.coste).toBeCloseTo(4.8333, 3);
+    expect((hoy.coste - 5) * 300).toBeLessThan(0);
   });
 });

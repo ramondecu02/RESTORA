@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { all, isUuid, one, withTenant } from "@/server/db";
-import { requireApp } from "@/server/ctx";
+import { hasPerm, requireApp } from "@/server/ctx";
 import type { OcrCarta } from "@/lib/ocr-types";
 import { Leyendo } from "../../../compras/[id]/leyendo";
 import { ErrorDoc } from "../../../compras/[id]/error-doc";
@@ -25,5 +25,5 @@ export default async function CartaDoc({ params }: { params: Promise<{ id: strin
   if (d.doc.status === "leyendo" || d.doc.status === "subido") return <Leyendo id={id} kind="carta" name={d.files[0]?.name ?? "Carta"} pages={d.doc.pages} thumb={d.files[0]?.mime.startsWith("image/") ? url(d.files[0].storage_key) : null} />;
   if (d.doc.status === "error") return <ErrorDoc id={id} error={d.doc.ocr_error} canRetry carta />;
   if (d.doc.status === "guardado") redirect("/carta");
-  return <CartaReview docId={id} carta={d.doc.ocr ?? { nombre_local: null, platos: [] }} recetas={d.recetas} files={d.files.map((f) => ({ url: url(f.storage_key), mime: f.mime }))} />;
+  return <CartaReview docId={id} carta={d.doc.ocr ?? { nombre_local: null, platos: [] }} recetas={d.recetas} files={d.files.map((f) => ({ url: url(f.storage_key), mime: f.mime }))} canPrecios={hasPerm(ctx, "carta:precios")} />;
 }

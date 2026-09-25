@@ -60,19 +60,20 @@ export default async function Carta({ searchParams }: { searchParams: Promise<{ 
           ) : null}
           <div className="dishgrid">
             {shown.map((s) => {
-              const fc = foodCost(s.coste, s.pvp, ctx.local.iva_venta);
+              // Sin escandallo (o sin coste de compra en reventa) no hay food cost ni margen: nada de «0 % coste»
+              const fc = s.sinCoste ? null : foodCost(s.coste, s.pvp, ctx.local.iva_venta);
               const est = estadoFC(fc, s.fcObjetivo);
-              const m = s.pvp ? neto(s.pvp, ctx.local.iva_venta) - s.coste : null;
+              const m = s.pvp && !s.sinCoste ? neto(s.pvp, ctx.local.iva_venta) - s.coste : null;
               const url = fotoUrl(s.foto_key);
               return (
                 <article key={s.id} className="dishcard">
                   <div className="dishcard-ph">
                     {url ? <img src={url} alt="" loading="lazy" /> : <span className="dishcard-ini" aria-hidden="true">{s.name[0]?.toUpperCase()}</span>}
-                    <span className={`dishcard-fc tag ${est.estado === "ok" ? "tag-ok" : est.estado === "warn" ? "tag-warn" : est.estado === "crit" ? "tag-bad" : "tag-none"}`}>{fc != null ? `${pct(fc, 0)} coste` : "Sin PVP"}</span>
+                    <span className={`dishcard-fc tag ${est.estado === "ok" ? "tag-ok" : est.estado === "warn" ? "tag-warn" : est.estado === "crit" ? "tag-bad" : "tag-none"}`}>{fc != null ? `${pct(fc, 0)} coste` : !s.pvp ? "Sin PVP" : s.reventa ? "Sin coste" : "Sin escandallo"}</span>
                     {canEsc ? <PhotoButton recetaId={s.id} className="dishcard-cam" label={`Cambiar foto de ${s.name}`}><Icon name="camera" size={18} /></PhotoButton> : null}
                   </div>
                   <div className="dishcard-b">
-                    <div><div className="dishcard-n">{s.name}</div><div className="dishcard-f">{s.familia}{s.reventa ? " · reventa" : ""}{s.missing && !s.reventa ? " · faltan ingredientes" : ""}</div></div>
+                    <div><div className="dishcard-n">{s.name}</div><div className="dishcard-f">{s.familia}{s.reventa ? " · reventa" : ""}{(s.missing || s.sinCoste) && !s.reventa ? " · faltan ingredientes" : ""}</div></div>
                     <div className="dishcard-pvp">{eur(s.pvp)}</div>
                     <div className="dishcard-m">{m != null ? `${eur(m)} margen` : "—"} · {qty(s.ventas, 0)} uds</div>
                     <div className="dishcard-acts">

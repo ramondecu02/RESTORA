@@ -13,7 +13,7 @@ export const PLANTILLAS: Plantilla[] = [
   { key: "bravas", name: "Patatas bravas", familia: "Entrantes", raciones: 1, pvp: 6.5, lineas: [
     { cat: "patata-agria", q: 350, u: "g" }, { cat: "aceite-oliva-ve", q: 40, u: "ml" }, { cat: "tomate-triturado", q: 60, u: "g" }, { cat: "pimenton-picante", q: 3, u: "g" }, { cat: "ajo", q: 5, u: "g" }] },
   { key: "gazpacho", name: "Gazpacho andaluz", familia: "Entrantes", raciones: 1, pvp: 6.5, lineas: [
-    { cat: "tomate-pera", q: 250, u: "g" }, { cat: "pepino", q: 50, u: "g" }, { cat: "pimiento-verde", q: 30, u: "g" }, { cat: "ajo", q: 3, u: "g" }, { cat: "aceite-oliva-ve", q: 30, u: "ml" }, { cat: "vinagre-jerez", q: 10, u: "ml" }, { cat: "pan-barra", q: 30, u: "g" }] },
+    { cat: "tomate-pera", q: 250, u: "g" }, { cat: "pepino", q: 50, u: "g" }, { cat: "pimiento-verde", q: 30, u: "g" }, { cat: "ajo", q: 3, u: "g" }, { cat: "aceite-oliva-ve", q: 30, u: "ml" }, { cat: "vinagre-jerez", q: 10, u: "ml" }, { cat: "pan-barra", q: 0.12, u: "ud" }] }, // el pan va por barras (ud): 30 g de una barra de 250 g
   { key: "crema", name: "Crema catalana", familia: "Postres", raciones: 1, pvp: 6.5, lineas: [
     { cat: "leche-entera", q: 150, u: "ml" }, { cat: "huevo-campero-l", q: 1.5, u: "ud" }, { cat: "azucar", q: 35, u: "g" }, { cat: "limon", q: 5, u: "g" }, { cat: "canela", q: 1, u: "g" }] },
 ];
