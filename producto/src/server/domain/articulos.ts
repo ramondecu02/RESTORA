@@ -4,6 +4,7 @@ import { replay } from "@/lib/pmp";
 import { norm } from "@/lib/fuzzy";
 import type { BaseUnit } from "@/lib/units";
 import { getCatalog } from "../queries/catalog";
+import { UserError } from "../ctx";
 
 export async function ivaCategoria(categoryId: string): Promise<number> {
   const { cats } = await getCatalog();
@@ -30,29 +31,39 @@ export async function articuloDesdeCatalogo(c: Db, tenantId: string, localId: st
 
 export async function crearArticulo(c: Db, tenantId: string, localId: string, a: { name: string; categoryId: string; unit: BaseUnit; rend?: number; iva?: number; catalogId?: string | null; demo?: boolean }): Promise<string> {
   const name = a.name.trim().slice(0, 100);
-  const dup = await one<{ id: string }>(c, "select id from articulos where local_id = $1 and lower(name) = lower($2) and not archived", [localId, name]);
-  if (dup) return dup.id;
+  const dup = await one<{ id: string; name: string; unit: BaseUnit }>(c, "select id, name, unit from articulos where local_id = $1 and lower(name) = lower($2) and not archived", [localId, name]);
+  if (dup) {
+    // Reutilizarlo con otra unidad aplicaría una conversión pensada para otra medida (bandejas en kg contadas como ud)
+    if (dup.unit !== a.unit) throw new UserError(`Ya tienes «${dup.name}» y se mide en ${dup.unit}, no en ${a.unit}. Elígelo en la lista para que la conversión de unidades sea la suya.`);
+    return dup.id;
+  }
   const iva = a.iva ?? await ivaCategoria(a.categoryId);
   const r = await one<{ id: string }>(c, `insert into articulos (tenant_id, local_id, name, category_id, catalog_item_id, unit, rend, iva, demo)
     values ($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id`, [tenantId, localId, name, a.categoryId, a.catalogId ?? null, a.unit, Math.min(100, Math.max(1, a.rend ?? 100)), iva, !!a.demo]);
   return r!.id;
 }
 
-/** Guarda el texto del albarán como alias del artículo: la próxima vez se reconoce solo. */
-export async function aprenderAlias(c: Db, articuloId: string, texto: string) {
-  const t = norm(texto).slice(0, 120);
-  if (!t) return;
-  await c.query("update articulos set aliases = array_append(aliases, $2) where id = $1 and not ($2 = any(aliases)) and cardinality(aliases) < 40", [articuloId, t]);
+/** Guarda el texto del albarán como alias del artículo: la próxima vez se reconoce solo. Devuelve el alias si es nuevo. */
+export async function aprenderAlias(c: Db, articuloId: string, texto: string): Promise<string | null> {
+  const t = aliasDe(texto);
+  if (!t) return null;
+  const r = await c.query("update articulos set aliases = array_append(aliases, $2) where id = $1 and not ($2 = any(aliases)) and cardinality(aliases) < 40", [articuloId, t]);
+  return r.rowCount ? t : null;
 }
+export const aliasDe = (texto: string) => norm(texto).slice(0, 120);
 
 /** Recalcula stock, PMP y última compra de un artículo a partir de sus movimientos y líneas de compra. */
 export async function rebuildArticulo(c: Db, articuloId: string) {
+  // Primero se bloquea el artículo: si otra transacción lo está recalculando, se espera a que termine y así se leen
+  // también sus movimientos (si no, la caché de stock y PMP quedaría vieja). «no key update» no choca con las
+  // referencias que toman los movimientos recién insertados, así dos albaranes con el mismo artículo no se interbloquean.
+  await c.query("select 1 from articulos where id = $1 for no key update", [articuloId]);
   const movs = await all<{ cantidad: number; coste_unit: number | null; tipo: string; fecha: Date }>(c,
     "select cantidad, coste_unit, tipo, fecha from stock_movimientos where articulo_id = $1 order by fecha, id", [articuloId]);
   const r = replay(movs.map((m) => ({ cantidad: m.cantidad, costeUnit: m.coste_unit, tipo: m.tipo, fecha: m.fecha })));
   const last = await one<{ coste_unit: number; proveedor_id: string | null; fecha: string }>(c, `select cl.coste_unit, d.proveedor_id, d.fecha
     from compra_lineas cl join documentos d on d.id = cl.documento_id
-    where cl.articulo_id = $1 and d.status = 'guardado' order by d.fecha desc nulls last, d.saved_at desc limit 1`, [articuloId]);
+    where cl.articulo_id = $1 and d.status = 'guardado' order by d.fecha desc nulls last, d.saved_at desc, cl.idx limit 1`, [articuloId]);
   await c.query(`update articulos set stock = $2, pmp = $3, last_price = $4, last_proveedor_id = $5, last_purchase_at = $6, updated_at = now() where id = $1`,
     [articuloId, r.stock, r.pmp, last?.coste_unit ?? null, last?.proveedor_id ?? null, last ? new Date(last.fecha + "T12:00:00Z") : null]);
 }

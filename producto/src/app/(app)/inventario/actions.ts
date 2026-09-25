@@ -12,9 +12,9 @@ import { toArtCost, type ArtRow } from "@/server/domain/costs";
 
 const TIPOS_SALIDA = ["merma", "desecho", "devolucion", "perdida", "invitacion"] as const;
 
-async function art(c: Db, ctx: AppCtx, id: string) {
+async function art(c: Db, ctx: AppCtx, id: string, lock = false) {
   if (!isUuid(id)) throw new UserError("Artículo no válido.");
-  const a = await one<{ id: string; stock: number }>(c, "select id, stock from articulos where id = $1 and local_id = $2 and not archived", [id, ctx.local.id]);
+  const a = await one<{ id: string; stock: number }>(c, `select id, stock from articulos where id = $1 and local_id = $2 and not archived${lock ? " for no key update" : ""}`, [id, ctx.local.id]);
   if (!a) throw new UserError("Artículo no encontrado.");
   return a;
 }
@@ -25,10 +25,11 @@ export async function ajustarStock(id: string, nuevo: number): Promise<Result<{ 
     requirePerm(ctx, "inventario");
     if (!Number.isFinite(nuevo) || nuevo < 0 || nuevo > 1e7) throw new UserError("Stock no válido.");
     const stock = await withTenant(ctx.tenantId, async (c) => {
-      const a = await art(c, ctx, id);
-      const diff = Math.round((nuevo - a.stock) * 1000) / 1000;
-      if (diff !== 0) {
-        await c.query("insert into stock_movimientos (tenant_id, local_id, articulo_id, tipo, cantidad, nota, created_by) values ($1,$2,$3,'ajuste',$4,'Recuento',$5)", [ctx.tenantId, ctx.local.id, id, diff, ctx.userId]);
+      const a = await art(c, ctx, id, true);
+      const contado = Math.round(nuevo * 1000) / 1000;
+      if (contado !== Math.round(a.stock * 1000) / 1000) {
+        // Se guarda lo contado, no la diferencia: al rehacer el stock, lo anterior a esta fecha ya está incluido en el recuento
+        await c.query("insert into stock_movimientos (tenant_id, local_id, articulo_id, tipo, cantidad, nota, created_by) values ($1,$2,$3,'recuento',$4,'Recuento',$5)", [ctx.tenantId, ctx.local.id, id, contado, ctx.userId]);
         await rebuildArticulo(c, id);
       }
       return (await one<{ stock: number }>(c, "select stock from articulos where id = $1", [id]))!.stock;
