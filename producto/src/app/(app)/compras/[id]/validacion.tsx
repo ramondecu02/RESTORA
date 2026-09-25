@@ -43,7 +43,7 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
   const [creating, setCreating] = useState<string | null>(null);
   const [picker, setPicker] = useState<{ line: string | null } | null>(null);
   const [showDoc, setShowDoc] = useState(false);
-  const [ask, setAsk] = useState<null | { kind: "total" | "duplicado" | "descartar"; text: string }>(null);
+  const [ask, setAsk] = useState<null | { kind: "total" | "duplicado" | "descartar"; text: string; opts?: { forzarTotal?: boolean; forzarDuplicado?: boolean } }>(null);
   const [saving, startSave] = useTransition();
   const [discarding, startDiscard] = useTransition();
   const catName = useMemo(() => new Map(cats.map((c) => [c.id, c.name])), [cats]);
@@ -120,8 +120,8 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
     await guardarBorrador(docId, d);
     const r = await confirmar(docId, d, opts);
     if (r.ok) { router.push(`/compras/${r.id}?guardado=1`); router.refresh(); return; }
-    if (r.kind === "total") setAsk({ kind: "total", text: `Las líneas suman ${eur(chk.total)} y el documento dice ${eur(d.total)} (diferencia de ${eur(Math.abs(r.diff ?? 0))}). Revisa cantidades y precios, o guárdalo igualmente si sabes por qué no cuadra.` });
-    else if (r.kind === "duplicado") setAsk({ kind: "duplicado", text: `${r.error} Si lo guardas otra vez, esa compra contará dos veces.` });
+    if (r.kind === "total") setAsk({ kind: "total", opts, text: `Las líneas suman ${eur(chk.total)} y el documento dice ${eur(d.total)} (diferencia de ${eur(Math.abs(r.diff ?? 0))}). Revisa cantidades y precios, o guárdalo igualmente si sabes por qué no cuadra.` });
+    else if (r.kind === "duplicado") setAsk({ kind: "duplicado", opts, text: `${r.error} Si lo guardas otra vez, esa compra contará dos veces.` });
     else toastError(r.error);
   });
 
@@ -274,7 +274,7 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
         arts={arts} catalog={catalog} cats={catName} title={picker?.line ? "¿Qué artículo es?" : "Añadir línea"} />
       <Confirm open={ask?.kind === "total" || ask?.kind === "duplicado"} onClose={() => setAsk(null)} title={ask?.kind === "total" ? "El total no cuadra" : "Documento repetido"}
         text={ask?.text} confirm="Guardar igualmente" busy={saving}
-        onConfirm={() => { const k = ask?.kind; setAsk(null); save(k === "total" ? { forzarTotal: true, forzarDuplicado: true } : { forzarDuplicado: true }); }} />
+        onConfirm={() => { const a = ask; setAsk(null); save({ ...a?.opts, ...(a?.kind === "total" ? { forzarTotal: true } : { forzarDuplicado: true }) }); }} />
       <Confirm open={ask?.kind === "descartar"} onClose={() => setAsk(null)} title="¿Descartar el documento?" text={ask?.text} confirm="Descartar" danger busy={discarding}
         onConfirm={() => startDiscard(async () => { const r = await descartar(docId); if (r && !r.ok) toastError(r.error); })} />
       {!manual ? <Tour k="validacion" show={!tourSeen} steps={[{ sel: '[data-tour="legend"]', h: "Solo te paramos donde hace falta", p: "Verde: leído con seguridad. Ámbar: échale un ojo. Rojo: decides tú antes de guardar." }]} /> : null}

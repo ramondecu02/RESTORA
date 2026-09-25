@@ -8,12 +8,17 @@ export function applyPurchase(stock: number, pmp: number | null, q: number, unit
   if (pmp == null || s === 0) return unitCost;
   return (s * pmp + q * unitCost) / (s + q);
 }
-/** Reconstruye stock y PMP recorriendo los movimientos en orden (se usa al borrar un albarán). */
+/**
+ * Reconstruye stock y PMP recorriendo los movimientos en orden de fecha (se usa al borrar un albarán).
+ * Un «recuento» guarda lo contado (valor absoluto, no una diferencia): fija el stock en su fecha, así que lo anterior
+ * que llegue o se borre después (un albarán atrasado, unas ventas importadas) no mueve lo que ya se contó.
+ */
 export function replay(movs: Mov[]): { stock: number; pmp: number | null } {
   const sorted = [...movs].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
   let stock = 0;
   let pmp: number | null = null;
   for (const m of sorted) {
+    if (m.tipo === "recuento") { stock = m.cantidad; continue; }
     if (m.cantidad > 0 && m.costeUnit != null && (m.tipo === "compra" || m.tipo === "inicial")) pmp = applyPurchase(stock, pmp, m.cantidad, m.costeUnit);
     stock += m.cantidad;
   }
