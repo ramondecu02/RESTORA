@@ -5,12 +5,15 @@ import { useRef, useState } from "react";
 import { QUAD_COLOR, Scatter } from "@/components/charts";
 import { NumInput } from "@/components/ui/num-input";
 import { toastError } from "@/components/ui/toast";
-import { estadoFC, foodCost, neto, revMargen, revPvp } from "@/lib/costing";
+import { estadoFC, foodCost, neto, revMargen } from "@/lib/costing";
 import { aporta, cuadrantes, margenUnit, QUAD_INFO, resumenCarta, type DishStat, type Quad } from "@/lib/menu";
 import { eur, eur0, pct, qty } from "@/lib/format";
 import { setReventa, setVentasMes } from "../escandallos/actions";
+import { editarReventa, type CambioRev, type FilaRev } from "./reventa";
 
-export function VentasBoard({ stats: initial, comensales, canPrecios }: { stats: DishStat[]; comensales: number | null; canPrecios: boolean }) {
+type Fila = DishStat & FilaRev;
+
+export function VentasBoard({ stats: initial, comensales, canPrecios }: { stats: Fila[]; comensales: number | null; canPrecios: boolean }) {
   const [stats, setStats] = useState(initial);
   const [flash, setFlash] = useState<string | null>(null);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -32,14 +35,11 @@ export function VentasBoard({ stats: initial, comensales, canPrecios }: { stats:
     setFlash(s.id); setTimeout(() => setFlash(null), 900);
     save("u" + s.id, () => setVentasMes(s.id, v));
   };
-  const setRev = (s: DishStat, patch: { coste?: number | null; margen?: number | null; pvp?: number | null }) => {
-    const coste = patch.coste !== undefined ? patch.coste ?? 0 : s.coste;
-    let pvp = s.pvp;
-    if (patch.pvp !== undefined) pvp = patch.pvp;
-    else if (patch.margen != null) pvp = Math.round(revPvp(coste, patch.margen, s.iva) * 100) / 100;
-    else if (patch.coste !== undefined && s.pvp) pvp = Math.round(revPvp(coste, revMargen(s.coste, s.pvp, s.iva), s.iva) * 100) / 100;
-    setStats((xs) => xs.map((x) => (x.id === s.id ? { ...x, coste, pvp } : x)));
-    save("r" + s.id, () => setReventa(s.id, { coste: patch.coste !== undefined ? coste : null, margen: pvp ? Math.round(revMargen(coste, pvp, s.iva)) : null, pvp }));
+  const setRev = (s: Fila, patch: CambioRev) => {
+    const r = editarReventa(s, patch);
+    if (!r) return;
+    setStats((xs) => xs.map((x) => (x.id === s.id ? { ...x, coste: r.coste, pvp: r.pvp, mRef: r.mRef } : x)));
+    save("r" + s.id, () => setReventa(s.id, r.envio));
   };
   const ticketCom = comensales && res.ingresos ? res.ingresos / (comensales * 30) : null;
 
@@ -97,7 +97,8 @@ export function VentasBoard({ stats: initial, comensales, canPrecios }: { stats:
             <tbody>{reventa.map((s) => (
               <tr key={s.id}>
                 <td><Link className="link" href={`/escandallos/${s.id}`}>{s.name}</Link><div className="xs muted">{s.familia}</div></td>
-                <td className="r"><NumInput className="inp inp-xs inp-num" decimals={2} value={s.coste} disabled={!canPrecios} onValue={(n) => setRev(s, { coste: n })} aria-label={`Precio de compra de ${s.name}`} /></td>
+                <td className="r"><NumInput className="inp inp-xs inp-num" decimals={2} value={s.coste} disabled={!canPrecios || s.conLineas} onValue={(n) => setRev(s, { coste: n })} aria-label={`Precio de compra de ${s.name}`}
+                  title={s.conLineas ? "Calculado con el artículo enlazado" : undefined} />{s.conLineas ? <div className="xs muted">Del artículo</div> : null}</td>
                 <td className="r"><NumInput className="inp inp-xs inp-num" decimals={0} value={s.pvp ? revMargen(s.coste, s.pvp, s.iva) : null} disabled={!canPrecios} onValue={(n) => n != null && setRev(s, { margen: Math.min(99, Math.max(0, n)) })} aria-label={`Margen de ${s.name}`} /></td>
                 <td className="r"><NumInput className="inp inp-xs inp-num" decimals={2} value={s.pvp} disabled={!canPrecios} onValue={(n) => setRev(s, { pvp: n })} aria-label={`PVP de ${s.name}`} /></td>
                 <td className="r">{s.pvp ? eur(neto(s.pvp, s.iva) - s.coste) : "—"}</td>
