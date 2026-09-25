@@ -2,13 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { OnbShell } from "@/components/onb-shell";
-import { requireOnboarding } from "@/server/ctx";
+import { hasPerm, requireOnboarding } from "@/server/ctx";
 
 export const metadata = { title: "Bienvenida" };
 
 export default async function Bienvenida() {
   const { s, org } = await requireOnboarding();
-  if (org.onboardingDone) redirect("/hoy");
+  if (org.onboardingDone || !hasPerm(org, "local:editar")) redirect("/hoy");
   const first = s.name.split(/\s+/)[0];
   return (
     <OnbShell step="negocio" foot={

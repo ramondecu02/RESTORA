@@ -27,7 +27,7 @@ export function BriefingWizard({ restName, initial, editar }: { restName: string
   const backBtn = (to: number | null) => to == null
     ? <Link className="btn btn-3 btn-sm" href={exitHref}><Icon name="back" /> Atrás</Link>
     : <button type="button" className="btn btn-3 btn-sm" onClick={() => setStep(to)}><Icon name="back" /> Atrás</button>;
-  const save = () => start(async () => { const r = await guardarBriefing(b, editar); if (r && !r.ok) toastError(r.error); });
+  const save = () => start(async () => { const r = await guardarBriefing(b); if (r && !r.ok) toastError(r.error); });
 
   if (step === 1) {
     const ok = !!(b.tipo && b.platos);
