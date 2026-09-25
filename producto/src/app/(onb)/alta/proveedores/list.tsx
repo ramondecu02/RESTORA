@@ -26,7 +26,7 @@ export function ProveedoresAlta({ initial }: { initial: P[] }) {
     const r = await quitarProveedorAlta(id);
     if (!r.ok) toastError(r.error); else setList((l) => l.filter((x) => x.id !== id));
   });
-  const finish = () => startFinish(async () => { await terminarAlta(); });
+  const finish = () => startFinish(async () => { const r = await terminarAlta(); if (r && !r.ok) toastError(r.error); });
   return (
     <OnbShell step="prov" back="/alta/local" foot={
       <OnbFoot back={<Link className="btn btn-3 btn-sm" href="/alta/local"><Icon name="back" /> Atrás</Link>}>
