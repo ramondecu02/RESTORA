@@ -18,12 +18,13 @@ export default async function Ventas() {
     const s = await dishStats(c, ctx.local);
     const imps = await all<{ id: string; filename: string; desde: string | null; hasta: string | null; filas: number; total: number; created_at: Date; demo: boolean }>(c,
       "select id, filename, desde, hasta, filas, total, created_at, demo from ventas_importes where local_id = $1 order by desde desc nulls last, created_at desc limit 12", [ctx.local.id]);
-    return { stats: s.stats.filter((x) => x.en_carta), imps };
+    // Una reventa enlazada a un artículo toma el coste de él: en la tabla no se edita la compra.
+    return { stats: s.stats.filter((x) => x.en_carta).map((x) => ({ ...x, conLineas: !!s.ctx.recetas.get(x.id)?.lineas.length })), imps };
   });
   return (
     <Screen title="Ventas y rentabilidad" sub="Qué platos te sostienen y cuáles te cuestan dinero"
       actions={<Link className="btn btn-sm only-wide" href="/ventas/importar"><Icon name="upload" size={18} /> Importar ventas</Link>}>
-      <VentasBoard stats={data.stats.map((s) => ({ id: s.id, name: s.name, familia: s.familia, reventa: s.reventa, pvp: s.pvp, iva: s.iva, coste: s.coste, ventas: s.ventas, fcObjetivo: s.fcObjetivo }))}
+      <VentasBoard stats={data.stats.map((s) => ({ id: s.id, name: s.name, familia: s.familia, reventa: s.reventa, pvp: s.pvp, iva: s.iva, coste: s.coste, ventas: s.ventas, fcObjetivo: s.fcObjetivo, conLineas: s.conLineas }))}
         comensales={ctx.local.comensales_dia} canPrecios={hasPerm(ctx, "carta:precios")} />
       <section className="card" aria-labelledby="h-imp">
         <div className="card-h"><h2 className="h3" id="h-imp">Ventas importadas</h2><Link className="btn btn-2 btn-xs" href="/ventas/importar"><Icon name="upload" size={16} /> Importar CSV</Link></div>
