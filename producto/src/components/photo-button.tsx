@@ -23,14 +23,20 @@ export function PhotoButton({ recetaId, className = "btn btn-2 btn-xs", label, c
   const up = async (file: File | undefined) => {
     if (!file) return;
     setBusy(true);
-    const fd = new FormData();
-    fd.append("foto", await shrink(file), "foto.jpg");
-    const r = await fetch(`/api/recetas/${recetaId}/foto`, { method: "POST", body: fd });
-    const j = await r.json().catch(() => ({}));
-    setBusy(false);
-    if (!r.ok) { toastError(j.error || "No se ha podido subir la foto."); return; }
-    toast("Foto actualizada");
-    router.refresh();
+    try {
+      const fd = new FormData();
+      fd.append("foto", await shrink(file), "foto.jpg");
+      const r = await fetch(`/api/recetas/${recetaId}/foto`, { method: "POST", body: fd });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { toastError(j.error || "No se ha podido subir la foto."); return; }
+      toast("Foto actualizada");
+      router.refresh();
+    } catch {
+      // Sin conexión (o se cortó): el botón vuelve a estar disponible para reintentar.
+      toastError("Sin conexión: no se ha podido subir la foto. Inténtalo de nuevo.");
+    } finally {
+      setBusy(false);
+    }
   };
   return (
     <>

@@ -62,7 +62,8 @@ export function Uploader({ kind, cta, sample }: { kind: "albaran" | "carta"; cta
   };
   const trySample = async (s: { url: string; name: string }) => {
     setBusy(true);
-    const b = await fetch(s.url).then((r) => r.blob());
+    const b = await fetch(s.url).then((r) => r.blob()).catch(() => null);
+    if (!b) { toastError("Sin conexión. Comprueba la red y vuelve a intentarlo."); setBusy(false); return; }
     await send([new File([b], s.name, { type: b.type || "image/jpeg" })]);
   };
   const pick = (k: string) => inputs.current[k]?.click();

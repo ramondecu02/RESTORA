@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import { refresh } from "next/cache";
 import { all, isUuid, one, withTenant } from "@/server/db";
-import { requireApp, requirePerm, UserError } from "@/server/ctx";
+import { hasPerm, requireApp, requirePerm, UserError } from "@/server/ctx";
 import { run, type Result } from "@/server/action";
 import { audit } from "@/server/audit";
 import { setFlash } from "@/server/session";
@@ -10,14 +10,22 @@ import { recomputeCosts } from "@/server/domain/costs";
 import { articuloDesdeCatalogo } from "@/server/domain/articulos";
 import { guardarRecetaTx, type RecetaIn } from "@/server/domain/recetas";
 import { PLANTILLAS } from "@/lib/plantillas";
-import { revPvp } from "@/lib/costing";
+import { margenDesdePvp, pvpDesdeMargen } from "@/lib/receta-edit";
 import type { BaseUnit } from "@/lib/units";
+
+/** Número opcional dentro de un rango; si no es válido, error para el usuario (nada de negativos ni NaN en precios). */
+const opt = (v: unknown, min: number, max: number, msg: string) => {
+  if (v == null) return null;
+  if (typeof v !== "number" || !Number.isFinite(v) || v < min || v > max) throw new UserError(msg);
+  return v;
+};
 
 export async function guardarReceta(id: string, input: RecetaIn): Promise<Result> {
   return run(async () => {
     const ctx = await requireApp();
     requirePerm(ctx, "escandallos");
     if (!isUuid(id)) throw new UserError("Receta no válida.");
+    if (!input || typeof input.name !== "string" || !Array.isArray(input.lineas)) throw new UserError("Datos no válidos.");
     if (input.precios?.length) requirePerm(ctx, "compras");
     await withTenant(ctx.tenantId, async (c) => {
       await guardarRecetaTx(c, ctx, id, input);
@@ -33,17 +41,26 @@ export async function crearReceta(input: Nueva): Promise<Result<{ id: string }>>
   return run(async () => {
     const ctx = await requireApp();
     requirePerm(ctx, "escandallos");
+    if (!input || typeof input.name !== "string" || typeof input.familia !== "string") throw new UserError("Datos no válidos.");
     const name = input.name.trim();
     if (name.length < 2) throw new UserError("Ponle un nombre.");
     if (!["plato", "elaboracion", "menu"].includes(input.tipo)) throw new UserError("Tipo no válido.");
+    const elab = input.tipo === "elaboracion", reventa = input.tipo === "plato" && input.reventa === true;
+    const pvpIn = opt(input.pvp, 0, 100000, "Precio no válido.");
+    const coste = opt(input.coste, 0, 100000, "Precio de compra no válido.");
+    const margen = opt(input.margen, 0, 99, "El margen va de 0 a 99 %.");
+    const rinde = elab ? opt(input.rinde, 0.001, 1e6, "Indica cuánto sale de la receta.") ?? 1 : 1;
+    if (elab && !["kg", "L", "ud"].includes(input.rindeUnit)) throw new UserError("Unidad no válida.");
+    // Los precios de carta (PVP, coste y margen de reventa) solo los ponen los roles con «carta:precios».
+    const precios = hasPerm(ctx, "carta:precios") && !elab;
     const id = await withTenant(ctx.tenantId, async (c) => {
       const tpl = input.plantilla ? PLANTILLAS.find((p) => p.key === input.plantilla) : null;
-      let pvp = input.pvp;
-      if (input.reventa && input.coste != null && input.margen != null) pvp = Math.round(revPvp(input.coste, input.margen, ctx.local.iva_venta) * 100) / 100;
+      let pvp = precios ? pvpIn ?? tpl?.pvp ?? null : null;
+      if (precios && reventa && coste != null && margen != null) pvp = pvpDesdeMargen(coste, margen, ctx.local.iva_venta);
       const r = await one<{ id: string }>(c, `insert into recetas (tenant_id, local_id, tipo, name, familia, raciones, rinde, rinde_unit, pvp, reventa, coste_manual, margen_objetivo, estado, en_carta)
         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'borrador',$13) returning id`,
-        [ctx.tenantId, ctx.local.id, input.tipo, name.slice(0, 100), input.familia.slice(0, 40), tpl?.raciones ?? 1, input.tipo === "elaboracion" ? input.rinde ?? 1 : 1,
-          input.tipo === "elaboracion" ? input.rindeUnit : "kg", pvp ?? tpl?.pvp ?? null, input.reventa, input.reventa ? input.coste : null, input.reventa ? input.margen : null, input.tipo !== "elaboracion"]);
+        [ctx.tenantId, ctx.local.id, input.tipo, name.slice(0, 100), input.familia.trim().slice(0, 40), tpl?.raciones ?? 1, rinde,
+          elab ? input.rindeUnit : "kg", pvp, reventa, reventa && precios ? coste : null, reventa && precios ? margen : null, !elab]);
       if (tpl) {
         let idx = 0;
         for (const l of tpl.lineas) {
@@ -59,32 +76,24 @@ export async function crearReceta(input: Nueva): Promise<Result<{ id: string }>>
   });
 }
 
-export async function asegurarArticulo(catalogId: string): Promise<Result<{ id: string; name: string; unit: BaseUnit; rend: number }>> {
-  return run(async () => {
+export async function duplicarReceta(id: string): Promise<Result> {
+  const r = await run<string>(async () => {
     const ctx = await requireApp();
     requirePerm(ctx, "escandallos");
-    const a = await withTenant(ctx.tenantId, async (c) => {
-      const id = await articuloDesdeCatalogo(c, ctx.tenantId, ctx.local.id, catalogId);
-      return one<{ id: string; name: string; unit: BaseUnit; rend: number }>(c, "select id, name, unit, rend from articulos where id = $1", [id]);
+    if (!isUuid(id)) throw new UserError("Receta no válida.");
+    const nid = await withTenant(ctx.tenantId, async (c) => {
+      const r = await one<{ id: string }>(c, `insert into recetas (tenant_id, local_id, tipo, name, familia, raciones, rinde, rinde_unit, fc_objetivo, pvp, reventa, coste_manual, margen_objetivo, en_carta, estado, descripcion, notas)
+        select tenant_id, local_id, tipo, name || ' (copia)', familia, raciones, rinde, rinde_unit, fc_objetivo, pvp, reventa, coste_manual, margen_objetivo, false, 'borrador', descripcion, notas
+        from recetas where id = $1 and local_id = $2 and not archived returning id`, [id, ctx.local.id]);
+      if (!r) throw new UserError("Receta no encontrada.");
+      await c.query("insert into receta_lineas (tenant_id, receta_id, idx, articulo_id, subreceta_id, cantidad, unidad) select tenant_id, $2, idx, articulo_id, subreceta_id, cantidad, unidad from receta_lineas where receta_id = $1", [id, r.id]);
+      await recomputeCosts(c, ctx.local.id);
+      return r.id;
     });
-    return { ok: true, data: a! };
+    return { ok: true, data: nid };
   });
-}
-
-export async function duplicarReceta(id: string): Promise<void> {
-  const ctx = await requireApp();
-  requirePerm(ctx, "escandallos");
-  const nid = await withTenant(ctx.tenantId, async (c) => {
-    const r = await one<{ id: string }>(c, `insert into recetas (tenant_id, local_id, tipo, name, familia, raciones, rinde, rinde_unit, fc_objetivo, pvp, reventa, coste_manual, margen_objetivo, en_carta, estado, descripcion, notas)
-      select tenant_id, local_id, tipo, name || ' (copia)', familia, raciones, rinde, rinde_unit, fc_objetivo, pvp, reventa, coste_manual, margen_objetivo, false, 'borrador', descripcion, notas
-      from recetas where id = $1 and local_id = $2 returning id`, [id, ctx.local.id]);
-    if (!r) throw new Error("Receta no encontrada");
-    await c.query("insert into receta_lineas (tenant_id, receta_id, idx, articulo_id, subreceta_id, cantidad, unidad) select tenant_id, $2, idx, articulo_id, subreceta_id, cantidad, unidad from receta_lineas where receta_id = $1", [id, r.id]);
-    await recomputeCosts(c, ctx.local.id);
-    return r.id;
-  });
-  await setFlash("Copia creada. Está fuera de la carta hasta que la actives.");
-  redirect(`/escandallos/${nid}`);
+  if (r.ok) { await setFlash("Copia creada. Está fuera de la carta hasta que la actives."); redirect(`/escandallos/${r.data}`); }
+  return r;
 }
 
 export async function archivarReceta(id: string): Promise<Result> {
@@ -106,8 +115,9 @@ export async function archivarReceta(id: string): Promise<Result> {
 export async function setVentasMes(id: string, ventas: number): Promise<Result> {
   return run(async () => {
     const ctx = await requireApp();
-    requirePerm(ctx, "escandallos");
-    if (!(ventas >= 0 && ventas < 1e7)) throw new UserError("Unidades no válidas.");
+    requirePerm(ctx, "ventas");
+    if (!isUuid(id)) throw new UserError("Plato no válido.");
+    if (!(typeof ventas === "number" && ventas >= 0 && ventas < 1e7)) throw new UserError("Unidades no válidas.");
     await withTenant(ctx.tenantId, (c) => c.query("update recetas set ventas_mes = $2 where id = $1 and local_id = $3", [id, Math.round(ventas), ctx.local.id]));
   });
 }
@@ -115,10 +125,22 @@ export async function setReventa(id: string, v: { coste: number | null; margen: 
   return run(async () => {
     const ctx = await requireApp();
     requirePerm(ctx, "carta:precios");
+    if (!isUuid(id) || !v || typeof v !== "object") throw new UserError("Producto no válido.");
+    const coste = opt(v.coste, 0, 100000, "Precio de compra no válido.");
+    // El margen llega calculado desde el PVP: si el PVP no cubre el coste sería negativo, y se deja en 0.
+    const margen = v.margen == null ? null : Math.min(99, Math.max(0, opt(v.margen, -1e7, 1e7, "Margen no válido.")!));
+    const pvp = opt(v.pvp, 0, 100000, "Precio no válido.");
     await withTenant(ctx.tenantId, async (c) => {
-      await c.query("update recetas set coste_manual = coalesce($2, coste_manual), margen_objetivo = $3, pvp = $4 where id = $1 and local_id = $5 and reventa",
-        [id, v.coste, v.margen, v.pvp, ctx.local.id]);
+      const r = await c.query("update recetas set coste_manual = coalesce($2, coste_manual), margen_objetivo = $3, pvp = $4 where id = $1 and local_id = $5 and reventa and not archived",
+        [id, coste, margen, pvp, ctx.local.id]);
+      if (!r.rowCount) throw new UserError("Producto no encontrado.");
       await recomputeCosts(c, ctx.local.id);
+      // El margen objetivo no puede quedar por encima del real con ese PVP: por redondeo, el producto saldría «fuera de objetivo».
+      if (pvp != null && margen != null) {
+        const x = await one<{ coste_cache: number | null }>(c, "select coste_cache from recetas where id = $1", [id]);
+        const real = x?.coste_cache != null ? margenDesdePvp(x.coste_cache, pvp, ctx.local.iva_venta) : null;
+        if (real != null && real < margen) await c.query("update recetas set margen_objetivo = $2 where id = $1", [id, real]);
+      }
     });
   });
 }
@@ -126,7 +148,8 @@ export async function setPvp(id: string, pvp: number | null): Promise<Result> {
   return run(async () => {
     const ctx = await requireApp();
     requirePerm(ctx, "carta:precios");
-    if (pvp != null && !(pvp >= 0 && pvp < 100000)) throw new UserError("Precio no válido.");
+    if (!isUuid(id)) throw new UserError("Plato no válido.");
+    if (pvp != null && !(typeof pvp === "number" && pvp >= 0 && pvp < 100000)) throw new UserError("Precio no válido.");
     await withTenant(ctx.tenantId, (c) => c.query("update recetas set pvp = $2 where id = $1 and local_id = $3", [id, pvp, ctx.local.id]));
   });
 }
