@@ -35,9 +35,10 @@ export default async function Proveedores() {
   const canEdit = hasPerm(ctx, "proveedores:editar");
   let ahorroTotal = 0;
   const comps = [...groups.values()].map((rows) => {
-    const cur = rows.find((r) => r.proveedor_id === rows[0].actual) ?? rows[rows.length - 1];
+    // Sin proveedor actual con precio (sin compras ni cambio elegido) no hay ahorro que calcular
+    const cur = rows.find((r) => r.proveedor_id === rows[0].actual) ?? null;
     const best = rows[0];
-    const ud = cur.precio_unit - best.precio_unit;
+    const ud = cur ? cur.precio_unit - best.precio_unit : 0;
     const cons = data.consumo.get(rows[0].articulo_id)?.anual ?? null;
     const anual = ud > 0 && cons ? ud * cons : null;
     if (anual) ahorroTotal += anual;
@@ -60,15 +61,15 @@ export default async function Proveedores() {
                     <div key={r.proveedor_id} className={`vs ${r.proveedor_id === best.proveedor_id ? "best" : ""}`}>
                       <div className="vs-sup"><span>{r.proveedor}</span>{r.proveedor_id === best.proveedor_id ? <span className="tag tag-ok">Mejor</span> : null}</div>
                       <span className="vs-price">{eur(r.precio_unit)}<small className="muted" style={{ fontSize: 13 }}>/{r.unit}</small></span>
-                      <span className="vs-meta">{r.proveedor_id === cur.proveedor_id ? "Proveedor actual" : r.origen === "cotizacion" ? (r.nota || "Cotización") : "Por albarán"}{r.entrega ? ` · ${r.entrega}` : ""}</span>
-                      {r.proveedor_id !== cur.proveedor_id ? (r.precio_unit < cur.precio_unit
+                      <span className="vs-meta">{r.proveedor_id === cur?.proveedor_id ? "Proveedor actual" : r.origen === "cotizacion" ? (r.nota || "Cotización") : "Por albarán"}{r.entrega ? ` · ${r.entrega}` : ""}</span>
+                      {cur && r.proveedor_id !== cur.proveedor_id ? (r.precio_unit < cur.precio_unit
                         ? <Link className="linkbtn" style={{ minHeight: 32 }} href={`/articulos/${r.articulo_id}`}>Cambiar a este <Icon name="arrowR" size={16} /></Link>
                         : <span className="vs-meta">+{eur(r.precio_unit - cur.precio_unit)} más caro</span>) : null}
                     </div>
                   ))}
                 </div>
                 {ud > 0 ? <p className="hint">Mejor alternativa −{eur(ud)}/{rows[0].unit}{cons ? ` · consumo estimado ${qty(cons, 0)} ${rows[0].unit}/año` : ""}{anual ? ` · ahorro si cambias ${eur0(anual)}/año` : ""}</p>
-                  : <p className="hint">Tu proveedor actual es el más barato de los comparados.</p>}
+                  : <p className="hint">{cur ? "Tu proveedor actual es el más barato de los comparados." : `Sin proveedor actual con precio: el más barato de los comparados es ${best.proveedor}.`}</p>}
               </div>
             )) : <div className="empty"><span className="li-ic"><Icon name="swap" /></span><b>Aún no tienes comparativas</b><p>Aparecen solas cuando compras lo mismo a dos proveedores. También puedes añadir el precio que te ofrece otro desde la ficha del artículo.</p></div>}
           </section>

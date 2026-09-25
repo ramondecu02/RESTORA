@@ -27,10 +27,11 @@ export function NuevoArticulo({ cats, catalog }: { cats: { id: string; name: str
         {sug.length ? <div className="stack-xs"><span className="hint">¿Es alguno de estos del catálogo? Así ya sabemos su tipo, unidad y merma habitual:</span>
           <div className="tags">{sug.map((s) => <button key={s.item.id} type="button" className="chip" onClick={() => setF({ ...f, name: s.item.name, catalogId: s.item.id, categoryId: s.item.categoryId, unit: s.item.unit, rend: s.item.rend })}>{s.item.name}</button>)}</div></div> : null}
         {f.catalogId ? <span className="tag tag-ok"><Icon name="check" size={14} sw={3} /> Del catálogo del sector</span> : null}
+        {f.catalogId ? <p className="hint">Si cambias la unidad, se guarda como artículo propio, sin enlazar con el catálogo.</p> : null}
       </div>
       <div className="fgrid fgrid-2">
         <div className="fld"><label htmlFor="n-cat">Tipo</label><select id="n-cat" className="inp" value={f.categoryId} onChange={(e) => setF({ ...f, categoryId: e.target.value })}>{cats.map((c) => <option key={c.id} value={c.id}>{c.name} · IVA {c.iva} %</option>)}</select></div>
-        <div className="fld"><label htmlFor="n-u">Se mide en</label><select id="n-u" className="inp" value={f.unit} onChange={(e) => setF({ ...f, unit: e.target.value as BaseUnit })}><option value="kg">kg (peso)</option><option value="L">L (volumen)</option><option value="ud">ud (unidades)</option></select></div>
+        <div className="fld"><label htmlFor="n-u">Se mide en</label><select id="n-u" className="inp" value={f.unit} onChange={(e) => setF({ ...f, unit: e.target.value as BaseUnit, catalogId: f.catalogId && catalog.find((c) => c.id === f.catalogId)?.unit === e.target.value ? f.catalogId : null })}><option value="kg">kg (peso)</option><option value="L">L (volumen)</option><option value="ud">ud (unidades)</option></select></div>
         <div className="fld"><label htmlFor="n-r">Aprovechable (%)</label><NumInput id="n-r" decimals={1} value={f.rend} onValue={(n) => setF({ ...f, rend: Math.min(100, Math.max(1, n ?? 100)) })} /><p className="hint">100 − merma. Lubina entera: ~80 %.</p></div>
         <div className="fld"><label htmlFor="n-p">Precio (€/{f.unit}, sin IVA)</label><NumInput id="n-p" decimals={4} value={f.precio} onValue={(n) => setF({ ...f, precio: n })} placeholder="Opcional" /><p className="hint">Si no lo pones, llegará con el primer albarán.</p></div>
       </div>
