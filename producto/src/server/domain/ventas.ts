@@ -6,7 +6,7 @@ import { explode, recetaCost } from "@/lib/costing";
 import { norm } from "@/lib/fuzzy";
 import { neto } from "@/lib/costing";
 import { isoDate } from "@/lib/format";
-import { loadCostContext } from "./costs";
+import { loadCostContext, recomputeCosts } from "./costs";
 import { rebuildArticulo } from "./articulos";
 
 export type VentaIn = { fecha: string | null; producto: string; unidades: number; importe: number | null };
@@ -57,6 +57,8 @@ export async function importarVentas(ctx: AppCtx, input: ImportIn) {
         await rebuildArticulo(c, aid);
         articulos++;
       }
+      // Ventas con fecha pasada cambian el PMP de compras posteriores: la caché de coste de las recetas se rehace
+      if (articulos) await recomputeCosts(c, ctx.local.id);
     }
     if (input.actualizarUds) {
       const dias = Math.max(1, Math.round((new Date(hasta).getTime() - new Date(desde).getTime()) / 864e5) + 1);
@@ -75,6 +77,7 @@ export async function borrarImportacion(ctx: AppCtx, id: string) {
     await c.query("delete from stock_movimientos where ref_id = $1", [id]);
     await c.query("delete from ventas_importes where id = $1", [id]);
     for (const a of arts) await rebuildArticulo(c, a);
+    if (arts.length) await recomputeCosts(c, ctx.local.id);
     await audit(c, ctx.tenantId, ctx.userId, "borrar", "ventas", id, {});
   });
 }

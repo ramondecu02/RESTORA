@@ -20,6 +20,8 @@ export function computeStats(recetas: RecetaRow[], ctx: CostContext, local: Loca
       id: r.id, name: r.name, familia: r.familia || (r.reventa ? "Bebidas" : "Otros"), reventa: r.reventa, pvp: r.pvp, iva: local.iva_venta,
       coste: rc.perUnit, ventas: r.ventas_mes, fcObjetivo: fcObj(r, local), tipo: r.tipo, foto_key: r.foto_key, en_carta: r.en_carta,
       orden: r.orden, estado: r.estado, missing: rc.missing, descripcion: r.descripcion,
+      // Sin ingredientes, o con ninguno de ellos con precio: no hay coste que valorar
+      sinCoste: rc.vacio || (rc.missing > 0 && rc.total <= 0),
     });
   }
   return stats;

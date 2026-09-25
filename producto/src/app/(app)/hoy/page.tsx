@@ -32,6 +32,8 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
   const iva = ctx.local.iva_venta, fcObj = ctx.local.fc_objetivo;
   const stage = d.n.albs === 0 ? 0 : d.n.recs === 0 ? 1 : d.n.provs < 2 && d.n.pvps === 0 ? 2 : 3;
   const dashboard = d.n.pvps > 0 && d.stats.some((s) => s.pvp);
+  // Ventas, márgenes y su evolución: solo para quien ve Ventas (cocina no)
+  const verVentas = hasPerm(ctx, "ventas");
 
   // Serie de 6 meses: histórico real (ventas importadas) + mes actual calculado con la carta
   const months: string[] = [];
@@ -125,7 +127,7 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
                   <p>{plural(d.fuera.length, "plato fuera de objetivo", "platos fuera de objetivo")} y {plural(d.bajos.length, "producto bajo mínimo", "productos bajo mínimo")}. El resto, en orden.</p>
                 </div>
               </div>
-              <div className="tiles">
+              {verVentas ? <><div className="tiles">
                 {([["Margen del mes", margenS, eur0], ["Ventas del mes", ventasS, eur0], [comHoy ? "Ticket por comensal" : "Ticket medio", ticketS, (n: number) => eur(n)], ["Comensales/día", comS, (n: number) => qty(n, 0)]] as const).map(([l, s, f]) => {
                   const cur = s[5];
                   return (
@@ -137,7 +139,7 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
                   );
                 })}
               </div>
-              {!d.hist.length ? <p className="hint">El mes en curso se calcula con tus unidades al mes y tus costes de hoy. Importa ventas para ver la evolución real.</p> : null}
+              {!d.hist.length ? <p className="hint">El mes en curso se calcula con tus unidades al mes y tus costes de hoy. Importa ventas para ver la evolución real.</p> : null}</> : null}
             </section>
           )}
 
@@ -156,7 +158,7 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
             </section>
           ) : null}
 
-          {dashboard ? (
+          {dashboard && verVentas ? (
             <div className="two two-eq">
               <section className="card card-fill" aria-labelledby="h-fc">
                 <div className="card-h"><h2 className="h3" id="h-fc">Food cost de la carta</h2><span className="muted small">6 meses</span></div>
@@ -169,7 +171,7 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
             </div>
           ) : null}
 
-          {dashboard && d.aporta.length ? (
+          {dashboard && verVentas && d.aporta.length ? (
             <section className="card" aria-labelledby="h-ap">
               <div className="card-h"><h2 className="h3" id="h-ap">Aportación por plato</h2><span className="muted small">Margen al mes · toca para abrirlo</span></div>
               <BarsH fmt={eur0} rows={d.aporta.map((a) => ({ label: a.name, value: a.value, href: `/escandallos/${a.id}`, color: famColor(a.familia) }))} />

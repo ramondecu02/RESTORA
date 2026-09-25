@@ -1,7 +1,7 @@
 import { all, type Db } from "../db";
 import { costeNeto } from "@/lib/costing";
 import { PLANTILLAS } from "@/lib/plantillas";
-import { toBase } from "@/lib/units";
+import { compatible, toBase } from "@/lib/units";
 import { toArtCost, type ArtRow } from "../domain/costs";
 
 /** Coste por ración de cada plantilla con los precios del local (null si falta algún precio importante). */
@@ -13,7 +13,8 @@ export async function plantillasConCoste(c: Db, localId: string) {
     let total = 0, faltan = 0, conPrecio = 0;
     for (const l of p.lineas) {
       const a = byCat.get(l.cat);
-      const uc = a ? costeNeto(toArtCost(a)) : null;
+      // Con un artículo en otra unidad la cantidad de la plantilla no vale (crearReceta tampoco añade esa línea)
+      const uc = a && compatible(a.unit, l.u) ? costeNeto(toArtCost(a)) : null;
       if (uc == null) { faltan++; continue; }
       conPrecio++;
       total += uc * toBase(l.q, l.u);

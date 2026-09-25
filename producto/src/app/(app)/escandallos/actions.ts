@@ -11,7 +11,7 @@ import { articuloDesdeCatalogo } from "@/server/domain/articulos";
 import { guardarRecetaTx, type RecetaIn } from "@/server/domain/recetas";
 import { PLANTILLAS } from "@/lib/plantillas";
 import { revPvp } from "@/lib/costing";
-import type { BaseUnit } from "@/lib/units";
+import { compatible, type BaseUnit } from "@/lib/units";
 
 export async function guardarReceta(id: string, input: RecetaIn): Promise<Result> {
   return run(async () => {
@@ -48,6 +48,9 @@ export async function crearReceta(input: Nueva): Promise<Result<{ id: string }>>
         let idx = 0;
         for (const l of tpl.lineas) {
           const artId = await articuloDesdeCatalogo(c, ctx.tenantId, ctx.local.id, l.cat);
+          // Si tu artículo va en otra unidad (peso, volumen o unidades) la línea no encaja: la añades tú en la ficha
+          const a = await one<{ unit: BaseUnit }>(c, "select unit from articulos where id = $1", [artId]);
+          if (!a || !compatible(a.unit, l.u)) continue;
           await c.query("insert into receta_lineas (tenant_id, receta_id, idx, articulo_id, cantidad, unidad) values ($1,$2,$3,$4,$5,$6)", [ctx.tenantId, r!.id, idx++, artId, l.q, l.u]);
         }
       }
