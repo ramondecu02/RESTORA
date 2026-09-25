@@ -28,17 +28,23 @@ export function parseNum(v: unknown): number | null {
   const n = Number(t);
   return Number.isFinite(n) ? n : null;
 }
+/** Zona horaria de los restaurantes: las fechas se calculan y se muestran en hora de Madrid, esté donde esté el servidor. */
+export const TZ = "Europe/Madrid";
 export function fecha(iso: string | Date | null | undefined, opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" }) {
   if (!iso) return "—";
-  const d = typeof iso === "string" ? new Date(iso.length <= 10 ? iso + "T12:00:00" : iso) : iso;
-  return d.toLocaleDateString("es-ES", opts);
+  // Un día suelto (AAAA-MM-DD) se ancla a mediodía UTC: en Madrid sigue siendo ese mismo día.
+  const d = typeof iso === "string" ? new Date(iso.length <= 10 ? iso + "T12:00:00Z" : iso) : iso;
+  return d.toLocaleDateString("es-ES", { timeZone: TZ, ...opts });
 }
 export const fechaLarga = (iso: string | Date) => fecha(iso, { weekday: "long", day: "numeric", month: "long" });
 export const fechaNum = (iso: string | Date | null | undefined) => fecha(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
 export const capitalize = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 export const plural = (n: number, a: string, b: string) => `${fmtN(n, 0)} ${n === 1 ? a : b}`;
+const ymd = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+/** Día (AAAA-MM-DD) de ese instante en Madrid; sin argumento, el día de hoy en el restaurante. */
 export function isoDate(d: Date = new Date()): string {
-  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const p = Object.fromEntries(ymd.formatToParts(d).map((x) => [x.type, x.value]));
+  return `${p.year}-${p.month}-${p.day}`;
 }
 export function initials(name: string) {
   return (name || "?").trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
