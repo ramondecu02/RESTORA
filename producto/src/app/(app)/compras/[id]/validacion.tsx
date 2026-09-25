@@ -9,11 +9,11 @@ import { Tour } from "@/components/shell/tour";
 import { NumInput } from "@/components/ui/num-input";
 import { Confirm, Sheet } from "@/components/ui/sheet";
 import { toastError } from "@/components/ui/toast";
-import { draftCheck, lineImporte, pendientes, prettyProduct } from "@/lib/draft";
+import { convertir, draftCheck, lineImporte, pendientes, prettyProduct } from "@/lib/draft";
 import { eur, fecha as fFecha, plural, qty } from "@/lib/format";
-import { bestMatches, norm } from "@/lib/fuzzy";
+import { bestMatches } from "@/lib/fuzzy";
 import type { Draft, DraftLine } from "@/lib/ocr-types";
-import { inferPackFactor, type BaseUnit } from "@/lib/units";
+import type { BaseUnit } from "@/lib/units";
 import { confirmar, descartar, guardarBorrador } from "../actions";
 
 type Art = { id: string; name: string; unit: BaseUnit; categoryId: string; iva: number; rend: number; aliases: string[] };
@@ -24,13 +24,6 @@ type FileRef = { url: string; mime: string; name: string };
 type Base = { unit: BaseUnit; iva: number; name: string; categoryId: string };
 
 const RATES = [4, 10, 21];
-const sameUnit = (u: string, base: BaseUnit) => {
-  const x = norm(u);
-  if (!x || x === norm(base)) return true;
-  if (base === "kg") return /^(kg|kgs|kilo|kilos|k)$/.test(x);
-  if (base === "L") return /^(l|lt|lts|litro|litros)$/.test(x);
-  return /^(ud|uds|u|un|unid|unidad|unidades|und|pieza|piezas|pz)$/.test(x);
-};
 
 export function Validacion({ docId, initial, files, arts, catalog, cats, provs, meta, tourSeen }: {
   docId: string; initial: Draft; files: FileRef[]; arts: Art[]; catalog: CatItem[]; cats: Cat[]; provs: Prov[];
@@ -50,13 +43,27 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
   const catIva = useMemo(() => new Map(cats.map((c) => [c.id, c.iva])), [cats]);
   const manual = !!d.manual;
 
-  // Guardado automático del borrador
+  // Guardado automático del borrador. Si sales antes de que se guarde (volver, cambiar de app), se guarda al salir.
   const first = useRef(true);
+  const unsaved = useRef<Draft | null>(null);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
-    const t = setTimeout(() => { guardarBorrador(docId, d).then((r) => { if (!r.ok) toastError(r.error); }); }, 700);
+    unsaved.current = d;
+    const t = setTimeout(() => { unsaved.current = null; guardarBorrador(docId, d).then((r) => { if (!r.ok) toastError(r.error); }); }, 700);
     return () => clearTimeout(t);
   }, [d, docId]);
+  useEffect(() => {
+    const flush = () => {
+      const x = unsaved.current;
+      if (!x) return;
+      unsaved.current = null;
+      guardarBorrador(docId, x).then((r) => { if (!r.ok) toastError(r.error); }, () => {});
+    };
+    const onHide = () => { if (document.visibilityState === "hidden") flush(); };
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", flush);
+    return () => { document.removeEventListener("visibilitychange", onHide); window.removeEventListener("pagehide", flush); flush(); };
+  }, [docId]);
 
   const baseOf = (l: DraftLine): Base | null => {
     if (!l.match) return null;
@@ -78,12 +85,12 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
 
   /** Tras elegir artículo: recalcula conversión de unidades e IVA esperado, como hace la lectura. */
   const rebase = (l: DraftLine, base: Base): DraftLine => {
-    let factor = l.factor, fuente = l.factorFuente;
+    let factor = l.factor, fuente = l.factorFuente, unidadCompra = l.unidadCompra || base.unit;
     if (fuente !== "usuario") {
-      const inf = inferPackFactor(l.texto + " " + l.unidadCompra, base.unit);
-      if (inf) { factor = inf.factor; fuente = "texto"; }
-      else if (sameUnit(l.unidadCompra, base.unit)) { factor = 1; fuente = "unidad"; }
-      else { factor = null; fuente = null; }
+      // Mismo criterio que la lectura: si la unidad impresa ya es la del artículo, factor 1; el texto solo cuenta para envases
+      const cv = convertir(l.texto, l.unidadCompra, base.unit);
+      factor = cv?.factor ?? null; fuente = cv?.fuente ?? null;
+      if (cv) unidadCompra = cv.unidad;
     }
     let iva = l.iva, ivaDec = l.decisiones.iva, ivaOk = l.resuelto.iva;
     if (!(l.resuelto.iva && l.decisiones.iva)) {
@@ -91,8 +98,7 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
       else { iva = null; ivaDec = true; ivaOk = false; }
     }
     return {
-      ...l, factor, factorFuente: fuente, ivaEsperado: base.iva, iva,
-      unidadCompra: l.unidadCompra || base.unit,
+      ...l, factor, factorFuente: fuente, ivaEsperado: base.iva, iva, unidadCompra,
       decisiones: { ...l.decisiones, unidad: factor == null || l.decisiones.unidad && fuente === "usuario", iva: ivaDec },
       resuelto: { ...l.resuelto, articulo: true, unidad: factor != null, iva: ivaOk },
     };
@@ -117,6 +123,7 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
   const shown = f === "decidir" ? decLines : d.lineas;
 
   const save = (opts: { forzarTotal?: boolean; forzarDuplicado?: boolean } = {}) => startSave(async () => {
+    unsaved.current = null;
     await guardarBorrador(docId, d);
     const r = await confirmar(docId, d, opts);
     if (r.ok) { router.push(`/compras/${r.id}?guardado=1`); router.refresh(); return; }
@@ -216,7 +223,15 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
   const onCreateFromPicker = (name: string) => {
     const lineId = picker?.line;
     setPicker(null);
-    if (lineId) { setCreating(lineId); setLine(lineId, (l) => ({ ...l, nuevo: { name, categoryId: l.nuevo?.categoryId ?? "otros", unit: l.nuevo?.unit ?? "kg", rend: 100 } })); }
+    // Se suelta el artículo que tuviera la línea para que aparezca el formulario de artículo nuevo
+    if (lineId) {
+      setCreating(lineId);
+      setLine(lineId, (l) => {
+        const b = baseOf(l);
+        return { ...l, match: null, ignorar: false, nuevo: { name, categoryId: l.nuevo?.categoryId ?? b?.categoryId ?? suggestCat(l), unit: l.nuevo?.unit ?? b?.unit ?? guessUnit(l.texto, l.unidadCompra), rend: 100 },
+          decisiones: { ...l.decisiones, articulo: true }, resuelto: { ...l.resuelto, articulo: false } };
+      });
+    }
   };
 
   const lines = (
@@ -313,7 +328,7 @@ function LineCard({ l, base, catName, cats, manual, defaultCat, editing, setEdit
   if (l.ignorar) tags.push(<span key="x" className="tag">No es un producto · solo cuenta para el total</span>);
 
   const expected = l.importe != null && l.precio ? l.importe / (l.precio * (1 - (l.descuento || 0) / 100)) : null;
-  const rates = [...new Set([l.ivaEsperado, l.ivaLeido, ...RATES].filter((x): x is number => x != null))];
+  const rates = [...new Set([l.ivaEsperado, l.ivaLeido, ...RATES].filter((x): x is number => x != null && Number.isInteger(x)))];
 
   return (
     <article className={`ln ${pend.length ? "is-dec" : ""}`} id={`ln-${l.id}`}>
@@ -368,7 +383,7 @@ function LineCard({ l, base, catName, cats, manual, defaultCat, editing, setEdit
 
       {!l.ignorar && l.resuelto.articulo && !l.resuelto.unidad && unit ? (
         <div className="dec">
-          <p>¿Cuántos <b>{unit === "ud" ? "unidades" : unit}</b> trae cada «{l.unidadCompra || "unidad de compra"}»? Así el coste por {unit} sale bien.</p>
+          <p>¿Cuántos <b>{unit === "ud" ? "unidades" : unit}</b> trae cada «{l.unidadCompra || "unidad de compra"}»? Así el coste por {unit} sale bien.{l.factorFuente === "articulo" && l.factor ? <> Con otro proveedor era 1 {l.unidadCompra} = {qty(l.factor)} {unit}.</> : null}</p>
           <div className="dec-q">
             <div className="fld"><label htmlFor={`f-${l.id}`}>1 {l.unidadCompra || "unidad"} =</label><div className="inp-unit"><NumInput id={`f-${l.id}`} value={fTmp} onValue={setFTmp} /><span>{unit}</span></div></div>
             <button type="button" className="btn" disabled={!(fTmp && fTmp > 0)} onClick={() => onChange((x) => ({ ...x, factor: fTmp, factorFuente: "usuario", resuelto: { ...x.resuelto, unidad: true } }))}>Confirmar</button>

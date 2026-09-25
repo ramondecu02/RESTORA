@@ -20,14 +20,14 @@ export async function loadRefs(c: Db, localId: string, provId: string | null) {
   const arts = await all<{ id: string; name: string; aliases: string[]; unit: BaseUnit; category_id: string; iva: number; rend: number }>(c,
       "select id, name, aliases, unit, category_id, iva, rend from articulos where local_id = $1 and not archived", [localId]);
   const provs = await all<{ id: string; name: string; cif: string }>(c, "select id, name, cif from proveedores where local_id = $1 and not archived", [localId]);
-  const packs = await all<{ articulo_id: string; unidad_compra: string; factor: number }>(c, `select distinct on (ap.articulo_id) ap.articulo_id, ap.unidad_compra, ap.factor
+  const packs = await all<{ articulo_id: string; unidad_compra: string; factor: number; propio: boolean }>(c, `select distinct on (ap.articulo_id) ap.articulo_id, ap.unidad_compra, ap.factor, (ap.proveedor_id = $2) is true as propio
       from articulo_proveedor ap join articulos a on a.id = ap.articulo_id where a.local_id = $1 and ap.origen = 'albaran'
       order by ap.articulo_id, (ap.proveedor_id = $2) desc, ap.fecha desc nulls last`, [localId, provId]);
   const artRefs: ArtRef[] = arts.map((a) => ({ id: a.id, name: a.name, aliases: a.aliases, unit: a.unit, categoryId: a.category_id, iva: a.iva, rend: a.rend }));
   const catalog: CatRef[] = items.map((i) => ({ id: i.id, name: i.name, aliases: i.aliases, unit: i.unit, categoryId: i.category_id, rend: i.rend }));
   const catIva = new Map(cats.map((c) => [c.id, c.iva]));
   const provRefs: ProvRef[] = provs;
-  const packMem: PackMemory = new Map(packs.map((p) => [p.articulo_id, { unidadCompra: p.unidad_compra, factor: p.factor }]));
+  const packMem: PackMemory = new Map(packs.map((p) => [p.articulo_id, { unidadCompra: p.unidad_compra, factor: p.factor, propio: p.propio }]));
   return { arts: artRefs, catalog, catIva, provs: provRefs, packs: packMem };
 }
 

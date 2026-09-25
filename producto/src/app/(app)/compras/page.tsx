@@ -32,9 +32,11 @@ export default async function Compras({ searchParams }: { searchParams: Promise<
       from documentos where local_id = $1 and status = 'guardado' and fecha >= date_trunc('month', current_date)`, [ctx.local.id]);
     const gasto = await all<{ name: string; id: string; total: number }>(c, `select p.name, p.id, sum(d.base)::float as total from documentos d join proveedores p on p.id = d.proveedor_id
       where d.local_id = $1 and d.status = 'guardado' and d.fecha >= current_date - 30 group by p.id, p.name order by total desc limit 8`, [ctx.local.id]);
+    // Misma ventana que la serie (los 6 meses de la gráfica), para que ningún artículo salga sin puntos
     const top = await all<{ id: string; name: string; unit: string; gasto: number }>(c, `select a.id, a.name, a.unit, sum(cl.importe)::float as gasto from compra_lineas cl
       join documentos d on d.id = cl.documento_id join articulos a on a.id = cl.articulo_id
-      where d.local_id = $1 and d.status = 'guardado' and d.fecha >= current_date - 180 group by a.id, a.name, a.unit order by gasto desc limit 4`, [ctx.local.id]);
+      where d.local_id = $1 and d.status = 'guardado' and d.fecha >= date_trunc('month', current_date) - interval '5 months'
+        and d.fecha < date_trunc('month', current_date) + interval '1 month' group by a.id, a.name, a.unit order by gasto desc limit 4`, [ctx.local.id]);
     const series = top.length ? await all<{ articulo_id: string; mes: string; precio: number }>(c, `select cl.articulo_id, to_char(date_trunc('month', d.fecha), 'YYYY-MM') as mes,
       (sum(cl.coste_unit * cl.cantidad * cl.factor) / nullif(sum(cl.cantidad * cl.factor), 0))::float as precio
       from compra_lineas cl join documentos d on d.id = cl.documento_id where cl.articulo_id = any($1::uuid[]) and d.status = 'guardado' and d.fecha >= date_trunc('month', current_date) - interval '5 months'

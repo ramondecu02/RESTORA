@@ -5,8 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "./icons";
 import { toastError } from "./ui/toast";
 
-type Page = { file: File; url: string | null };
+type Page = { id: number; file: File; url: string | null };
 const MAX_SIDE = 2200;
+const MAX_PAGES = 10;
+let seq = 0;
+const revoke = (p: Page) => { if (p.url) URL.revokeObjectURL(p.url); };
 
 async function compress(f: File): Promise<File> {
   if (!f.type.startsWith("image/") || f.type === "image/gif") return f;
@@ -31,7 +34,13 @@ export function Uploader({ kind, cta, sample }: { kind: "albaran" | "carta"; cta
   const [busy, setBusy] = useState(false);
   const [over, setOver] = useState(false);
   const inputs = useRef<Record<string, HTMLInputElement | null>>({});
-  useEffect(() => () => pages.forEach((p) => p.url && URL.revokeObjectURL(p.url)), [pages]);
+  // Las miniaturas usan URLs de objeto: se liberan al quitar una página y, al salir, las que queden
+  const live = useRef<Page[]>([]);
+  const commit = (next: Page[]) => { live.current = next; setPages(next); };
+  useEffect(() => {
+    const ref = live;
+    return () => ref.current.forEach(revoke);
+  }, []);
 
   const add = async (list: FileList | File[] | null) => {
     if (!list) return;
@@ -40,10 +49,13 @@ export function Uploader({ kind, cta, sample }: { kind: "albaran" | "carta"; cta
     const out: Page[] = [];
     for (const f of arr) {
       const c = await compress(f);
-      out.push({ file: c, url: c.type.startsWith("image/") ? URL.createObjectURL(c) : null });
+      out.push({ id: ++seq, file: c, url: c.type.startsWith("image/") ? URL.createObjectURL(c) : null });
     }
-    setPages((p) => [...p, ...out].slice(0, 10));
+    const next = [...live.current, ...out];
+    next.slice(MAX_PAGES).forEach(revoke);
+    commit(next.slice(0, MAX_PAGES));
   };
+  const remove = (p: Page) => { revoke(p); commit(live.current.filter((x) => x.id !== p.id)); };
   const send = async (files: File[]) => {
     if (!files.length) return;
     setBusy(true);
@@ -99,10 +111,10 @@ export function Uploader({ kind, cta, sample }: { kind: "albaran" | "carta"; cta
             <p className="lbl">{pages.length === 1 ? "1 página" : `${pages.length} páginas`} · {(total / 1024 / 1024).toLocaleString("es-ES", { maximumFractionDigits: 1 })} MB</p>
             <div className="pages">
               {pages.map((p, i) => (
-                <div className="pg" key={i}>
+                <div className="pg" key={p.id}>
                   {p.url ? <img src={p.url} alt={`Página ${i + 1}`} /> : <><Icon name="file" /><span>PDF</span></>}
                   <span className="pg-n">{i + 1}</span>
-                  <button type="button" className="pg-x" onClick={() => setPages((x) => x.filter((_, j) => j !== i))} aria-label={`Quitar página ${i + 1}`}><Icon name="close" size={14} /></button>
+                  <button type="button" className="pg-x" onClick={() => remove(p)} aria-label={`Quitar página ${i + 1}`}><Icon name="close" size={14} /></button>
                 </div>
               ))}
               <button type="button" className="pg pg-add" onClick={() => pick("any")}><Icon name="plus" size={20} /><span>Otra página</span></button>
