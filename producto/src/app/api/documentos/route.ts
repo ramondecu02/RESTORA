@@ -5,7 +5,7 @@ import { getAppCtx } from "@/server/ctx";
 import { one, withTenant } from "@/server/db";
 import { can } from "@/server/rbac";
 import { rateLimit } from "@/server/ratelimit";
-import { extFor, putFile, sniffMime } from "@/server/storage";
+import { deleteFile, extFor, putFile, sniffMime } from "@/server/storage";
 import { processDocumento } from "@/server/domain/compras";
 
 export const maxDuration = 300;
@@ -38,10 +38,12 @@ export async function POST(req: NextRequest) {
       values ($1,$2,$3,'leyendo','ocr',$4,$5) returning id`, [ctx.tenantId, ctx.local.id, kind, bufs.length, ctx.userId]);
     return d!.id;
   });
+  const keys: string[] = [];
   try {
     let i = 0;
     for (const b of bufs) {
       const key = `t/${ctx.tenantId}/docs/${id}/${i}-${randomToken(6)}.${extFor(b.mime)}`;
+      keys.push(key);
       await putFile(key, b.data, b.mime);
       await withTenant(ctx.tenantId, (c) => c.query("insert into documento_archivos (tenant_id, documento_id, idx, storage_key, mime, bytes, name) values ($1,$2,$3,$4,$5,$6,$7)",
         [ctx.tenantId, id, i, key, b.mime, b.data.length, b.name]));
@@ -49,7 +51,14 @@ export async function POST(req: NextRequest) {
     }
   } catch (e) {
     console.error("[subida] error guardando archivos", e);
-    await withTenant(ctx.tenantId, (c) => c.query("update documentos set status = 'error', ocr_error = 'No se pudo guardar el archivo.' where id = $1", [id]));
+    // Con páginas a medias la lectura saldría incompleta: se quita el documento entero y se vuelve a subir
+    try {
+      await withTenant(ctx.tenantId, (c) => c.query("delete from documentos where id = $1", [id]));
+      for (const k of keys) await deleteFile(k);
+    } catch (e2) {
+      console.error("[subida] no se pudo quitar el documento a medias", e2);
+      await withTenant(ctx.tenantId, (c) => c.query("update documentos set status = 'error', ocr_error = 'No se pudo guardar el archivo.' where id = $1", [id])).catch(() => {});
+    }
     return NextResponse.json({ error: "No hemos podido guardar el archivo. Prueba otra vez." }, { status: 500 });
   }
   const tenantId = ctx.tenantId;

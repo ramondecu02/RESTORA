@@ -8,7 +8,8 @@ export type ArtRef = { id: string; name: string; aliases: string[]; unit: BaseUn
 export type CatRef = { id: string; name: string; aliases: string[]; unit: BaseUnit; categoryId: string; rend: number };
 export type CatIva = Map<string, number>;
 export type ProvRef = { id: string; name: string; cif: string };
-export type PackMemory = Map<string, { unidadCompra: string; factor: number }>; // clave articuloId
+/** Envase aprendido de albaranes anteriores (clave articuloId). propio = false: se aprendió con otro proveedor y solo se sugiere. */
+export type PackMemory = Map<string, { unidadCompra: string; factor: number; propio?: boolean }>;
 
 const lid = (i: number) => "l" + (i + 1);
 export const MATCH_AUTO = 0.84;
@@ -20,14 +21,39 @@ export function matchProveedor(nombre: string | null, cif: string | null, provs:
   return best ? best.item : null;
 }
 
+/** La unidad impresa es la unidad base del artículo o un sinónimo (kilos, litros, unidades...). */
+export function esUnidadBase(u: string, base: BaseUnit): boolean {
+  const x = norm(u);
+  if (!x) return false;
+  if (x === norm(base)) return true;
+  if (base === "kg") return /^(kg|kgs|kilo|kilos|k)$/.test(x);
+  if (base === "L") return /^(l|lt|lts|litro|litros)$/.test(x);
+  return /^(ud|uds|u|un|unid|unidad|unidades|und|pieza|piezas|pz)$/.test(x);
+}
+/** Conversión de la unidad de compra a la unidad base. Manda la unidad impresa: si ya es la base, factor 1;
+ *  el tamaño que aparezca en el texto solo cuenta si la unidad es un envase (caja, saco, garrafa...) o no se lee. */
+export function convertir(texto: string, unidad: string, base: BaseUnit): { factor: number; fuente: "unidad" | "texto"; unidad: string } | null {
+  const u = unidad.trim();
+  if (esUnidadBase(u, base)) return { factor: 1, fuente: "unidad", unidad: u };
+  const inf = inferPackFactor(texto + " " + u, base);
+  if (inf) return { factor: inf.factor, fuente: "texto", unidad: u || inf.label };
+  return u ? null : { factor: 1, fuente: "unidad", unidad: base };
+}
+/** Tipo de IVA leído, solo si es un tipo entero posible: 5,2 o 1,4 son recargo de equivalencia, no IVA. */
+export function tipoIva(x: number | null | undefined): number | null {
+  if (x == null || !Number.isFinite(x)) return null;
+  const r = Math.round(x);
+  return Math.abs(x - r) < 0.01 && r >= 0 && r <= 30 ? r : null;
+}
+
 export function buildDraft(ocr: OcrAlbaran, ctx: { arts: ArtRef[]; catalog: CatRef[]; catIva: CatIva; provs: ProvRef[]; packs: PackMemory }): Draft {
   const prov = matchProveedor(ocr.proveedor_nombre, ocr.proveedor_cif, ctx.provs);
-  const singleRate = ocr.desglose_iva.length === 1 ? ocr.desglose_iva[0].tipo : null;
+  const singleRate = ocr.desglose_iva.length === 1 ? tipoIva(ocr.desglose_iva[0].tipo) : null;
   const lineas: DraftLine[] = ocr.lineas.map((l, i) => {
     const texto = l.descripcion.trim();
     // 1) alias aprendido o artículo propio; 2) catálogo base; 3) sin coincidencia
-    const own = bestMatches(texto, ctx.arts, (a) => [a.name, ...a.aliases], 0.4, 3);
-    const cat = bestMatches(texto, ctx.catalog, (c) => [c.name, ...c.aliases], 0.4, 3);
+    const own = bestMatches(texto, ctx.arts, (a) => [a.name, ...a.aliases], 0.4, 3, true);
+    const cat = bestMatches(texto, ctx.catalog, (c) => [c.name, ...c.aliases], 0.4, 3, true);
     let match: DraftLine["match"] = null;
     if (own[0] && own[0].score >= MATCH_AUTO) match = { tipo: "tuyo", id: own[0].item.id, score: own[0].score, porUsuario: false };
     else if (cat[0] && cat[0].score >= MATCH_AUTO && !ctx.arts.some((a) => norm(a.name) === norm(cat[0].item.name))) match = { tipo: "catalogo", id: cat[0].item.id, score: cat[0].score, porUsuario: false };
@@ -38,33 +64,43 @@ export function buildDraft(ocr: OcrAlbaran, ctx: { arts: ArtRef[]; catalog: CatR
     ].sort((a, b) => b.score - a.score).slice(0, 4);
 
     const base = lineBase(match, ctx);
-    // Unidad de compra y factor de conversión
+    // Unidad de compra y factor de conversión. Nunca se cambia la unidad impresa en la línea.
     let unidadCompra = (l.unidad || "").trim();
     let factor: number | null = null;
     let factorFuente: DraftLine["factorFuente"] = null;
+    let sugerido = false;
     const mem = match && match.tipo === "tuyo" ? ctx.packs.get(match.id!) : undefined;
     if (base) {
       const u = norm(unidadCompra);
-      const inferred = inferPackFactor(texto + " " + unidadCompra, base.unit);
-      if (mem && (!u || norm(mem.unidadCompra) === u || !inferred)) { factor = mem.factor; unidadCompra = mem.unidadCompra || unidadCompra; factorFuente = "articulo"; }
-      else if (inferred) { factor = inferred.factor; unidadCompra = unidadCompra || inferred.label; factorFuente = "texto"; }
-      else if (!u || u === norm(base.unit) || (base.unit === "kg" && /^(kg|kilo|kilos|k)$/.test(u)) || (base.unit === "L" && /^(l|lt|litro|litros)$/.test(u)) || (base.unit === "ud" && /^(ud|uds|u|unidad|unidades|und|pieza|piezas)$/.test(u))) { factor = 1; unidadCompra = unidadCompra || base.unit; factorFuente = "unidad"; }
+      // El envase recordado solo vale si la línea no trae unidad o trae la misma; si se aprendió con otro proveedor, se propone y se pregunta
+      if (mem && mem.factor > 0 && !esUnidadBase(unidadCompra, base.unit) && (!u || norm(mem.unidadCompra) === u)) {
+        const enBase = esUnidadBase(mem.unidadCompra, base.unit);
+        factor = enBase ? 1 : mem.factor; unidadCompra = mem.unidadCompra || unidadCompra; factorFuente = "articulo";
+        sugerido = mem.propio === false && !enBase;
+      } else {
+        const cv = convertir(texto, unidadCompra, base.unit);
+        if (cv) { factor = cv.factor; unidadCompra = cv.unidad; factorFuente = cv.fuente; }
+      }
     }
     const ivaEsperado = base ? base.iva : null;
-    const ivaLeido = l.iva_pct ?? singleRate ?? null;
-    const cantidad = l.cantidad ?? (l.importe != null && l.precio_unitario ? round(l.importe / (l.precio_unitario * (1 - (l.descuento_pct || 0) / 100)), 3) : null);
-    const precio = l.precio_unitario ?? (l.importe != null && cantidad ? round(l.importe / cantidad, 4) : null);
+    const ivaRaro = l.iva_pct != null && tipoIva(l.iva_pct) == null;
+    const ivaLeido = tipoIva(l.iva_pct) ?? singleRate ?? null;
+    // Con descuento, el importe ya viene rebajado: cantidad y precio se deducen deshaciéndolo
+    const kDesc = 1 - (l.descuento_pct || 0) / 100;
+    const cantidad = l.cantidad ?? (l.importe != null && l.precio_unitario && kDesc > 0 ? round(l.importe / (l.precio_unitario * kDesc), 3) : null);
+    const precio = l.precio_unitario ?? (l.importe != null && cantidad && kDesc > 0 ? round(l.importe / (cantidad * kDesc), 4) : null);
     const decisiones = {
       articulo: !match,
       iva: ivaLeido == null || (ivaEsperado != null && ivaLeido !== ivaEsperado),
       cantidad: l.cantidad == null || l.confianza_cantidad === "baja",
-      unidad: !!base && factor == null,
+      unidad: !!base && (factor == null || sugerido),
     };
+    const duda = ivaRaro ? [l.duda, `En la línea pone IVA ${String(l.iva_pct).replace(".", ",")} %, que no es un tipo de IVA (¿recargo de equivalencia?)`].filter(Boolean).join(" · ") : l.duda;
     return {
       id: lid(i), texto, cantidad, cantidadTexto: l.cantidad_texto || (l.cantidad != null ? String(l.cantidad) : ""), unidadCompra: unidadCompra || (base?.unit ?? ""),
       factor, factorFuente, precio, descuento: l.descuento_pct || 0, bonificadas: l.bonificadas || 0, importe: l.importe,
       ivaLeido, iva: decisiones.iva ? null : ivaLeido, ivaEsperado,
-      conf: { linea: l.confianza, cantidad: l.confianza_cantidad, precio: l.confianza_precio }, duda: l.duda,
+      conf: { linea: l.confianza, cantidad: l.confianza_cantidad, precio: l.confianza_precio }, duda,
       match, nuevo: null, candidatos, decisiones,
       resuelto: { articulo: !decisiones.articulo, iva: !decisiones.iva, cantidad: !decisiones.cantidad, unidad: !decisiones.unidad },
     };
