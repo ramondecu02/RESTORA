@@ -111,7 +111,7 @@ export function EliminarNegocio({ nombre }: { nombre: string }) {
   return (
     <section className="card card-bad" aria-labelledby="h-del">
       <div className="card-h"><h2 className="h3" id="h-del">Eliminar el negocio</h2></div>
-      <p className="muted small">Borra para siempre todos los datos de {nombre}: albaranes, archivos, artículos, escandallos y ventas. No se puede deshacer.</p>
+      <p className="muted small">Borra para siempre todos los datos de {nombre}: albaranes, archivos, artículos, escandallos y ventas. Si tienes suscripción, se cancela y no se te cobra más. No se puede deshacer.</p>
       {!open ? <button type="button" className="btn btn-3 btn-sm" onClick={() => setOpen(true)}><Icon name="trash" size={18} /> Eliminar negocio…</button> : (
         <div className="stack-sm">
           <div className="fld"><label htmlFor="del-n">Escribe «{nombre}» para confirmar</label><input id="del-n" className="inp" value={txt} onChange={(e) => setTxt(e.target.value)} /></div>

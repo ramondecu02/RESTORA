@@ -1,7 +1,8 @@
 // Archivos privados (albaranes, fotos). Vercel Blob en producción; disco local en desarrollo.
-import { del, get, put } from "@vercel/blob";
+import { del, get, list, put } from "@vercel/blob";
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { isUuid } from "./db";
 import { env } from "./env";
 
 const LOCAL_DIR = path.join(process.cwd(), ".storage");
@@ -68,6 +69,23 @@ export async function deleteFile(key: string): Promise<void> {
     else { const f = path.join(LOCAL_DIR, key); await rm(f, { force: true }); await rm(f + ".type", { force: true }); }
   } catch (e) {
     console.error("[archivos] no se pudo borrar", key, (e as Error).message);
+  }
+}
+
+/** Borra todos los archivos de un negocio (carpeta t/<negocio>/), también los que ya no están enlazados en la base. */
+export async function deleteTenantFiles(tenantId: string): Promise<void> {
+  if (!isUuid(tenantId)) throw new Error("Negocio no válido");
+  const prefix = `t/${tenantId}/`;
+  try {
+    if (blobOn()) {
+      for (let i = 0; i < 1000; i++) {
+        const r = await list({ prefix, limit: 100, token: env.blobToken });
+        if (!r.blobs.length) break;
+        await del(r.blobs.map((b) => b.url), { token: env.blobToken });
+      }
+    } else await rm(path.join(LOCAL_DIR, prefix), { recursive: true, force: true });
+  } catch (e) {
+    console.error("[archivos] no se pudo borrar la carpeta", prefix, (e as Error).message);
   }
 }
 

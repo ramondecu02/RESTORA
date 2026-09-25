@@ -9,7 +9,7 @@ type M = { id: string; name: string; email: string; role: string };
 export function Equipo({ me, miembros, invit, roles }: { me: string; miembros: M[]; invit: { id: string; email: string; role: string; expires: string }[]; roles: { id: string; label: string; desc: string }[] }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("cocina");
-  const [link, setLink] = useState<string | null>(null);
+  const [link, setLink] = useState<{ url: string; enviado: boolean } | null>(null);
   const [pending, start] = useTransition();
   const label = (r: string) => roles.find((x) => x.id === r)?.label ?? r;
   return (
@@ -52,9 +52,9 @@ export function Equipo({ me, miembros, invit, roles }: { me: string; miembros: M
           </div>
           <button type="button" className="btn btn-sm" disabled={pending || !email.includes("@")} onClick={() => start(async () => {
             const r = await invitar(email, role);
-            if (r.ok) { toast(r.msg ?? "Enviada"); setLink(r.data!.link); setEmail(""); } else toastError(r.error);
+            if (r.ok) { if (r.data!.enviado) toast(r.msg ?? "Enviada"); else toastError(r.msg ?? "No hemos podido enviar el email."); setLink({ url: r.data!.link, enviado: r.data!.enviado }); setEmail(""); } else toastError(r.error);
           })}>{pending ? <span className="spin" /> : <Icon name="mail" size={18} />} Enviar invitación</button>
-          {link ? <div className="note note-ok"><Icon name="check" /><p>Le hemos enviado un email. También puedes pasarle el enlace: <button type="button" className="link" onClick={() => navigator.clipboard?.writeText(link).then(() => toast("Enlace copiado"))}>copiar enlace</button>. Caduca en 7 días.</p></div> : null}
+          {link ? <div className={`note ${link.enviado ? "note-ok" : "note-warn"}`}><Icon name={link.enviado ? "check" : "info"} /><p>{link.enviado ? "Le hemos enviado un email. También puedes pasarle el enlace: " : "No hemos podido enviarle el email. Pásale tú el enlace: "}<button type="button" className="link" onClick={() => navigator.clipboard?.writeText(link.url).then(() => toast("Enlace copiado"))}>copiar enlace</button>. Caduca en 7 días.</p></div> : null}
         </section>
       </div>
     </div>

@@ -8,23 +8,16 @@ import { dishStats } from "@/server/domain/carta";
 import { loadArticulos, toArtCost } from "@/server/domain/costs";
 import { costeBase, foodCost, recetaCost } from "@/lib/costing";
 import { isoDate } from "@/lib/format";
+import { cell, csv, type Cell } from "@/lib/csv-export";
 
-type Cell = string | number | null | undefined;
 const TIPOS: Record<string, Perm> = { articulos: "compras", proveedores: "compras", compras: "compras", escandallos: "escandallos", ventas: "ventas" };
-
-const cell = (v: Cell) => {
-  if (v == null) return "";
-  if (typeof v === "number") return Number.isFinite(v) ? String(Math.round(v * 10000) / 10000).replace(".", ",") : "";
-  const s = String(v);
-  return /[;"\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-};
-const csv = (rows: Cell[][]) => "﻿" + rows.map((r) => r.map(cell).join(";")).join("\r\n") + "\r\n";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ tipo: string }> }) {
   const ctx = await getAppCtx();
   if (!ctx) return NextResponse.json({ error: "Tu sesión ha caducado. Vuelve a entrar." }, { status: 401 });
   const { tipo } = await params;
-  const perm = TIPOS[tipo];
+  // Solo claves propias: «constructor» o «toString» no son exportaciones
+  const perm = Object.hasOwn(TIPOS, tipo) ? TIPOS[tipo] : undefined;
   if (!perm) return NextResponse.json({ error: "No existe esa exportación." }, { status: 404 });
   if (!can(ctx.role, perm)) return NextResponse.json({ error: "Tu rol no permite exportar estos datos." }, { status: 403 });
   const L = ctx.local.id;
