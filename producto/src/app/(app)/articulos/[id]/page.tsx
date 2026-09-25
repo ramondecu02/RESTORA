@@ -129,7 +129,7 @@ function BenchCard({ b, precio, unit }: { b: Bench; precio: number | null; unit:
         <span className="bench-med" style={{ left: `${X(b.p50)}%` }} />
         {precio != null ? <span className="bench-me" style={{ left: `${X(precio)}%` }}><small>Tú</small></span> : null}
       </div>
-      <p className="muted small">Datos anónimos de las últimas 12 semanas. Solo se muestran con cinco restaurantes o más, y el tuyo no cuenta.</p>
+      <p className="muted small">Datos anónimos y redondeados de las últimas 12 semanas. Solo se muestran con cinco restaurantes o más que compran desde hace al menos una semana, y el tuyo no cuenta.</p>
     </section>
   );
 }

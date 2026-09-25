@@ -27,7 +27,7 @@ export function ProvFormButton({ id, initial, label, className = "btn btn-2 btn-
   });
   return (
     <>
-      <button type="button" className={className} onClick={() => setOpen(true)}><Icon name={icon} size={18} /> {label}</button>
+      <button type="button" className={className} onClick={() => { if (id) setF({ ...EMPTY, ...initial }); setOpen(true); }}><Icon name={icon} size={18} /> {label}</button>
       <Sheet open={open} onClose={() => setOpen(false)} title={id ? "Editar proveedor" : "Nuevo proveedor"}
         foot={<><button type="button" className="btn btn-3" onClick={() => setOpen(false)}>Cancelar</button><button type="button" className="btn" disabled={pending || f.name.trim().length < 2} onClick={save}>{pending ? <span className="spin" /> : null}Guardar</button></>}>
         <div className="fgrid fgrid-2">

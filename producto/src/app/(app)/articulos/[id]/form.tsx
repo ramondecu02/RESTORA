@@ -5,17 +5,32 @@ import { NumInput } from "@/components/ui/num-input";
 import { Confirm } from "@/components/ui/sheet";
 import { toast, toastError } from "@/components/ui/toast";
 import type { BaseUnit } from "@/lib/units";
-import { archivarArticulo, guardarArticulo } from "../actions";
+import { archivarArticulo, guardarArticulo, type ArtCampos } from "../actions";
 
-type A = { id: string; name: string; categoryId: string; unit: BaseUnit; rend: number; iva: number; precioManual: number | null; stockMin: number | null; consumo: number | null; trackStock: boolean; aliases: string[] };
+type A = ArtCampos & { id: string; aliases: string[] };
+const CAMPOS = ["name", "categoryId", "unit", "rend", "iva", "precioManual", "stockMin", "consumo", "trackStock"] as const;
+/** Lo que el usuario ha cambiado respecto a `base`: solo eso se guarda, para no pisar lo que otros cambien mientras tanto. */
+function cambios(f: A, base: A) {
+  const p: Partial<ArtCampos> = {};
+  for (const k of CAMPOS) if (f[k] !== base[k]) (p as Record<string, unknown>)[k] = f[k];
+  return { p, quitarAliases: base.aliases.filter((x) => !f.aliases.includes(x)) };
+}
 
 export function ArtForm({ a, cats, canEdit, unitLocked }: { a: A; cats: { id: string; name: string; iva: number }[]; canEdit: boolean; unitLocked: boolean }) {
   const [f, setF] = useState(a);
+  const [base, setBase] = useState(a);
+  // Llegan datos nuevos del servidor (tras guardar o tras cambios de otros): se toman, conservando lo que el usuario esté editando
+  if (base !== a) {
+    const { p, quitarAliases } = cambios(f, base);
+    setBase(a);
+    setF({ ...a, ...p, aliases: a.aliases.filter((x) => !quitarAliases.includes(x)) });
+  }
   const [pending, start] = useTransition();
-  const dirty = JSON.stringify(f) !== JSON.stringify(a);
+  const pend = cambios(f, a);
+  const dirty = Object.keys(pend.p).length > 0 || pend.quitarAliases.length > 0;
   const set = <K extends keyof A>(k: K, v: A[K]) => setF((x) => ({ ...x, [k]: v }));
   const save = () => start(async () => {
-    const r = await guardarArticulo(a.id, f);
+    const r = await guardarArticulo(a.id, { ...pend.p, quitarAliases: pend.quitarAliases });
     if (r.ok) toast(r.msg ?? "Guardado"); else toastError(r.error);
   });
   return (
