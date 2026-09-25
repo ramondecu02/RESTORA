@@ -17,11 +17,22 @@ export function toast(msg: string, opts: { tone?: "ok" | "bad"; action?: T["acti
 }
 export const toastError = (msg: string) => toast(msg, { tone: "bad", ms: 5000 });
 
+/** El valor de rs_flash llega codificado dos veces (setFlash y el serializador de cookies de Next):
+ *  se decodifica mientras queden secuencias %XX, como mucho dos veces. null si la cookie está corrupta. */
+export function decodeFlash(raw: string): string | null {
+  let s = raw;
+  for (let i = 0; i < 2 && /%[0-9a-f]{2}/i.test(s); i++) {
+    try { s = decodeURIComponent(s); } catch { return i ? s : null; }
+  }
+  return s;
+}
+
 function readFlash() {
   const m = document.cookie.match(/(?:^|;\s*)rs_flash=([^;]*)/);
   if (!m) return;
   document.cookie = "rs_flash=; Max-Age=0; path=/";
-  try { toast(decodeURIComponent(m[1])); } catch { /* cookie corrupta */ }
+  const msg = decodeFlash(m[1]);
+  if (msg) toast(msg);
 }
 
 export function Toasts() {

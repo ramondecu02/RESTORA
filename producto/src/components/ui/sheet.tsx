@@ -1,6 +1,6 @@
 "use client";
 // Hoja inferior en móvil / ventana centrada en escritorio. Se cierra con ✕, fondo o Escape.
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../icons";
 
@@ -12,17 +12,20 @@ export function Sheet({ open, onClose, title, sub, children, foot, wide, drawer,
   const ref = useRef<HTMLDivElement>(null);
   const prev = useRef<Element | null>(null);
   useEffect(() => { setRoot(document.getElementById("ovl-root")); }, []);
+  // onClose suele ser una función nueva en cada render del padre: si fuese dependencia del efecto, cada tecla
+  // en un campo controlado devolvería el foco fuera y luego al primer control de la hoja.
+  const close = useEffectEvent(() => onClose());
   useEffect(() => {
     if (!open) return;
-    prev.current = document.activeElement;
+    prev.current = document.activeElement; // solo al abrir; se devuelve el foco solo al cerrar
     const t = setTimeout(() => {
       const el = ref.current?.querySelector<HTMLElement>("[autofocus], input:not([type=hidden]), select, textarea, button:not(.sheet-x)");
       (el ?? ref.current)?.focus();
     }, 30);
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); close(); } };
     document.addEventListener("keydown", onKey);
     return () => { clearTimeout(t); document.removeEventListener("keydown", onKey); (prev.current as HTMLElement | null)?.focus?.(); };
-  }, [open, onClose]);
+  }, [open]);
   if (!open || !root) return null;
   const id = labelledBy ?? "sheet-title";
   return createPortal(

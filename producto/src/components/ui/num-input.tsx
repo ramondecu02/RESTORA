@@ -11,10 +11,11 @@ export function NumInput({ value, onValue, decimals = 3, className = "inp", ...r
   const [txt, setTxt] = useState(show(value, decimals));
   const focused = useRef(false);
   useEffect(() => { if (!focused.current) setTxt(show(value, decimals)); }, [value, decimals]);
+  // Al salir del campo se muestra el valor que el padre aceptó (acotado o descartado), no lo tecleado.
   return (
     <input {...rest} className={className} inputMode="decimal" autoComplete="off" value={txt}
       onFocus={(e) => { focused.current = true; rest.onFocus?.(e); }}
-      onBlur={(e) => { focused.current = false; setTxt(show(parseNum(txt), decimals)); rest.onBlur?.(e); }}
+      onBlur={(e) => { focused.current = false; setTxt(show(value, decimals)); rest.onBlur?.(e); }}
       onChange={(e) => { setTxt(e.target.value); onValue(parseNum(e.target.value)); }} />
   );
 }
