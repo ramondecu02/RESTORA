@@ -2,6 +2,7 @@
 import { all, one, withTenant, type Db } from "../db";
 import { UserError, type AppCtx } from "../ctx";
 import { audit } from "../audit";
+import { deleteFile } from "../storage";
 import { getCatalog } from "../queries/catalog";
 import { rebuildArticulo } from "../domain/articulos";
 import { loadCostContext, recomputeCosts } from "../domain/costs";
@@ -21,35 +22,52 @@ const monthDate = (monthsAgo: number, day: number) => {
   return isoDate(d);
 };
 
+/** Hay datos de ejemplo en el local mientras quede cualquier fila marcada como de ejemplo (al quitarlos no queda ninguna). */
+export async function demoCargado(c: Db, localId: string): Promise<boolean> {
+  return !!(await one(c, `select 1 where exists (select 1 from documentos where local_id = $1 and demo) or exists (select 1 from ventas_importes where local_id = $1 and demo)
+    or exists (select 1 from recetas where local_id = $1 and demo) or exists (select 1 from articulos where local_id = $1 and demo) or exists (select 1 from proveedores where local_id = $1 and demo)`, [localId]));
+}
+
+/** Nombre de una fila de ejemplo que no choca con un artículo o proveedor tuyo: nunca se mezclan los datos de ejemplo con los tuyos. */
+const nombreEjemplo = (name: string, intento: number) => (intento === 0 ? name : `${name} (ejemplo${intento > 1 ? ` ${intento}` : ""})`);
+async function nombreLibre(c: Db, tabla: "articulos" | "proveedores", localId: string, name: string): Promise<string> {
+  for (let i = 0; ; i++) {
+    const n = nombreEjemplo(name, i);
+    if (!(await one(c, `select 1 from ${tabla} where local_id = $1 and lower(name) = lower($2) and not archived`, [localId, n]))) return n;
+  }
+}
+/** Nombre del TPV normalizado como lo guarda el ejemplo en ventas_alias. */
+const aliasDe = (name: string) => name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+
 export async function cargarDemo(ctx: AppCtx) {
   const { cats } = await getCatalog();
   const ivaCat = new Map(cats.map((c) => [c.id, c.iva]));
   return withTenant(ctx.tenantId, async (c) => {
-    const ya = await one(c, "select 1 from proveedores where local_id = $1 and demo limit 1", [ctx.local.id]);
-    if (ya) throw new UserError("Ya tienes cargados los datos de ejemplo.");
-    await c.query(`update locales set ciudad = case when ciudad = '' then 'Tarragona' else ciudad end, lema = case when lema = '' then 'Cocina de mercado' else lema end,
-      comensales_dia = coalesce(comensales_dia, $2), postal_code = case when postal_code = '' then '43003' else postal_code end where id = $1`, [ctx.local.id, COMENSALES_BASE]);
+    // Bloquea el local: dos cargas a la vez no pueden duplicar el ejemplo
+    const loc = await one<{ comensales_dia: number | null }>(c, "select comensales_dia from locales where id = $1 for update", [ctx.local.id]);
+    if (await demoCargado(c, ctx.local.id)) throw new UserError("Ya tienes cargados los datos de ejemplo.");
+    // Los datos del local no se tocan: el código postal decide la zona de los precios de referencia y los comensales, el ticket medio.
     // Las ventas de ejemplo se escalan a los comensales que declaró el local, para que el ticket medio salga razonable
-    const cd = (await one<{ c: number | null }>(c, "select comensales_dia as c from locales where id = $1", [ctx.local.id]))?.c ?? COMENSALES_BASE;
+    const cd = loc?.comensales_dia ?? COMENSALES_BASE;
     const escala = cd / COMENSALES_BASE;
     const vm = (n: number) => Math.max(1, Math.round(n * escala));
-    // Proveedores
+    // Proveedores (siempre nuevos y marcados como de ejemplo)
     const prov = new Map<string, string>();
     for (const p of PROVS) {
-      const ex = await one<{ id: string }>(c, "select id from proveedores where local_id = $1 and lower(name) = lower($2) and not archived", [ctx.local.id, p.name]);
-      const id = ex?.id ?? (await one<{ id: string }>(c, `insert into proveedores (tenant_id, local_id, name, empresa, tipo, cif, responsable, phone, email, direccion, entrega, notas, origen, demo)
+      const name = await nombreLibre(c, "proveedores", ctx.local.id, p.name);
+      const id = (await one<{ id: string }>(c, `insert into proveedores (tenant_id, local_id, name, empresa, tipo, cif, responsable, phone, email, direccion, entrega, notas, origen, demo)
         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'manual',true) returning id`,
-        [ctx.tenantId, ctx.local.id, p.name, p.empresa, p.tipo, p.cif, p.responsable, p.phone, p.email, p.direccion, p.entrega, p.notas]))!.id;
+        [ctx.tenantId, ctx.local.id, name, p.empresa, p.tipo, p.cif, p.responsable, p.phone, p.email, p.direccion, p.entrega, p.notas]))!.id;
       prov.set(p.key, id);
     }
-    // Artículos
+    // Artículos (siempre nuevos: las compras de ejemplo no caen sobre un artículo tuyo del mismo nombre)
     const art = new Map<string, string>();
     for (const a of ARTS) {
-      const ex = await one<{ id: string }>(c, "select id from articulos where local_id = $1 and lower(name) = lower($2) and not archived", [ctx.local.id, a.name]);
+      const name = await nombreLibre(c, "articulos", ctx.local.id, a.name);
       const inv = INVENTARIO[a.key];
-      const id = ex?.id ?? (await one<{ id: string }>(c, `insert into articulos (tenant_id, local_id, name, category_id, catalog_item_id, unit, rend, iva, aliases, track_stock, stock_min, consumo_semanal, demo)
+      const id = (await one<{ id: string }>(c, `insert into articulos (tenant_id, local_id, name, category_id, catalog_item_id, unit, rend, iva, aliases, track_stock, stock_min, consumo_semanal, demo)
         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,true) returning id`,
-        [ctx.tenantId, ctx.local.id, a.name, a.cat, a.catalog, a.unit, a.rend, ivaCat.get(a.cat) ?? 10, a.aliases ?? [], !!inv, inv?.[2] ?? null, inv?.[1] ?? null]))!.id;
+        [ctx.tenantId, ctx.local.id, name, a.cat, a.catalog, a.unit, a.rend, ivaCat.get(a.cat) ?? 10, a.aliases ?? [], !!inv, inv?.[2] ?? null, inv?.[1] ?? null]))!.id;
       art.set(a.key, id);
     }
     // Seis meses de albaranes, con consumo entre compras para que el precio medio siga a los precios recientes
@@ -170,7 +188,7 @@ export async function cargarDemo(ctx: AppCtx) {
         await c.query(`insert into ventas_lineas (tenant_id, local_id, import_id, fecha, nombre, receta_id, unidades, importe, neto, coste_unit, coste_total) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
           [ctx.tenantId, ctx.local.id, imp, monthDate(m, 15), d.name, rid, uds, importe, importe / (1 + ctx.local.iva_venta / 100), cu, cu * uds]);
         total += importe; filas++;
-        await c.query("insert into ventas_alias (tenant_id, local_id, nombre_norm, receta_id) values ($1,$2,$3,$4) on conflict do nothing", [ctx.tenantId, ctx.local.id, d.name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim(), rid]);
+        await c.query("insert into ventas_alias (tenant_id, local_id, nombre_norm, receta_id) values ($1,$2,$3,$4) on conflict do nothing", [ctx.tenantId, ctx.local.id, aliasDe(d.name), rid]);
       }
       await c.query("update ventas_importes set filas = $2, total = $3 where id = $1", [imp, filas, Math.round(total * 100) / 100]);
     }
@@ -180,20 +198,39 @@ export async function cargarDemo(ctx: AppCtx) {
 }
 
 export async function quitarDemo(ctx: AppCtx) {
-  return withTenant(ctx.tenantId, async (c: Db) => {
+  const fotos = await withTenant(ctx.tenantId, async (c: Db) => {
     const L = ctx.local.id;
+    await c.query("select 1 from locales where id = $1 for update", [L]);
     const docs = (await all<{ id: string }>(c, "select id from documentos where local_id = $1 and demo", [L])).map((d) => d.id);
     const imps = (await all<{ id: string }>(c, "select id from ventas_importes where local_id = $1 and demo", [L])).map((d) => d.id);
+    const pares = await all<{ articulo_id: string; proveedor_id: string }>(c, "select articulo_id, proveedor_id from articulo_proveedor where documento_id = any($1::uuid[])", [docs]);
     await c.query("delete from stock_movimientos where local_id = $1 and (ref_id = any($2::uuid[]) or ref_tipo = 'demo')", [L, [...docs, ...imps]]);
     await c.query("delete from documentos where id = any($1::uuid[])", [docs]);
     await c.query("delete from ventas_importes where id = any($1::uuid[])", [imps]);
     await c.query("delete from pedidos where local_id = $1 and demo", [L]);
-    // Recetas de ejemplo que alguna receta tuya usa (directa o indirectamente): se quedan como tuyas
+    // Precios por proveedor que venían de albaranes de ejemplo: se recalculan con tus compras o desaparecen
+    for (const p of pares) {
+      const last = await one<{ unidad_compra: string; factor: number; precio: number; coste_unit: number; fecha: string; documento_id: string }>(c, `
+        select cl.unidad_compra, cl.factor, cl.precio, cl.coste_unit, d.fecha, d.id as documento_id from compra_lineas cl join documentos d on d.id = cl.documento_id
+        where cl.articulo_id = $1 and d.proveedor_id = $2 and d.status = 'guardado' order by d.fecha desc, d.saved_at desc limit 1`, [p.articulo_id, p.proveedor_id]);
+      if (last) await c.query(`update articulo_proveedor set unidad_compra = $3, factor = $4, precio = $5, precio_unit = $6, fecha = $7, documento_id = $8
+        where articulo_id = $1 and proveedor_id = $2`, [p.articulo_id, p.proveedor_id, last.unidad_compra, last.factor, last.precio, last.coste_unit, last.fecha, last.documento_id]);
+      else await c.query("delete from articulo_proveedor where articulo_id = $1 and proveedor_id = $2 and origen = 'albaran'", [p.articulo_id, p.proveedor_id]);
+    }
+    // Precios de otros proveedores que trae el ejemplo (artículo y proveedor de ejemplo)
+    await c.query(`delete from articulo_proveedor ap using articulos a, proveedores p where a.id = ap.articulo_id and p.id = ap.proveedor_id
+      and a.local_id = $1 and a.demo and p.demo and ap.origen = 'cotizacion'`, [L]);
+    // Recetas de ejemplo que usas (en una receta tuya, en ventas que has importado o con un nombre del TPV que asignaste tú): se quedan como tuyas
+    const aliasEjemplo = [...PLATOS, ...REVENTA, MENU].map((d) => aliasDe(d.name));
     for (let i = 0; i < 10; i++) {
-      const r = await c.query(`update recetas set demo = false where local_id = $1 and demo and id in (
-        select rl.subreceta_id from receta_lineas rl join recetas r on r.id = rl.receta_id where not r.demo and rl.subreceta_id is not null)`, [L]);
+      const r = await c.query(`update recetas set demo = false where local_id = $1 and demo and (
+        id in (select rl.subreceta_id from receta_lineas rl join recetas r on r.id = rl.receta_id where not r.demo and rl.subreceta_id is not null)
+        or id in (select receta_id from ventas_lineas where local_id = $1 and receta_id is not null)
+        or id in (select receta_id from ventas_alias where local_id = $1 and nombre_norm <> all($2::text[])))`, [L, aliasEjemplo]);
       if (!r.rowCount) break;
     }
+    // Fotos propias subidas a platos de ejemplo: se borran del almacén al terminar
+    const fotos = (await all<{ k: string }>(c, "select foto_key as k from recetas where local_id = $1 and demo and foto_key like $2", [L, `t/${ctx.tenantId}/%`])).map((x) => x.k);
     await c.query("delete from receta_lineas where receta_id in (select id from recetas where local_id = $1 and demo)", [L]);
     await c.query("delete from recetas where local_id = $1 and demo", [L]);
     // Artículos: se borran salvo que los uses en compras, recetas o pedidos tuyos
@@ -201,12 +238,15 @@ export async function quitarDemo(ctx: AppCtx) {
       id in (select articulo_id from compra_lineas) or id in (select articulo_id from receta_lineas where articulo_id is not null) or id in (select articulo_id from pedido_lineas))`, [L]);
     const kept = (await all<{ id: string }>(c, "select id from articulos where local_id = $1 and not demo", [L])).map((a) => a.id);
     await c.query("delete from articulos where local_id = $1 and demo", [L]);
+    // Antes de decidir qué proveedores quedan: stock, PMP y último proveedor ya sin las compras de ejemplo
+    for (const a of kept) await rebuildArticulo(c, a);
     await c.query(`update proveedores set demo = false where local_id = $1 and demo and (
       id in (select proveedor_id from documentos where proveedor_id is not null) or id in (select proveedor_id from articulo_proveedor)
       or id in (select last_proveedor_id from articulos where last_proveedor_id is not null) or id in (select proveedor_pref_id from articulos where proveedor_pref_id is not null))`, [L]);
     await c.query("delete from proveedores where local_id = $1 and demo", [L]);
-    for (const a of kept) await rebuildArticulo(c, a);
     await recomputeCosts(c, L);
     await audit(c, ctx.tenantId, ctx.userId, "quitar", "demo", null, {});
+    return fotos;
   });
+  for (const k of fotos) await deleteFile(k);
 }

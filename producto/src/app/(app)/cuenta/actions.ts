@@ -1,7 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
 import { refresh } from "next/cache";
-import { all, isUuid, one, sys, withTenant } from "@/server/db";
+import { isUuid, one, sys, withTenant, type Db } from "@/server/db";
 import { requireApp, requirePerm, UserError } from "@/server/ctx";
 import { run, type Result } from "@/server/action";
 import { audit } from "@/server/audit";
@@ -10,10 +10,10 @@ import { destroyUserSessions, setFlash } from "@/server/session";
 import { inviteEmail, sendEmail } from "@/server/email";
 import { env } from "@/server/env";
 import { rateLimit } from "@/server/ratelimit";
-import { deleteFile } from "@/server/storage";
+import { deleteTenantFiles } from "@/server/storage";
 import { isRole, ROLE_LABEL, type Role } from "@/server/rbac";
 import { cargarDemo, quitarDemo } from "@/server/demo/seed";
-import { checkoutUrl, portalUrl, stripeOn } from "@/server/billing";
+import { cancelarCobros, checkoutUrl, portalUrl, stripeOn } from "@/server/billing";
 
 export async function guardarLocal(input: { name: string; address: string; postal_code: string; ciudad: string; lema: string; iva_venta: number; fc_objetivo: number; comensales_dia: number | null }): Promise<Result> {
   return run(async () => {
@@ -80,26 +80,30 @@ export async function eliminarNegocio(confirmacion: string): Promise<Result> {
     const ctx = await requireApp();
     requirePerm(ctx, "facturacion");
     if (confirmacion.trim().toLowerCase() !== ctx.org.name.trim().toLowerCase()) throw new UserError("Escribe el nombre exacto del negocio para confirmar.");
-    const keys = await withTenant(ctx.tenantId, async (c) => [
-      ...(await all<{ k: string }>(c, "select storage_key as k from documento_archivos")).map((x) => x.k),
-      ...(await all<{ k: string }>(c, "select foto_key as k from recetas where foto_key like 't/%'")).map((x) => x.k),
-    ]);
+    // Primero se cancela la suscripción: si Stripe falla no se borra nada y se puede volver a intentar
+    try { await cancelarCobros(ctx.tenantId); } catch (e) {
+      console.error("[stripe] no se pudo cancelar al eliminar el negocio", e);
+      throw new UserError("No hemos podido cancelar tu suscripción, así que no hemos borrado nada. Inténtalo de nuevo en un momento.");
+    }
     await sys((c) => c.query("delete from organizations where id = $1", [ctx.tenantId]));
-    for (const k of keys) await deleteFile(k);
+    // Toda la carpeta del negocio (t/<negocio>/), también los archivos que ya no estaban enlazados: fotos sueltas, subidas a medias
+    await deleteTenantFiles(ctx.tenantId);
   });
   if (r.ok) { await setFlash("Negocio eliminado con todos sus datos."); redirect("/sin-negocio"); }
   return r;
 }
 
 // ---- Usuarios e invitaciones ----
-export async function invitar(email: string, role: string): Promise<Result<{ link: string }>> {
+export async function invitar(email: string, role: string): Promise<Result<{ link: string; enviado: boolean }>> {
   return run(async () => {
     const ctx = await requireApp();
     requirePerm(ctx, "usuarios");
     const e = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)) throw new UserError("Revisa el email.");
     if (!isRole(role)) throw new UserError("Elige un rol.");
-    if (!(await rateLimit(`inv:${ctx.tenantId}`, 30, 3600))) throw new UserError("Demasiadas invitaciones seguidas. Espera un poco.");
+    // Límite por negocio y también por persona: crear otro negocio no da más invitaciones
+    if (!(await rateLimit(`inv:${ctx.tenantId}`, 30, 3600)) || !(await rateLimit(`inv-u:${ctx.userId}`, 30, 3600)) || !(await rateLimit(`inv-ud:${ctx.userId}`, 60, 86400)))
+      throw new UserError("Demasiadas invitaciones seguidas. Espera un poco.");
     const ya = await sys((c) => one(c, "select 1 from memberships m join users u on u.id = m.user_id where m.org_id = $1 and lower(u.email) = $2", [ctx.tenantId, e]));
     if (ya) throw new UserError("Esa persona ya está en tu equipo.");
     const token = randomToken(24);
@@ -108,9 +112,9 @@ export async function invitar(email: string, role: string): Promise<Result<{ lin
       await c.query("insert into invitations (org_id, email, role, token_hash, invited_by, expires_at) values ($1,$2,$3,$4,$5, now() + interval '7 days')", [ctx.tenantId, e, role, sha256(token), ctx.userId]);
     });
     const link = `${env.appUrl}/invitacion/${token}`;
-    await sendEmail({ to: e, ...inviteEmail(ctx.org.name, ctx.name, ROLE_LABEL[role as Role], link) });
+    const enviado = await sendEmail({ to: e, ...inviteEmail(ctx.org.name, ctx.name, ROLE_LABEL[role as Role], link) });
     refresh();
-    return { ok: true, data: { link }, msg: `Invitación enviada a ${e}` };
+    return { ok: true, data: { link, enviado }, msg: enviado ? `Invitación enviada a ${e}` : `Invitación creada, pero no hemos podido enviar el email a ${e}. Pásale tú el enlace.` };
   });
 }
 export async function revocarInvitacion(id: string): Promise<Result> {
@@ -122,18 +126,28 @@ export async function revocarInvitacion(id: string): Promise<Result> {
     refresh();
   });
 }
-async function propietarios(orgId: string) {
-  return (await sys((c) => one<{ n: number }>(c, "select count(*)::int as n from memberships where org_id = $1 and role = 'propietario'", [orgId])))!.n;
+async function propietarios(c: Db, orgId: string) {
+  return (await one<{ n: number }>(c, "select count(*)::int as n from memberships where org_id = $1 and role = 'propietario'", [orgId]))!.n;
+}
+/** Bloquea el negocio para cambiar el equipo (dos cambios a la vez no pueden dejarlo sin propietario) y comprueba que quien actúa sigue pudiendo. */
+async function bloquearEquipo(c: Db, orgId: string, userId: string) {
+  await c.query("select 1 from organizations where id = $1 for update", [orgId]);
+  const yo = await one<{ role: Role }>(c, "select role from memberships where org_id = $1 and user_id = $2", [orgId, userId]);
+  if (!yo) throw new UserError("Ya no estás en este negocio.");
+  requirePerm(yo, "usuarios");
 }
 export async function cambiarRol(userId: string, role: string): Promise<Result> {
   return run(async () => {
     const ctx = await requireApp();
     requirePerm(ctx, "usuarios");
     if (!isUuid(userId) || !isRole(role)) throw new UserError("Datos no válidos.");
-    const cur = await sys((c) => one<{ role: string }>(c, "select role from memberships where org_id = $1 and user_id = $2", [ctx.tenantId, userId]));
-    if (!cur) throw new UserError("Esa persona no está en tu equipo.");
-    if (cur.role === "propietario" && role !== "propietario" && (await propietarios(ctx.tenantId)) <= 1) throw new UserError("Tiene que quedar al menos un propietario.");
-    await sys((c) => c.query("update memberships set role = $3 where org_id = $1 and user_id = $2", [ctx.tenantId, userId, role]));
+    await sys(async (c) => {
+      await bloquearEquipo(c, ctx.tenantId, ctx.userId);
+      const cur = await one<{ role: string }>(c, "select role from memberships where org_id = $1 and user_id = $2", [ctx.tenantId, userId]);
+      if (!cur) throw new UserError("Esa persona no está en tu equipo.");
+      if (cur.role === "propietario" && role !== "propietario" && (await propietarios(c, ctx.tenantId)) <= 1) throw new UserError("Tiene que quedar al menos un propietario.");
+      await c.query("update memberships set role = $3 where org_id = $1 and user_id = $2", [ctx.tenantId, userId, role]);
+    });
     refresh();
     return { ok: true, msg: "Rol cambiado" };
   });
@@ -142,10 +156,12 @@ export async function quitarMiembro(userId: string): Promise<Result> {
   return run(async () => {
     const ctx = await requireApp();
     requirePerm(ctx, "usuarios");
-    const cur = await sys((c) => one<{ role: string }>(c, "select role from memberships where org_id = $1 and user_id = $2", [ctx.tenantId, userId]));
-    if (!cur) throw new UserError("Esa persona no está en tu equipo.");
-    if (cur.role === "propietario" && (await propietarios(ctx.tenantId)) <= 1) throw new UserError("No puedes quitar al único propietario.");
+    if (!isUuid(userId)) throw new UserError("Datos no válidos.");
     await sys(async (c) => {
+      await bloquearEquipo(c, ctx.tenantId, ctx.userId);
+      const cur = await one<{ role: string }>(c, "select role from memberships where org_id = $1 and user_id = $2", [ctx.tenantId, userId]);
+      if (!cur) throw new UserError("Esa persona no está en tu equipo.");
+      if (cur.role === "propietario" && (await propietarios(c, ctx.tenantId)) <= 1) throw new UserError("No puedes quitar al único propietario.");
       await c.query("delete from memberships where org_id = $1 and user_id = $2", [ctx.tenantId, userId]);
       await c.query("delete from sessions where user_id = $1 and org_id = $2", [userId, ctx.tenantId]);
     });
@@ -160,7 +176,10 @@ export async function irAPagar(): Promise<Result<string>> {
     const ctx = await requireApp();
     requirePerm(ctx, "facturacion");
     if (!stripeOn()) throw new UserError("Los pagos aún no están configurados en esta instalación.");
-    return { ok: true as const, data: await checkoutUrl(ctx.tenantId, ctx.email, ctx.org.name) };
+    const url = await checkoutUrl(ctx.tenantId, ctx.email, ctx.org.name);
+    // Ya hay una suscripción en marcha (p. ej. aún no había llegado el aviso de Stripe): no se abre otra
+    if (!url) { refresh(); throw new UserError("Ya tienes una suscripción en marcha. Para cambiarla o cancelarla, entra en «Gestionar pagos y facturas»."); }
+    return { ok: true as const, data: url };
   });
   if (r.ok && r.data) redirect(r.data);
   return r;
