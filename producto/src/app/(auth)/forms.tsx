@@ -5,6 +5,7 @@ import { Icon } from "@/components/icons";
 import { PasswordField, TextField } from "@/components/ui/fields";
 import { Submit } from "@/components/ui/submit";
 import { toast } from "@/components/ui/toast";
+import { codeBoxInput } from "@/lib/code-box";
 import { cambiarEmail, crearNegocio, entrar, recuperar, reenviarCodigo, registrar, restablecer, verificar, type FormState } from "./actions";
 
 const SITE = "https://restoraapp.app";
@@ -64,7 +65,13 @@ export function CodeInput({ name, autoFocus }: { name: string; autoFocus?: boole
       {digits.map((d, i) => (
         <input key={i} ref={(el) => { refs.current[i] = el; }} className="code-i" inputMode="numeric" autoComplete={i === 0 ? "one-time-code" : "off"}
           aria-label={`Cifra ${i + 1} de 6`} value={d} autoFocus={autoFocus && i === 0} maxLength={6}
-          onChange={(e) => { const t = e.target.value.replace(/\D/g, ""); if (t.length > 1) setAll(t, i); else { setDigits((x) => { const n = [...x]; n[i] = t; return n; }); if (t && i < 5) refs.current[i + 1]?.focus(); } }}
+          onFocus={(e) => e.target.select()}
+          onChange={(e) => {
+            const r = codeBoxInput(d, e.target.value, (e.nativeEvent as InputEvent).data);
+            if ("spread" in r) return setAll(r.spread, i);
+            setDigits((x) => { const n = [...x]; n[i] = r.digit; return n; });
+            if (r.digit && i < 5) refs.current[i + 1]?.focus();
+          }}
           onKeyDown={(e) => { if (e.key === "Backspace" && !digits[i] && i > 0) refs.current[i - 1]?.focus(); }}
           onPaste={(e) => { e.preventDefault(); setAll(e.clipboardData.getData("text"), 0); }} />
       ))}
@@ -72,7 +79,7 @@ export function CodeInput({ name, autoFocus }: { name: string; autoFocus?: boole
   );
 }
 
-export function VerificarForm({ email, changed }: { email: string; changed?: boolean }) {
+export function VerificarForm({ email, changed, next }: { email: string; changed?: boolean; next?: string }) {
   const [s, act] = useActionState(verificar, undefined);
   const [rs, resend, resending] = useActionState(reenviarCodigo, undefined);
   const [left, setLeft] = useState(45);
@@ -86,6 +93,7 @@ export function VerificarForm({ email, changed }: { email: string; changed?: boo
       <div className="auth-head"><h1>Confirma tu email</h1><p>Hemos enviado un código de 6 cifras a <b>{email}</b>. Caduca en 30 minutos.</p></div>
       <form className="stack" action={act} noValidate>
         <FormError s={s} />
+        <input type="hidden" name="next" value={next ?? ""} />
         <CodeInput name="code" autoFocus />
         <Submit pendingText="Comprobando…">Verificar</Submit>
       </form>
@@ -97,17 +105,18 @@ export function VerificarForm({ email, changed }: { email: string; changed?: boo
         </form>
         {rs?.error ? <p className="ferr">{rs.error}</p> : null}
         <button className="linkbtn" type="button" style={{ justifyContent: "center" }} onClick={() => setEdit((x) => !x)}>¿Email equivocado? Cambiarlo</button>
-        {edit ? <CambiarEmailForm email={email} /> : null}
+        {edit ? <CambiarEmailForm email={email} next={next} /> : null}
       </div>
       <div className="note"><Icon name="info" /><p>Hasta confirmar el email no se pueden subir documentos ni invitar a nadie. Mira también en la carpeta de spam.</p></div>
     </>
   );
 }
-function CambiarEmailForm({ email }: { email: string }) {
+function CambiarEmailForm({ email, next }: { email: string; next?: string }) {
   const [s, act] = useActionState(cambiarEmail, undefined);
   return (
     <form className="stack-sm" action={act} noValidate style={{ textAlign: "left" }}>
       <FormError s={s} />
+      <input type="hidden" name="next" value={next ?? ""} />
       <TextField label="Email correcto" name="email" type="email" inputMode="email" autoComplete="email" defaultValue={s?.values?.email ?? email} error={s?.fields?.email} />
       <Submit className="btn btn-2 btn-block" pendingText="Guardando…">Guardar y enviar código</Submit>
     </form>
