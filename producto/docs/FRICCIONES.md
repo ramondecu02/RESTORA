@@ -21,19 +21,38 @@ Recorriendo la app como un restaurante nuevo (alta, primer albarán, datos de ej
 | Lectura | En producción, sin clave de API, se habrían rellenado albaranes reales con datos de ejemplo. | Sin clave, la lectura se desactiva con un mensaje claro y se puede apuntar a mano; los documentos de ejemplo siempre funcionan. |
 | Facturación | Se prometía «exportar tus datos» sin que existiera. | Cuenta → Tus datos: CSV de artículos, proveedores, compras, escandallos y ventas. |
 
+## Mejoras aplicadas después de la revisión
+
+Cerrando las tres primeras fricciones y verificando la robustez de la revisión de código.
+
+### 1. El primer albarán real decide si el usuario se queda — ✅ hecho
+Una foto torcida, con sombras o de un papel arrugado daba más líneas «Decides tú».
+- **Aplicado**: antes de subir, el móvil mide la foto (brillo y nitidez sobre una muestra reducida) y avisa «Oscura»/«Movida» con la sugerencia de repetirla con más luz, el papel plano y el móvil quieto. Nunca bloquea la subida (`src/lib/imgcheck.ts`, `src/components/uploader.tsx`, con pruebas).
+- **Pendiente menor**: medir en producción cuántas decisiones pide cada albarán (`documentos.draft`) para ajustar el umbral del repaso con Opus.
+
+### 2. Las unidades de compra se preguntan una vez por producto y proveedor — parcial
+«¿Cuántos kg trae cada caja?» aparece la primera vez que un proveedor vende algo por caja, garrafa o estuche. Después se recuerda (mismo proveedor primero, si no otro) y ya no se vuelve a preguntar.
+- **Aplicado**: en la revisión, cada línea ya emparejada muestra el último precio conocido y avisa de la subida o bajada, para detectar tanto un cambio real como un precio mal leído antes de guardar.
+- **Pendiente**: el catálogo no guarda formato de envase, así que la primera vez sigue preguntándose; sugerir el factor desde la capa anónima cuando lo haya dejaría solo «Confirmar».
+
+### 3. Los escandallos son el trabajo más largo — ✅ hecho
+Subir la carta crea los platos con su precio, pero sin ingredientes.
+- **Aplicado**: 35 plantillas por tipo de cocina (antes 6), buscables y ordenadas por las que ya tienes con precio; y sugerencia de ingredientes con IA a partir del nombre del plato, validada contra tu catálogo, para que solo ajustes cantidades (`src/lib/plantillas.ts`, `src/server/ocr`, `escandallos/actions.ts`).
+
+## Robustez: estado de los arreglos parciales de la revisión de código
+
+Verificado sobre la rama actual. Los seis puntos que quedaron a medias en la revisión están cerrados:
+
+| Punto | Dónde | Estado |
+| --- | --- | --- |
+| Permisos de precio de carta (cocina no cambia PVP, coste ni margen) | `escandallos/actions.ts`, `recetas.ts` (`guardarRecetaTx`), `carta/actions.ts` (`importarCarta`) | Cerrado: el servidor fuerza precio nulo para roles sin `carta:precios` al crear, editar e importar. |
+| Pedido → factura sin doble conteo de stock | `inventario/actions.ts` (`pedidoAbierto`, `recibirTx`, `estadoPedido`) | Cerrado: el pedido no se cierra al pasar a factura; queda enlazado y cuenta como recibido cuando esa factura se guarda; bloqueado si tiene una factura a medias. |
+| Ingrediente del catálogo en la ficha | `recetas.ts` (`guardarRecetaTx`) | Cerrado: la elección queda pendiente y el artículo se crea dentro de la transacción del guardado; si se descarta el borrador no queda huérfano. |
+| `coste_cache` desfasada tras importar ventas | `server/domain/ventas.ts` | Cerrado: `recomputeCosts` al importar y al borrar una importación que toca el PMP. |
+| Archivos huérfanos en el almacén | `demo/seed.ts` (`quitarDemo`), `cuenta/actions.ts` → `storage.ts` (`deleteTenantFiles`) | Cerrado: se borran las fotos de ejemplo y toda la carpeta `t/<negocio>/` al eliminar el negocio. |
+| k-anonimato de la capa anónima | `server/queries/bench.ts` | Mitigado y documentado: k=5 negocios, se excluye el propio, solo cuenta quien aporta ≥7 días reales (`created_at` del servidor) y los percentiles se publican redondeados. Riesgo residual (cuentas falsas) que solo cierra del todo el pago/verificación de cuentas. |
+
 ## Pendiente, por impacto
-
-### 1. El primer albarán real decide si el usuario se queda
-Una foto torcida, con sombras o de un papel arrugado da más líneas «Decides tú». El tutorial con el albarán de ejemplo enseña a resolverlas, pero con el suyo el usuario puede encontrarse 5–8 decisiones.
-- **Propuesta**: antes de subir, una comprobación rápida en el móvil (nitidez y encuadre) con «Repetir foto»; y medir en producción cuántas decisiones pide cada albarán (`documentos.draft`) para ajustar el umbral del repaso con Opus.
-
-### 2. Las unidades de compra se preguntan una vez por producto y proveedor
-«¿Cuántos kg trae cada caja?» aparece la primera vez que un proveedor vende algo por caja, garrafa o estuche. Después se recuerda, pero la primera semana suma preguntas.
-- **Propuesta**: sugerir el factor del catálogo o de otros negocios (capa anónima) cuando lo haya, dejando solo «Confirmar».
-
-### 3. Los escandallos son el trabajo más largo
-Subir la carta crea los platos con su precio, pero sin ingredientes («faltan ingredientes»). Las 6 plantillas ayudan con platos típicos.
-- **Propuesta**: más plantillas por tipo de cocina y, a medio plazo, proponer ingredientes a partir de la descripción del plato para que el usuario solo ajuste cantidades.
 
 ### 4. Las ventas dependen de que el TPV exporte por producto
 Casi todos exportan CSV, pero no siempre es fácil encontrarlo. Sin ventas, la rentabilidad usa las unidades al mes que el usuario escribe en cada plato.
