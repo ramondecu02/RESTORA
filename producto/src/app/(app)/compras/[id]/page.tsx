@@ -54,6 +54,12 @@ export default async function DocPage({ params, searchParams }: { params: Promis
       arts: await all<{ id: string; name: string; unit: BaseUnit; category_id: string; iva: number; rend: number; aliases: string[] }>(c,
         "select id, name, unit, category_id, iva, rend, aliases from articulos where local_id = $1 and not archived order by name", [ctx.local.id]),
       provs: await all<{ id: string; name: string }>(c, "select id, name from proveedores where local_id = $1 and not archived order by name", [ctx.local.id]),
+      // Precio de referencia por artículo para avisar de subidas/bajadas antes de guardar: el de este proveedor si existe, si no el de otro.
+      // Durante la revisión el documento aún no tiene proveedor guardado, así que usamos el que leyó el OCR.
+      precios: await all<{ articulo_id: string; precio_unit: number; proveedor: string; propio: boolean }>(c, `select distinct on (ap.articulo_id) ap.articulo_id, ap.precio_unit, p.name as proveedor, (ap.proveedor_id = $2) is true as propio
+        from articulo_proveedor ap join articulos a on a.id = ap.articulo_id join proveedores p on p.id = ap.proveedor_id
+        where a.local_id = $1 and ap.precio_unit is not null
+        order by ap.articulo_id, (ap.proveedor_id = $2) desc, ap.fecha desc nulls last`, [ctx.local.id, doc.draft?.proveedor?.id ?? doc.proveedor_id]),
     }));
     const draft: Draft = doc.draft ?? { proveedor: { nombreLeido: null, cif: null, id: null, conf: "alta", nuevo: true }, numero: null, numeroAlt: null, confNumero: "alta", numeroRevisado: true, fecha: null, confFecha: "alta", total: null, confTotal: "alta", desglose: [], lineas: [], observaciones: null, manual: true };
     return (
@@ -61,6 +67,7 @@ export default async function DocPage({ params, searchParams }: { params: Promis
         arts={refs.arts.map((a) => ({ id: a.id, name: a.name, unit: a.unit, categoryId: a.category_id, iva: a.iva, rend: a.rend, aliases: a.aliases }))}
         catalog={items.map((i) => ({ id: i.id, name: i.name, unit: i.unit, categoryId: i.category_id, rend: i.rend, aliases: i.aliases }))}
         cats={cats.map((c) => ({ id: c.id, name: c.name, singular: c.singular, iva: c.iva }))} provs={refs.provs}
+        precios={refs.precios.map((p) => ({ id: p.articulo_id, precioUnit: p.precio_unit, proveedor: p.proveedor, propio: p.propio }))}
         meta={{ ms: doc.ocr_ms, model: doc.ocr_model }} tourSeen={!!ctx.prefs.seen?.validacion} />
     );
   }

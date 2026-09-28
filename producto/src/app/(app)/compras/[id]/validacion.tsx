@@ -10,7 +10,8 @@ import { NumInput } from "@/components/ui/num-input";
 import { Confirm, Sheet } from "@/components/ui/sheet";
 import { toastError } from "@/components/ui/toast";
 import { convertir, draftCheck, lineImporte, pendientes, prettyProduct } from "@/lib/draft";
-import { eur, fecha as fFecha, plural, qty } from "@/lib/format";
+import { eur, fecha as fFecha, pct, plural, qty } from "@/lib/format";
+import { lineaCoste } from "@/lib/pmp";
 import { bestMatches } from "@/lib/fuzzy";
 import type { Draft, DraftLine } from "@/lib/ocr-types";
 import type { BaseUnit } from "@/lib/units";
@@ -22,11 +23,12 @@ type Cat = { id: string; name: string; singular: string; iva: number };
 type Prov = { id: string; name: string };
 type FileRef = { url: string; mime: string; name: string };
 type Base = { unit: BaseUnit; iva: number; name: string; categoryId: string };
+type PriceRef = { id: string; precioUnit: number; proveedor: string; propio: boolean };
 
 const RATES = [4, 10, 21];
 
-export function Validacion({ docId, initial, files, arts, catalog, cats, provs, meta, tourSeen }: {
-  docId: string; initial: Draft; files: FileRef[]; arts: Art[]; catalog: CatItem[]; cats: Cat[]; provs: Prov[];
+export function Validacion({ docId, initial, files, arts, catalog, cats, provs, precios, meta, tourSeen }: {
+  docId: string; initial: Draft; files: FileRef[]; arts: Art[]; catalog: CatItem[]; cats: Cat[]; provs: Prov[]; precios: PriceRef[];
   meta: { ms: number | null; model: string | null }; tourSeen: boolean;
 }) {
   const router = useRouter();
@@ -41,6 +43,7 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
   const [discarding, startDiscard] = useTransition();
   const catName = useMemo(() => new Map(cats.map((c) => [c.id, c.name])), [cats]);
   const catIva = useMemo(() => new Map(cats.map((c) => [c.id, c.iva])), [cats]);
+  const precioRef = useMemo(() => new Map(precios.map((p) => [p.id, p])), [precios]);
   const manual = !!d.manual;
 
   // Guardado automático del borrador. Si sales antes de que se guarde (volver, cambiar de app), se guarda al salir.
@@ -249,6 +252,7 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
       <div className="lns">
         {shown.map((l) => (
           <LineCard key={l.id} l={l} base={baseOf(l)} catName={catName} cats={cats} manual={manual} defaultCat={suggestCat(l)}
+            priceRef={l.match?.tipo === "tuyo" && l.match.id ? precioRef.get(l.match.id) ?? null : null}
             editing={editing === l.id} setEditing={(on) => setEditing(on ? l.id : null)}
             creating={creating === l.id} setCreating={(on) => setCreating(on ? l.id : null)}
             onPickCand={(c) => pick(l.id, { tipo: c.tipo, id: c.id })}
@@ -302,8 +306,8 @@ function Done({ txt, onUndo }: { txt: string; onUndo: () => void }) {
   return <div className="done-row"><span className="tag tag-ok"><Icon name="check" size={14} sw={3} /> {txt}</span><button type="button" className="linkbtn" onClick={onUndo}>Cambiar</button></div>;
 }
 
-function LineCard({ l, base, catName, cats, manual, defaultCat, editing, setEditing, creating, setCreating, onPickCand, onNuevo, onFind, onUndo, onChange, onRemove }: {
-  l: DraftLine; base: Base | null; catName: Map<string, string>; cats: Cat[]; manual: boolean; defaultCat: string;
+function LineCard({ l, base, catName, cats, manual, defaultCat, priceRef, editing, setEditing, creating, setCreating, onPickCand, onNuevo, onFind, onUndo, onChange, onRemove }: {
+  l: DraftLine; base: Base | null; catName: Map<string, string>; cats: Cat[]; manual: boolean; defaultCat: string; priceRef: PriceRef | null;
   editing: boolean; setEditing: (on: boolean) => void; creating: boolean; setCreating: (on: boolean) => void;
   onPickCand: (c: { tipo: "tuyo" | "catalogo"; id: string }) => void; onNuevo: (n: NonNullable<DraftLine["nuevo"]>) => void;
   onFind: () => void; onUndo: () => void; onChange: (f: (l: DraftLine) => DraftLine) => void; onRemove: () => void;
@@ -316,6 +320,9 @@ function LineCard({ l, base, catName, cats, manual, defaultCat, editing, setEdit
   const ivaTxt = l.ignorar ? "" : (l.iva ?? null) == null ? " · IVA por decidir" : ` · IVA ${l.iva} %`;
   const conv = unit && l.factor && l.factor !== 1 && l.precio != null ? <small> = {qty((l.cantidad ?? 0) * l.factor)} {unit} a {eur(l.precio / l.factor)}/{unit}</small> : null;
   const confCls = pend.length ? "conf-baja" : l.conf.linea === "media" || l.conf.precio === "media" ? "conf-media" : "conf-alta";
+  // Coste por unidad base de esta línea, para compararlo con lo que costaba antes (avisa de subidas y de precios mal leídos).
+  const nowUnit = !l.ignorar && l.precio != null && l.cantidad != null && l.factor ? lineaCoste(l.cantidad, l.precio, l.descuento || 0, l.bonificadas || 0, l.factor).costeUnit : null;
+  const priceDelta = priceRef && nowUnit != null && nowUnit > 0 && priceRef.precioUnit > 0 ? (nowUnit - priceRef.precioUnit) / priceRef.precioUnit : null;
   const [qTmp, setQTmp] = useState<number | null>(l.cantidad ?? (l.importe != null && l.precio ? Math.round((l.importe / l.precio) * 1000) / 1000 : null));
   const [fTmp, setFTmp] = useState<number | null>(l.factor);
   const [nv, setNv] = useState<NonNullable<DraftLine["nuevo"]>>(l.nuevo ?? { name: prettyProduct(l.texto), categoryId: defaultCat, unit: guessUnit(l.texto, l.unidadCompra), rend: 100 });
@@ -339,6 +346,15 @@ function LineCard({ l, base, catName, cats, manual, defaultCat, editing, setEdit
         <button type="button" className="iconbtn iconbtn-sm" aria-label={`Editar ${name}`} aria-expanded={editing} onClick={() => setEditing(!editing)}><Icon name="edit" size={18} /></button>
       </div>
       <p className="ln-m">{qTxt} × {eur(l.precio)}{l.descuento ? ` − ${l.descuento} %` : ""}{l.bonificadas ? ` + ${qty(l.bonificadas)} gratis` : ""}{ivaTxt}{conv}</p>
+      {priceRef && nowUnit != null && unit ? (
+        <p className="ln-ref">
+          <span>{priceRef.propio ? "Última compra" : `En ${priceRef.proveedor}`}: {eur(priceRef.precioUnit)}/{unit}</span>
+          {priceDelta != null && Math.abs(priceDelta) >= 0.005
+            ? <span className={`tag ${priceDelta > 0 ? (priceDelta >= 0.5 ? "tag-bad" : "tag-warn") : "tag-ok"}`}>{priceDelta > 0 ? "+" : "−"}{pct(Math.abs(priceDelta))}</span>
+            : <span className="tag tag-ok">igual precio</span>}
+          {priceDelta != null && priceDelta >= 0.5 ? <small>Comprueba que el precio esté bien leído.</small> : null}
+        </p>
+      ) : null}
       {l.duda && pend.length ? <p className="hint">{l.duda}</p> : null}
       {tags.length ? <div className="tags">{tags}</div> : null}
 

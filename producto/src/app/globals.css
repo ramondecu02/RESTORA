@@ -670,6 +670,8 @@ a.barh-row:hover .barh-l, button.barh-row:hover .barh-l { color: var(--brand); t
 .ln-amt { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ln-m { font-size: 13.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .ln-m small { color: var(--muted); }
+.ln-ref { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 3px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ln-ref small { flex-basis: 100%; color: var(--warn); }
 .ln-edit { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .ln-edit .fld label { font-size: 12px; }
 .dec { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 12px; background: var(--bad-soft); }
