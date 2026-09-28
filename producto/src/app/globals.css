@@ -616,6 +616,8 @@ a.barh-row:hover .barh-l, button.barh-row:hover .barh-l { color: var(--brand); t
 .pg-x .ic { width: 14px; height: 14px; }
 .pg-add { border-style: dashed; border-width: 1.5px; border-color: var(--line-2); cursor: pointer; font-weight: 600; }
 .pg-add .ic { width: 20px; height: 20px; }
+.pg-bad { border-color: var(--warn-line); box-shadow: 0 0 0 1px var(--warn-line); }
+.pg-warn { position: absolute; left: 0; right: 0; top: 0; text-align: center; padding: 3px 30px 3px 6px; background: var(--warn-dot); color: #fff; font-size: 10px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .or { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
 .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .up-sample { flex-direction: row; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 14px; }

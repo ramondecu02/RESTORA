@@ -2,29 +2,43 @@
 // Subida de fotos o PDF: comprime las fotos en el navegador (para que suban rápido desde el móvil) y las envía.
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { assessGray, flagged, qualityTag, SAMPLE_SIDE, toGray, type ImgQuality } from "@/lib/imgcheck";
 import { Icon } from "./icons";
 import { toastError } from "./ui/toast";
 
-type Page = { id: number; file: File; url: string | null };
+type Page = { id: number; file: File; url: string | null; quality: ImgQuality | null };
 const MAX_SIDE = 2200;
 const MAX_PAGES = 10;
 let seq = 0;
 const revoke = (p: Page) => { if (p.url) URL.revokeObjectURL(p.url); };
 
-async function compress(f: File): Promise<File> {
-  if (!f.type.startsWith("image/") || f.type === "image/gif") return f;
+// Comprime la foto (para subir rápido) y, de paso, mide su calidad sobre una muestra reducida.
+// Una sola decodificación para las dos cosas. Si el navegador no sabe decodificarla, se sube tal cual.
+async function prepare(f: File): Promise<{ file: File; quality: ImgQuality | null }> {
+  if (!f.type.startsWith("image/") || f.type === "image/gif") return { file: f, quality: null };
+  let bmp: ImageBitmap | null = null;
   try {
-    const bmp = await createImageBitmap(f, { imageOrientation: "from-image" } as ImageBitmapOptions);
+    bmp = await createImageBitmap(f, { imageOrientation: "from-image" } as ImageBitmapOptions);
+    let quality: ImgQuality | null = null;
+    try {
+      const k2 = Math.min(1, SAMPLE_SIDE / Math.max(bmp.width, bmp.height));
+      const sw = Math.max(1, Math.round(bmp.width * k2)), sh = Math.max(1, Math.round(bmp.height * k2));
+      const sc = document.createElement("canvas"); sc.width = sw; sc.height = sh;
+      const sctx = sc.getContext("2d", { willReadFrequently: true })!;
+      sctx.drawImage(bmp, 0, 0, sw, sh);
+      quality = assessGray(toGray(sctx.getImageData(0, 0, sw, sh).data, sw, sh), sw, sh);
+    } catch { quality = null; }
     const k = Math.min(1, MAX_SIDE / Math.max(bmp.width, bmp.height));
-    if (k === 1 && f.size < 1_200_000 && (f.type === "image/jpeg" || f.type === "image/png")) return f;
+    if (k === 1 && f.size < 1_200_000 && (f.type === "image/jpeg" || f.type === "image/png")) return { file: f, quality };
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(bmp.width * k); canvas.height = Math.round(bmp.height * k);
     canvas.getContext("2d")!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
     const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.84));
-    if (!blob) return f;
-    return new File([blob], f.name.replace(/\.[a-z0-9]+$/i, "") + ".jpg", { type: "image/jpeg" });
+    return blob ? { file: new File([blob], f.name.replace(/\.[a-z0-9]+$/i, "") + ".jpg", { type: "image/jpeg" }), quality } : { file: f, quality };
   } catch {
-    return f; // el navegador no sabe decodificarla (p. ej. HEIC fuera de Safari): se sube tal cual
+    return { file: f, quality: null }; // p. ej. HEIC fuera de Safari
+  } finally {
+    bmp?.close();
   }
 }
 
@@ -48,8 +62,8 @@ export function Uploader({ kind, cta, sample }: { kind: "albaran" | "carta"; cta
     if (!arr.length) { toastError("Sube una foto (JPG o PNG) o un PDF."); return; }
     const out: Page[] = [];
     for (const f of arr) {
-      const c = await compress(f);
-      out.push({ id: ++seq, file: c, url: c.type.startsWith("image/") ? URL.createObjectURL(c) : null });
+      const { file: c, quality } = await prepare(f);
+      out.push({ id: ++seq, file: c, url: c.type.startsWith("image/") ? URL.createObjectURL(c) : null, quality });
     }
     const next = [...live.current, ...out];
     next.slice(MAX_PAGES).forEach(revoke);
@@ -111,15 +125,22 @@ export function Uploader({ kind, cta, sample }: { kind: "albaran" | "carta"; cta
           <section className="stack-sm" aria-label="Páginas añadidas">
             <p className="lbl">{pages.length === 1 ? "1 página" : `${pages.length} páginas`} · {(total / 1024 / 1024).toLocaleString("es-ES", { maximumFractionDigits: 1 })} MB</p>
             <div className="pages">
-              {pages.map((p, i) => (
-                <div className="pg" key={p.id}>
-                  {p.url ? <img src={p.url} alt={`Página ${i + 1}`} /> : <><Icon name="file" /><span>PDF</span></>}
-                  <span className="pg-n">{i + 1}</span>
-                  <button type="button" className="pg-x" onClick={() => remove(p)} aria-label={`Quitar página ${i + 1}`}><Icon name="close" size={14} /></button>
-                </div>
-              ))}
+              {pages.map((p, i) => {
+                const tag = p.quality ? qualityTag(p.quality) : null;
+                return (
+                  <div className={`pg ${tag ? "pg-bad" : ""}`} key={p.id}>
+                    {p.url ? <img src={p.url} alt={`Página ${i + 1}`} /> : <><Icon name="file" /><span>PDF</span></>}
+                    <span className="pg-n">{i + 1}</span>
+                    {tag ? <span className="pg-warn">{tag}</span> : null}
+                    <button type="button" className="pg-x" onClick={() => remove(p)} aria-label={`Quitar página ${i + 1}`}><Icon name="close" size={14} /></button>
+                  </div>
+                );
+              })}
               <button type="button" className="pg pg-add" onClick={() => pick("any")}><Icon name="plus" size={20} /><span>Otra página</span></button>
             </div>
+            {pages.some((p) => flagged(p.quality)) ? (
+              <div className="note note-warn"><Icon name="alert" /><p>Alguna foto se ve oscura o movida. Puedes subirla igual, pero si el texto no se lee, repítela con <b>más luz</b>, el papel <b>plano</b> y el móvil <b>quieto</b>.</p></div>
+            ) : null}
             <button type="button" className="btn btn-block" disabled={busy} onClick={() => send(pages.map((p) => p.file))}>
               {busy ? <span className="spin" /> : null}{cta} · {pages.length === 1 ? "1 página" : `${pages.length} páginas`}
             </button>
