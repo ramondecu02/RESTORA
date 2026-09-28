@@ -11,7 +11,10 @@ import { articuloDesdeCatalogo } from "@/server/domain/articulos";
 import { guardarRecetaTx, type RecetaIn } from "@/server/domain/recetas";
 import { PLANTILLAS } from "@/lib/plantillas";
 import { margenDesdePvp, pvpDesdeMargen } from "@/lib/receta-edit";
-import { compatible, type BaseUnit } from "@/lib/units";
+import { compatible, type BaseUnit, type LineUnit } from "@/lib/units";
+import { getCatalog } from "@/server/queries/catalog";
+import { sugerirReceta, type CatalogoItem, type RecetaSugerida } from "@/server/ocr";
+import { env } from "@/server/env";
 
 /** Número opcional dentro de un rango; si no es válido, error para el usuario (nada de negativos ni NaN en precios). */
 const opt = (v: unknown, min: number, max: number, msg: string) => {
@@ -36,7 +39,8 @@ export async function guardarReceta(id: string, input: RecetaIn): Promise<Result
   });
 }
 
-type Nueva = { tipo: "plato" | "elaboracion" | "menu"; reventa: boolean; name: string; familia: string; pvp: number | null; coste: number | null; margen: number | null; rinde: number | null; rindeUnit: BaseUnit; plantilla?: string | null };
+type LineaIa = { cat: string; q: number; u: LineUnit };
+type Nueva = { tipo: "plato" | "elaboracion" | "menu"; reventa: boolean; name: string; familia: string; pvp: number | null; coste: number | null; margen: number | null; rinde: number | null; rindeUnit: BaseUnit; plantilla?: string | null; lineasIa?: LineaIa[] | null; racionesIa?: number | null };
 export async function crearReceta(input: Nueva): Promise<Result<{ id: string }>> {
   return run(async () => {
     const ctx = await requireApp();
@@ -53,29 +57,57 @@ export async function crearReceta(input: Nueva): Promise<Result<{ id: string }>>
     if (elab && !["kg", "L", "ud"].includes(input.rindeUnit)) throw new UserError("Unidad no válida.");
     // Los precios de carta (PVP, coste y margen de reventa) solo los ponen los roles con «carta:precios».
     const precios = hasPerm(ctx, "carta:precios") && !elab;
+    const tpl = input.plantilla ? PLANTILLAS.find((p) => p.key === input.plantilla) : null;
+    // Ingredientes sugeridos por IA: solo si no se eligió plantilla, y validados contra el catálogo (nunca se confía en el cliente)
+    const ia: { cat: string; q: number; u: LineUnit }[] = [];
+    if (!tpl && !elab && Array.isArray(input.lineasIa) && input.lineasIa.length) {
+      const { items } = await getCatalog();
+      const catUnit = new Map(items.map((i) => [i.id, i.unit]));
+      const vistos = new Set<string>();
+      for (const l of input.lineasIa.slice(0, 30)) {
+        const u = catUnit.get(l?.cat);
+        if (!u || vistos.has(l.cat) || !compatible(u, l.u) || !(typeof l.q === "number" && l.q > 0 && l.q < 1e6)) continue;
+        vistos.add(l.cat);
+        ia.push({ cat: l.cat, q: l.q, u: l.u });
+      }
+    }
+    const raciones = tpl?.raciones ?? (ia.length ? Math.min(50, Math.max(1, Math.round(input.racionesIa || 1))) : 1);
     const id = await withTenant(ctx.tenantId, async (c) => {
-      const tpl = input.plantilla ? PLANTILLAS.find((p) => p.key === input.plantilla) : null;
       let pvp = precios ? pvpIn ?? tpl?.pvp ?? null : null;
       if (precios && reventa && coste != null && margen != null) pvp = pvpDesdeMargen(coste, margen, ctx.local.iva_venta);
       const r = await one<{ id: string }>(c, `insert into recetas (tenant_id, local_id, tipo, name, familia, raciones, rinde, rinde_unit, pvp, reventa, coste_manual, margen_objetivo, estado, en_carta)
         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'borrador',$13) returning id`,
-        [ctx.tenantId, ctx.local.id, input.tipo, name.slice(0, 100), input.familia.trim().slice(0, 40), tpl?.raciones ?? 1, rinde,
+        [ctx.tenantId, ctx.local.id, input.tipo, name.slice(0, 100), input.familia.trim().slice(0, 40), raciones, rinde,
           elab ? input.rindeUnit : "kg", pvp, reventa, reventa && precios ? coste : null, reventa && precios ? margen : null, !elab]);
-      if (tpl) {
-        let idx = 0;
-        for (const l of tpl.lineas) {
-          const artId = await articuloDesdeCatalogo(c, ctx.tenantId, ctx.local.id, l.cat);
-          // Si tu artículo va en otra unidad (peso, volumen o unidades) la línea no encaja: la añades tú en la ficha
-          const a = await one<{ unit: BaseUnit }>(c, "select unit from articulos where id = $1", [artId]);
-          if (!a || !compatible(a.unit, l.u)) continue;
-          await c.query("insert into receta_lineas (tenant_id, receta_id, idx, articulo_id, cantidad, unidad) values ($1,$2,$3,$4,$5,$6)", [ctx.tenantId, r!.id, idx++, artId, l.q, l.u]);
-        }
+      let idx = 0;
+      for (const l of tpl ? tpl.lineas : ia) {
+        const artId = await articuloDesdeCatalogo(c, ctx.tenantId, ctx.local.id, l.cat);
+        // Si tu artículo va en otra unidad (peso, volumen o unidades) la línea no encaja: la añades tú en la ficha
+        const a = await one<{ unit: BaseUnit }>(c, "select unit from articulos where id = $1", [artId]);
+        if (!a || !compatible(a.unit, l.u)) continue;
+        await c.query("insert into receta_lineas (tenant_id, receta_id, idx, articulo_id, cantidad, unidad) values ($1,$2,$3,$4,$5,$6)", [ctx.tenantId, r!.id, idx++, artId, l.q, l.u]);
       }
       await recomputeCosts(c, ctx.local.id);
-      await audit(c, ctx.tenantId, ctx.userId, "crear", "receta", r!.id, { tipo: input.tipo, plantilla: input.plantilla ?? null });
+      await audit(c, ctx.tenantId, ctx.userId, "crear", "receta", r!.id, { tipo: input.tipo, plantilla: input.plantilla ?? null, ia: ia.length || null });
       return r!.id;
     });
     return { ok: true, data: { id } };
+  });
+}
+
+/** Propone ingredientes de un plato a partir de su nombre (con Claude). No crea nada: devuelve la propuesta para revisar. */
+export async function sugerirIngredientes(input: { name: string; familia?: string; descripcion?: string }): Promise<Result<RecetaSugerida>> {
+  return run(async () => {
+    const ctx = await requireApp();
+    requirePerm(ctx, "escandallos");
+    if (!input || typeof input.name !== "string" || input.name.trim().length < 2) throw new UserError("Escribe primero el nombre del plato.");
+    if (env.ocrProvider === "off") throw new UserError("La sugerencia con IA no está disponible todavía. Empieza desde una plantilla o añade los ingredientes a mano.");
+    const { cats, items } = await getCatalog();
+    const otros = new Set(cats.filter((c) => c.kind === "otros").map((c) => c.id)); // fuera limpieza y desechables
+    const catalogo: CatalogoItem[] = items.filter((i) => !otros.has(i.category_id)).map((i) => ({ id: i.id, name: i.name, unit: i.unit }));
+    const sug = await sugerirReceta(input.name.trim().slice(0, 100), (input.familia || "").trim().slice(0, 40), (input.descripcion || "").slice(0, 300), catalogo);
+    if (!sug.lineas.length) throw new UserError("No hemos sabido proponer ingredientes para ese plato. Prueba con otro nombre o añádelos a mano.");
+    return { ok: true, data: sug };
   });
 }
 

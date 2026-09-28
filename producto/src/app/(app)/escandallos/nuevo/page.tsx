@@ -1,6 +1,7 @@
 import { TaskScreen } from "@/components/shell/task-screen";
 import { requireApp, hasPerm } from "@/server/ctx";
 import { withTenant } from "@/server/db";
+import { env } from "@/server/env";
 import { plantillasConCoste } from "@/server/queries/plantillas";
 import { NuevaReceta } from "./form";
 
@@ -15,7 +16,7 @@ export default async function Nuevo({ searchParams }: { searchParams: Promise<{ 
   const pvp = sp.pvp ? Number(String(sp.pvp).replace(",", ".")) : NaN;
   return (
     <TaskScreen title={tipo === "elaboracion" ? "Nueva elaboración" : "Nuevo producto"} back={tipo === "elaboracion" ? "/escandallos/elaboraciones" : "/escandallos"}>
-      <NuevaReceta tipoInicial={tipo} plantilla={sp.plantilla ?? null} tpls={tpls} iva={ctx.local.iva_venta} canPrecios={canPrecios}
+      <NuevaReceta tipoInicial={tipo} plantilla={sp.plantilla ?? null} tpls={tpls} iva={ctx.local.iva_venta} canPrecios={canPrecios} iaOn={env.ocrProvider !== "off"}
         nombre={sp.nombre ?? ""} familia={sp.familia ?? ""} pvp={canPrecios && pvp >= 0 && pvp < 100000 ? pvp : null} />
     </TaskScreen>
   );

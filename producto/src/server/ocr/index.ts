@@ -4,8 +4,11 @@
 import { createHash } from "node:crypto";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { z } from "zod";
 import { OcrAlbaran, OcrCarta } from "@/lib/ocr-types";
 import { needsEscalation } from "@/lib/draft";
+import { PLANTILLAS } from "@/lib/plantillas";
+import { compatible, type BaseUnit, type LineUnit } from "@/lib/units";
 import { env } from "../env";
 import { MOCK_ALBARAN, MOCK_ALBARAN_GIL, MOCK_CARTA, SAMPLE_HASHES } from "./mock-data";
 
@@ -133,4 +136,73 @@ export async function readCarta(files: OcrFile[]): Promise<{ carta: OcrCarta; us
     carta: msg.parsed_output,
     usage: { model, inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens, costUsd: costOf(model, msg.usage.input_tokens, msg.usage.output_tokens), ms: Date.now() - t0, escalated: false },
   };
+}
+
+// ---- Sugerencia de ingredientes de un plato (a partir del nombre) con Claude ----
+const SYSTEM_RECETA = `Eres un jefe de cocina español que ayuda a montar el escandallo de un plato en RESTORA.
+A partir del nombre del plato (y su descripción si la hay) propones sus ingredientes principales con cantidades realistas para el número de raciones que se indique.
+Reglas:
+- Usa SOLO artículos de la lista de catálogo que se te da, con su id EXACTO. No inventes ids ni ingredientes que no estén en la lista.
+- Elige la unidad coherente con la del artículo: g o kg para peso, ml o L para líquidos, ud para lo que va por unidades.
+- Cantidades por el TOTAL de raciones indicado, no por ración. Sé realista (un plato de carta lleva entre 3 y 12 ingredientes).
+- Incluye el aceite, la sal y los básicos si el plato los lleva. No incluyas agua del grifo ni guarniciones de otra receta.
+- "pvp_sugerido": un precio de venta con IVA orientativo para ese plato en un restaurante español, o null si no lo tienes claro.`;
+
+const IaReceta = z.object({
+  raciones: z.number().describe("Raciones que salen con estas cantidades (normalmente 1 para un plato de carta)"),
+  pvp_sugerido: z.number().nullable().describe("Precio de venta con IVA orientativo en euros, o null"),
+  ingredientes: z.array(z.object({
+    catalog_id: z.string().describe("El id EXACTO de un artículo de la lista del catálogo"),
+    cantidad: z.number().describe("Cantidad para el total de raciones indicado"),
+    unidad: z.enum(["g", "kg", "ml", "L", "ud"]),
+  })).describe("Entre 3 y 12 ingredientes"),
+});
+
+export type CatalogoItem = { id: string; name: string; unit: BaseUnit };
+export type RecetaSugerida = { raciones: number; pvp: number | null; lineas: { cat: string; q: number; u: LineUnit; name: string }[]; modelo: string };
+
+const clean = (raciones: number, pvp: number | null, items: { catalog_id: string; cantidad: number; unidad: LineUnit }[], cat: Map<string, CatalogoItem>): RecetaSugerida => {
+  const vistos = new Set<string>();
+  const lineas: RecetaSugerida["lineas"] = [];
+  for (const it of items) {
+    const a = cat.get(it.catalog_id);
+    // Descartamos ids inventados, unidades que no casan con el artículo y cantidades no válidas
+    if (!a || vistos.has(a.id) || !compatible(a.unit, it.unidad) || !(it.cantidad > 0 && it.cantidad < 1e6)) continue;
+    vistos.add(a.id);
+    lineas.push({ cat: a.id, q: Math.round(it.cantidad * 1000) / 1000, u: it.unidad, name: a.name });
+    if (lineas.length >= 20) break;
+  }
+  return { raciones: Math.min(50, Math.max(1, Math.round(raciones || 1))), pvp: pvp != null && pvp > 0 && pvp < 100000 ? pvp : null, lineas, modelo: env.ocrModel };
+};
+
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]/g, " ");
+
+/** Sin clave (mock/dev): usamos la plantilla cuyo nombre más se parece, para poder probar el flujo. */
+function sugeridaMock(name: string, cat: Map<string, CatalogoItem>): RecetaSugerida {
+  const q = new Set(norm(name).split(/\s+/).filter((w) => w.length > 2));
+  let mejor = PLANTILLAS[0], score = -1;
+  for (const p of PLANTILLAS) {
+    const palabras = norm(p.name).split(/\s+/);
+    const s = palabras.filter((w) => q.has(w)).length;
+    if (s > score) { score = s; mejor = p; }
+  }
+  return clean(mejor.raciones, mejor.pvp, mejor.lineas.map((l) => ({ catalog_id: l.cat, cantidad: l.q, unidad: l.u })), cat);
+}
+
+export async function sugerirReceta(name: string, familia: string, descripcion: string, catalogo: CatalogoItem[]): Promise<RecetaSugerida> {
+  if (env.ocrProvider === "off") throw new Error("La sugerencia con IA no está disponible: falta configurar la clave de Claude.");
+  const cat = new Map(catalogo.map((c) => [c.id, c]));
+  if (env.ocrProvider === "mock") { await pause(); return sugeridaMock(name, cat); }
+  const lista = catalogo.map((c) => `${c.id} — ${c.name} (${c.unit})`).join("\n");
+  const detalle = descripcion.trim() ? `\nDescripción: ${descripcion.trim()}` : "";
+  const msg = await api().messages.parse({
+    model: env.ocrModel,
+    max_tokens: 2000,
+    system: SYSTEM_RECETA,
+    output_config: { format: zodOutputFormat(IaReceta), effort: "low" },
+    messages: [{ role: "user", content: [{ type: "text", text: `Plato: «${name}»${familia ? ` (grupo de carta: ${familia})` : ""}.${detalle}\n\nCatálogo disponible (usa estos ids):\n${lista}` }] }],
+  });
+  if (msg.stop_reason === "refusal" || !msg.parsed_output) throw new Error("No se ha podido sugerir la receta. Añade los ingredientes a mano.");
+  const out = msg.parsed_output;
+  return clean(out.raciones, out.pvp_sugerido, out.ingredientes, cat);
 }
