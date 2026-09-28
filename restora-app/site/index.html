@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RESTORA Cocina</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
 
@@ -398,6 +400,21 @@ select.inp, .field select { text-align:left; font-family:var(--f-ui); }
   .kpi__val { font-size:27px; }
 }
 @media (prefers-reduced-motion:reduce){ *,::before,::after { transition-duration:.01ms !important; animation-duration:.01ms !important; } }
+.ped-grp{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:12px;background:var(--raised)}
+.ped-grp__h{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.ped-grp__h b{font-family:var(--f-display);font-size:16px;display:block}
+.ped-grp__h small{color:var(--muted);font-size:12px}
+.ped-grp__tot{font-family:var(--f-display);font-size:18px;white-space:nowrap}
+.ped-lines{margin:10px 0}
+.ped-line{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.ped-line:first-child{border-top:0}
+.ped-line__n{flex:1;min-width:0}
+.ped-line__n b{font-size:14px;display:block}
+.ped-line__n small{color:var(--muted);font-size:11.5px}
+.ped-line__q{display:flex;align-items:center;gap:5px;flex:none}
+.ped-line__q input{width:66px;text-align:right;padding:7px 8px;border:1px solid var(--line);border-radius:9px;background:var(--sunk);color:var(--ink);font:inherit}
+.ped-line__q span{font-size:11px;color:var(--faint);width:22px}
+.ped-grp__foot{display:flex;flex-wrap:wrap;gap:7px;border-top:1px solid var(--line);padding-top:11px}
 </style>
 
 <div class="app">
@@ -1376,26 +1393,67 @@ function openAddItem(){
   syncCat(); prodSel.addEventListener("change",syncCat);
   document.getElementById("ai-save").addEventListener("click",()=>{const prodId=prodSel.value,cat=catSel.value||catOf(prodId);STATE.inventario.push({prod:prodId,cat,stock:parseFloat(document.getElementById("ai-stock").value)||0,minimo:parseFloat(document.getElementById("ai-min").value)||0,consumo:parseFloat(document.getElementById("ai-cons").value)||0});save();closeOverlay();invCat=cat;ir("inventario");toast(CAT[prodId].nombre+" añadido");});
 }
-function openPedido(){
-  const ped=pedidoSugerido();
-  if(!ped.length){toast("No hay nada bajo mínimo");return;}
-  const rows=ped.map(x=>{const p=prod(x.it.prod);return `<div class="feed__row"><span class="swatch" style="background:var(--crit)"></span><div><div class="feed__what">${esc(p.nombre)}</div><div class="feed__meta">tienes ${nf(x.it.stock,1)} ${p.ud} · mínimo ${nf(x.it.minimo,0)} ${p.ud}</div></div><span class="recipe__cost">${nf(x.qty,1)} ${p.ud} · ${eur(x.importe,0)}</span></div>`;}).join("");
-  const total=ped.reduce((t,x)=>t+x.importe,0);
-  openOverlay(`<div class="modal"><div class="modal__head"><span class="modal__title">Pedido sugerido</span><button class="modal__x" data-close type="button">${icon("x",18)}</button></div><div class="modal__body">
-    <p class="panel__note">Cantidades para volver a dos semanas de cobertura. Puedes recibirlo ahora (suma al stock) o registrarlo como factura.</p>
-    <div class="feed">${rows}</div>
-    <div class="uds-total" style="border:0;padding:0"><span style="color:var(--muted)">Total estimado</span><span style="font-family:var(--f-display);font-size:22px">${eur(total,0)}</span></div>
-  </div><div class="modal__foot"><button class="btn" data-close type="button">Cerrar</button><button class="btn" data-pedidofactura type="button">Registrar como factura</button><button class="btn btn--primary" data-recibir type="button">Recibir pedido</button></div></div>`);
+/* Pedidos a proveedores: agrupados por proveedor, con cantidades editables y envío por WhatsApp/email/copiar. */
+let PEDIDO={}; let pedMode="todos";
+const telWa=t=>{const d=(t||"").replace(/\D/g,"");return d?(d.length===9?"34"+d:d):"";};
+const provDe=it=>prod(it.prod).prov||"";
+function pedItems(prov,soloSug){return STATE.inventario.filter(it=>provDe(it)===prov&&(!soloSug||it.stock<it.minimo));}
+function pedProvs(soloSug){const s=new Set();STATE.inventario.forEach(it=>{const pv=provDe(it);if(pv&&STATE.proveedores[pv]&&(!soloSug||it.stock<it.minimo))s.add(pv);});return[...s].sort((a,b)=>STATE.proveedores[a].nombre.localeCompare(STATE.proveedores[b].nombre,"es"));}
+const pedQ=(prov,id)=>(PEDIDO[prov]&&PEDIDO[prov][id]!=null)?PEDIDO[prov][id]:0;
+function pedTotal(prov){return pedItems(prov,false).reduce((t,it)=>t+pedQ(prov,it.prod)*prod(it.prod).precio,0);}
+function pedVacio(prov){return pedItems(prov,false).every(it=>pedQ(prov,it.prod)<=0);}
+function pedTexto(prov){const pr=STATE.proveedores[prov]||{};const ls=pedItems(prov,false).filter(it=>pedQ(prov,it.prod)>0).map(it=>`- ${prod(it.prod).nombre}: ${nf(pedQ(prov,it.prod),1)} ${prod(it.prod).ud}`);return `Hola${pr.responsable?", "+pr.responsable:""}. Pedido de Casa Pujol:\n${ls.join("\n")}\nGracias.`;}
+function grupoPedidoHTML(prov,soloSug){
+  const pr=STATE.proveedores[prov]||{nombre:prov};const items=pedItems(prov,soloSug);if(!items.length)return"";
+  const lines=items.map(it=>{const p=prod(it.prod),bajo=it.stock<it.minimo;return `<div class="ped-line"><div class="ped-line__n"><b>${esc(p.nombre)}</b><small${bajo?' style="color:var(--crit)"':''}>tienes ${nf(it.stock,1)} ${p.ud} · mín ${nf(it.minimo,0)} · ${eur(p.precio)}/${p.ud}</small></div><div class="ped-line__q"><input type="number" min="0" step="0.5" value="${pedQ(prov,it.prod)||""}" data-pedqty="${esc(prov)}::${esc(it.prod)}" aria-label="Cantidad de ${esc(p.nombre)}"><span>${p.ud}</span></div></div>`;}).join("");
+  const wa=telWa(pr.telefono),mail=pr.email;
+  return `<section class="ped-grp"><div class="ped-grp__h"><div><b>${esc(pr.nombre)}</b><small>${esc(pr.entrega||pr.contacto||"")}</small></div><b class="ped-grp__tot" data-pedtot="${esc(prov)}">${eur(pedTotal(prov),0)}</b></div>
+    <div class="ped-lines">${lines}</div>
+    <div class="ped-grp__foot">${wa?`<button class="btn btn--sm btn--primary" data-pedwa="${esc(prov)}" type="button">${icon("telefono",15)}WhatsApp</button>`:""}${mail?`<button class="btn btn--sm" data-pedmail="${esc(prov)}" type="button">${icon("mail",15)}Email</button>`:""}<button class="btn btn--sm" data-pedcopy="${esc(prov)}" type="button">Copiar</button><button class="btn btn--sm" data-pedrecibir="${esc(prov)}" type="button">${icon("check",15)}Recibir</button><button class="btn btn--sm" data-pedfactura="${esc(prov)}" type="button">Factura</button></div></section>`;
 }
-function recibirPedido(){
-  const ped=pedidoSugerido();
-  ped.forEach(x=>{const it=STATE.inventario.find(i=>i.prod===x.it.prod);if(it)it.stock=+(it.stock+x.qty).toFixed(1);});
+function pedBodyHTML(){
+  if(pedMode==="todos"){const provs=pedProvs(true);if(!provs.length)return `<p class="panel__note">Nada por debajo de mínimo. Elige un proveedor arriba para preparar un pedido igualmente.</p>`;return provs.map(p=>grupoPedidoHTML(p,true)).join("");}
+  return grupoPedidoHTML(pedMode,false)||`<p class="panel__note">Este proveedor no tiene artículos en tu almacén.</p>`;
+}
+function openPedido(){
+  PEDIDO={};pedMode="todos";
+  pedidoSugerido().forEach(x=>{const pv=provDe(x.it);if(!pv)return;(PEDIDO[pv]=PEDIDO[pv]||{})[x.it.prod]=x.qty;});
+  const provOpts=pedProvs(false).map(k=>`<option value="${esc(k)}">${esc(STATE.proveedores[k].nombre)}</option>`).join("");
+  openOverlay(`<div class="modal"><div class="modal__head"><span class="modal__title">Pedidos a proveedores</span><button class="modal__x" data-close type="button">${icon("x",18)}</button></div><div class="modal__body">
+    <p class="panel__note">Agrupado por proveedor. Ajusta cantidades y envíalo por WhatsApp, email o cópialo. «Recibir» suma al stock; «Factura» abre una compra para poner los precios reales.</p>
+    <div class="field"><label for="ped-prov">Ver</label><select id="ped-prov"><option value="todos">Sugeridos (bajo mínimo)</option>${provOpts}</select></div>
+    <div id="ped-body">${pedBodyHTML()}</div>
+  </div><div class="modal__foot"><button class="btn" data-close type="button">Cerrar</button></div></div>`);
+  wirePedido();
+}
+function wirePedido(){
+  const sel=document.getElementById("ped-prov");
+  if(sel)sel.addEventListener("change",()=>{pedMode=sel.value;document.getElementById("ped-body").innerHTML=pedBodyHTML();wirePedidoQtys();});
+  wirePedidoQtys();
+}
+function wirePedidoQtys(){
+  document.querySelectorAll("[data-pedqty]").forEach(inp=>inp.addEventListener("input",()=>{
+    const parts=inp.dataset.pedqty.split("::"),pv=parts[0],id=parts[1],v=parseFloat(inp.value);
+    (PEDIDO[pv]=PEDIDO[pv]||{})[id]=isNaN(v)||v<0?0:v;
+    const tot=document.querySelector('[data-pedtot="'+pv+'"]');if(tot)tot.textContent=eur(pedTotal(pv),0);
+  }));
+}
+function enviarPedido(prov,via){
+  if(pedVacio(prov)){toast("Pon alguna cantidad primero");return;}
+  const txt=pedTexto(prov),pr=STATE.proveedores[prov]||{};
+  if(via==="wa")window.open("https://wa.me/"+telWa(pr.telefono)+"?text="+encodeURIComponent(txt),"_blank");
+  else if(via==="mail")window.location.href="mailto:"+(pr.email||"")+"?subject="+encodeURIComponent("Pedido Casa Pujol")+"&body="+encodeURIComponent(txt);
+  else{if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>toast("Pedido copiado"),()=>toast("No se pudo copiar"));else toast("No se pudo copiar");}
+}
+function recibirPedidoProv(prov){
+  let n=0;pedItems(prov,false).forEach(it=>{const q=pedQ(prov,it.prod);if(q>0){const iv=STATE.inventario.find(i=>i.prod===it.prod);if(iv){iv.stock=+(iv.stock+q).toFixed(1);n++;}}});
+  if(!n){toast("Pon alguna cantidad primero");return;}
   save();closeOverlay();ir("inventario");toast("Pedido recibido · stock actualizado");
 }
-function pedidoAFactura(){
-  const ped=pedidoSugerido();
-  facLineas=ped.map(x=>({prod:x.it.prod,cant:x.qty,precio:prod(x.it.prod).precio})); facAdjunto=null;
-  openOverlay(facturaHTML()); wireFactura();
+function pedidoProvAFactura(prov){
+  const ls=pedItems(prov,false).filter(it=>pedQ(prov,it.prod)>0).map(it=>({prod:it.prod,cant:pedQ(prov,it.prod),precio:prod(it.prod).precio}));
+  if(!ls.length){toast("Pon alguna cantidad primero");return;}
+  facLineas=ls;facAdjunto=null;openOverlay(facturaHTML());wireFactura();
 }
 
 /* ===== RENTABILIDAD ===== */
@@ -1685,8 +1743,11 @@ document.addEventListener("click",e=>{
   const invrm=e.target.closest("[data-invrm]"); if(invrm){const id=invrm.dataset.invrm;STATE.inventario=STATE.inventario.filter(i=>i.prod!==id);save();ir("inventario");toast("Referencia quitada");return;}
   if(e.target.closest("[data-invadd]")){openAddItem();return;}
   if(e.target.closest("[data-pedido]")){openPedido();return;}
-  if(e.target.closest("[data-recibir]")){recibirPedido();return;}
-  if(e.target.closest("[data-pedidofactura]")){pedidoAFactura();return;}
+  const _pw=e.target.closest("[data-pedwa]"); if(_pw){enviarPedido(_pw.dataset.pedwa,"wa");return;}
+  const _pm=e.target.closest("[data-pedmail]"); if(_pm){enviarPedido(_pm.dataset.pedmail,"mail");return;}
+  const _pc=e.target.closest("[data-pedcopy]"); if(_pc){enviarPedido(_pc.dataset.pedcopy,"copy");return;}
+  const _pr=e.target.closest("[data-pedrecibir]"); if(_pr){recibirPedidoProv(_pr.dataset.pedrecibir);return;}
+  const _pf=e.target.closest("[data-pedfactura]"); if(_pf){pedidoProvAFactura(_pf.dataset.pedfactura);return;}
   const invdel=e.target.closest("[data-albrm]"); if(invdel){const ref=invdel.dataset.albrm;STATE.albaranes=STATE.albaranes.filter(a=>a.ref!==ref);save();ir("compras");toast("Factura eliminada");return;}
   const sw=e.target.closest("[data-switch]"); if(sw){const[id,pr]=sw.dataset.switch.split("::");openCambioProveedor(id,pr);return;}
   const dsw=e.target.closest("[data-doswitch]"); if(dsw){const[id,pr]=dsw.dataset.doswitch.split("::");aplicarCambioProveedor(id,pr);return;}
