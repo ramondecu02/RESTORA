@@ -52,11 +52,13 @@ REM --- 4) Que quieres hacer ---
 :menu
 echo ==========================================================
 echo    [V] VER la web en local  (http://localhost:%PUERTO%)
-echo    [P] PUBLICAR en Cloudflare Pages (restoraapp.app)
+echo    [P] PUBLICAR la web en Cloudflare Pages (restoraapp.app)
+echo    [A] PUBLICAR la APP en Cloudflare Pages (app.restoraapp.app)
 echo    [S] Salir
 echo ==========================================================
-choice /c VPS /n /m "Elige una opcion [V/P/S]: "
-if errorlevel 3 goto :fin
+choice /c VPAS /n /m "Elige una opcion [V/P/A/S]: "
+if errorlevel 4 goto :fin
+if errorlevel 3 goto :publicarapp
 if errorlevel 2 goto :publicar
 if errorlevel 1 goto :ver
 goto :menu
@@ -86,6 +88,30 @@ echo.
 echo ==========================================================
 echo    PUBLICADO. Puede tardar 1-2 min en verse en la web.
 echo    Revisa la URL que muestra Cloudflare arriba.
+echo ==========================================================
+goto :fin
+
+:publicarapp
+echo.
+echo Vas a PUBLICAR la APP (app.restoraapp.app) con lo ultimo del repositorio.
+echo La primera vez te pedira iniciar sesion en Cloudflare (se abre el navegador).
+echo.
+choice /c SN /n /m "Seguro que quieres publicar la APP? [S/N]: "
+if errorlevel 2 goto :menu
+echo.
+echo Comprobando sesion de Cloudflare...
+call npx wrangler whoami >nul 2>&1 || call npx wrangler login
+echo Publicando la APP...
+pushd "%~dp0restora-app"
+call npx wrangler pages deploy site --project-name restora-app
+set "APPERR=%errorlevel%"
+popd
+if not "%APPERR%"=="0" goto :error_deploy
+echo.
+echo ==========================================================
+echo    APP PUBLICADA. Puede tardar 1-2 min en verse.
+echo    Los bindings D1 y los secretos (APP_PASSWORD, APP_SECRET)
+echo    se configuran en el panel de Cloudflare, no en el .bat.
 echo ==========================================================
 goto :fin
 

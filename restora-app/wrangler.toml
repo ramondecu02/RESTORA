@@ -4,12 +4,14 @@ name = "restora-app"
 compatibility_date = "2026-09-14"
 pages_build_output_dir = "site"
 
-# Binding de la base de datos D1. Pon el database_id real tras crearla
-# (o configúralo en el panel: Pages -> restora-app -> Settings -> Bindings).
-[[d1_databases]]
-binding = "DB"
-database_name = "restora-app-db"
-database_id = "PON_AQUI_EL_ID_DE_TU_BASE_D1"
+# Binding de la base de datos D1: se configura en el panel de Cloudflare
+# (Pages -> restora-app -> Settings -> Bindings), no aquí, para que
+# `wrangler pages deploy` no falle por un database_id de ejemplo.
+# Si prefieres declararlo aquí, descomenta y pon el id real de tu D1:
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "restora-app-db"
+# database_id = "EL_ID_REAL_DE_TU_D1"
 
 # Los secretos NO van aquí. Se ponen en el panel (Settings -> Variables and Secrets):
 #   APP_PASSWORD  -> la contraseña para entrar en la app
