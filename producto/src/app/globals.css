@@ -672,6 +672,13 @@ a.barh-row:hover .barh-l, button.barh-row:hover .barh-l { color: var(--brand); t
 .ln-m small { color: var(--muted); }
 .ln-ref { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 3px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .ln-ref small { flex-basis: 100%; color: var(--warn); }
+.ped-list { display: flex; flex-direction: column; }
+.ped-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.ped-row:first-child { border-top: 0; }
+.ped-row-n { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ped-row-n b { font-size: 14px; }
+.ped-row-n small { color: var(--muted); font-size: 12px; }
+.ped-row-q { flex: none; width: 128px; }
 .ln-edit { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .ln-edit .fld label { font-size: 12px; }
 .dec { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 12px; background: var(--bad-soft); }

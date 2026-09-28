@@ -25,7 +25,8 @@ export default async function Pedidos() {
     return { peds, lineas };
   });
   return (
-    <Screen title="Pedidos" sub="Preparados desde el inventario. Los envías tú." back="/inventario">
+    <Screen title="Pedidos" sub="A tus proveedores. Los envías tú por WhatsApp, email o impresos." back="/inventario"
+      actions={<Link className="btn btn-sm" href="/inventario/pedidos/nuevo"><Icon name="plus" size={18} /> Nuevo pedido</Link>}>
       {data.peds.length ? data.peds.map((p) => {
         const ls = data.lineas.filter((l) => l.pedido_id === p.id);
         const total = ls.reduce((s, l) => s + l.cantidad * (l.precio_estimado ?? 0), 0);
@@ -40,7 +41,7 @@ export default async function Pedidos() {
               : p.estado === "facturando" && p.factura ? <div className="row-wrap"><Link className="btn btn-xs" href={`/compras/${p.factura}`}>Continuar factura</Link><span className="hint">Al guardarla, el pedido queda recibido. Si la descartas, vuelve a estar abierto.</span></div> : null}
           </section>
         );
-      }) : <div className="card"><div className="empty"><span className="li-ic"><Icon name="cart" /></span><b>Sin pedidos</b><p>Prepáralos desde el inventario con «Preparar pedido»: calculamos lo que falta para cubrir dos semanas.</p></div></div>}
+      }) : <div className="card"><div className="empty"><span className="li-ic"><Icon name="cart" /></span><b>Sin pedidos</b><p>Crea uno para un proveedor con «Nuevo pedido», o prepáralo desde el inventario con «Preparar pedido»: calculamos lo que falta para cubrir dos semanas.</p><Link className="btn btn-sm" href="/inventario/pedidos/nuevo"><Icon name="plus" size={18} /> Nuevo pedido</Link></div></div>}
     </Screen>
   );
 }

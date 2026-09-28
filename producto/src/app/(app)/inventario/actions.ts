@@ -163,6 +163,34 @@ export async function guardarPedido(lineas: Linea[]): Promise<Result<{ ids: stri
   });
 }
 
+/** Crea un pedido para un proveedor concreto con las líneas que elige el usuario (no depende del inventario). */
+export async function crearPedidoProveedor(proveedorId: string | null, lineas: Linea[]): Promise<Result<{ id: string }>> {
+  return run(async () => {
+    const ctx = await requireApp();
+    requirePerm(ctx, "inventario");
+    if (proveedorId != null && !isUuid(proveedorId)) throw new UserError("Proveedor no válido.");
+    const ls = lineasValidas(lineas);
+    const id = await withTenant(ctx.tenantId, async (c) => {
+      if (proveedorId && !(await one(c, "select 1 from proveedores where id = $1 and local_id = $2 and not archived", [proveedorId, ctx.local.id])))
+        throw new UserError("Ese proveedor ya no existe.");
+      const arts = await all<ArtRow>(c, `select id, name, unit, rend, pmp, last_price, last_purchase_at, precio_manual, precio_manual_at, category_id, iva, stock, stock_min, consumo_semanal,
+        track_stock, last_proveedor_id, proveedor_pref_id, catalog_item_id, aliases, demo, foto_key from articulos where id = any($1::uuid[]) and local_id = $2`, [ls.map((l) => l.articuloId), ctx.local.id]);
+      const usable = ls.filter((l) => arts.some((a) => a.id === l.articuloId));
+      if (!usable.length) throw new UserError("Ninguno de los artículos del pedido existe ya.");
+      const p = await one<{ id: string }>(c, "insert into pedidos (tenant_id, local_id, proveedor_id, estado, created_by) values ($1,$2,$3,'borrador',$4) returning id", [ctx.tenantId, ctx.local.id, proveedorId, ctx.userId]);
+      for (const l of usable) {
+        const a = arts.find((x) => x.id === l.articuloId)!;
+        await c.query("insert into pedido_lineas (tenant_id, pedido_id, articulo_id, cantidad, unidad, precio_estimado) values ($1,$2,$3,$4,$5,$6)",
+          [ctx.tenantId, p!.id, a.id, l.cantidad, a.unit, costeBase(toArtCost(a))]);
+      }
+      await audit(c, ctx.tenantId, ctx.userId, "crear", "pedido", p!.id, { proveedor: proveedorId, lineas: usable.length });
+      return p!.id;
+    });
+    refresh();
+    return { ok: true, data: { id } };
+  });
+}
+
 /** Bloquea un pedido que sigue abierto. Uno registrado como factura cuenta como recibido cuando esa factura se guarda. */
 async function pedidoAbierto(c: Db, ctx: AppCtx, pedidoId: string) {
   if (!isUuid(pedidoId)) throw new UserError("Pedido no válido.");
