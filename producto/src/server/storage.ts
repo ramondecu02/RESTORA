@@ -11,15 +11,19 @@ const safeKey = (key: string) => {
   return key;
 };
 const blobOn = () => {
+  // Credencial: BLOB_STORE_ID (conexión actual de Vercel, con OIDC) o BLOB_READ_WRITE_TOKEN (conexión antigua).
   // En Vercel el disco es de solo lectura y efímero: sin Blob los archivos se perderían
-  if (!env.blobToken && process.env.VERCEL === "1") throw new Error("Falta BLOB_READ_WRITE_TOKEN: conecta un Blob store al proyecto.");
-  return !!env.blobToken;
+  const on = !!(env.blobToken || env.blobStoreId);
+  if (!on && process.env.VERCEL === "1") throw new Error("Falta el Blob: conecta un Blob store privado al proyecto (BLOB_STORE_ID o BLOB_READ_WRITE_TOKEN).");
+  return on;
 };
+/** Con token fijo se usa el token; sin él, el SDK se autentica solo con BLOB_STORE_ID y el OIDC de Vercel. */
+const auth = () => (env.blobToken ? { token: env.blobToken } : {});
 
 export async function putFile(key: string, data: Buffer, contentType: string): Promise<void> {
   safeKey(key);
   if (blobOn()) {
-    await put(key, data, { access: "private", contentType, allowOverwrite: true, token: env.blobToken });
+    await put(key, data, { access: "private", contentType, allowOverwrite: true, ...auth() });
     return;
   }
   const f = path.join(LOCAL_DIR, key);
@@ -31,7 +35,7 @@ export async function putFile(key: string, data: Buffer, contentType: string): P
 export async function readFileBytes(key: string): Promise<{ data: Buffer; contentType: string } | null> {
   safeKey(key);
   if (blobOn()) {
-    const r = await get(key, { access: "private", token: env.blobToken });
+    const r = await get(key, { access: "private", ...auth() });
     if (!r || r.statusCode !== 200) return null;
     const data = Buffer.from(await new Response(r.stream).arrayBuffer());
     return { data, contentType: r.blob.contentType };
@@ -48,7 +52,7 @@ export async function readFileBytes(key: string): Promise<{ data: Buffer; conten
 export async function openFile(key: string): Promise<{ body: ReadableStream<Uint8Array> | Buffer; contentType: string; size: number | null } | null> {
   safeKey(key);
   if (blobOn()) {
-    const r = await get(key, { access: "private", token: env.blobToken });
+    const r = await get(key, { access: "private", ...auth() });
     if (!r || r.statusCode !== 200) return null;
     return { body: r.stream, contentType: r.blob.contentType, size: r.blob.size };
   }
@@ -65,7 +69,7 @@ export async function openFile(key: string): Promise<{ body: ReadableStream<Uint
 export async function deleteFile(key: string): Promise<void> {
   safeKey(key);
   try {
-    if (blobOn()) await del(key, { token: env.blobToken });
+    if (blobOn()) await del(key, auth());
     else { const f = path.join(LOCAL_DIR, key); await rm(f, { force: true }); await rm(f + ".type", { force: true }); }
   } catch (e) {
     console.error("[archivos] no se pudo borrar", key, (e as Error).message);
@@ -79,9 +83,9 @@ export async function deleteTenantFiles(tenantId: string): Promise<void> {
   try {
     if (blobOn()) {
       for (let i = 0; i < 1000; i++) {
-        const r = await list({ prefix, limit: 100, token: env.blobToken });
+        const r = await list({ prefix, limit: 100, ...auth() });
         if (!r.blobs.length) break;
-        await del(r.blobs.map((b) => b.url), { token: env.blobToken });
+        await del(r.blobs.map((b) => b.url), auth());
       }
     } else await rm(path.join(LOCAL_DIR, prefix), { recursive: true, force: true });
   } catch (e) {

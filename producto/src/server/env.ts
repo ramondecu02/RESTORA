@@ -29,6 +29,8 @@ export const env = {
   get ocrEscalateModel() { return v("OCR_ESCALATE_MODEL") || "claude-opus-5"; },
   get ocrEffort(): "low" | "medium" | "high" { const e = v("OCR_EFFORT"); return e === "medium" || e === "high" ? e : "low"; },
   get blobToken() { return v("BLOB_READ_WRITE_TOKEN"); },
+  /** Lo pone Vercel al conectar un Blob store nuevo: el SDK se autentica con OIDC, sin token fijo. */
+  get blobStoreId() { return v("BLOB_STORE_ID"); },
   get resendKey() { return v("RESEND_API_KEY"); },
   get emailFrom() { return v("EMAIL_FROM") || "RESTORA <hola@restoraapp.app>"; },
   get emailProvider(): "resend" | "dev" {

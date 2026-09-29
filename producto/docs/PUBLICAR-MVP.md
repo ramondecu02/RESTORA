@@ -30,10 +30,12 @@ Necesitas: tu cuenta de GitHub (dueña de `ramondecu02/RESTORA`), tu email y Nod
 1. En el proyecto → pestaña **Storage** → *Create Database* → **Neon** → región **Frankfurt
    (AWS eu-central-1)** → crear y conectar a todos los entornos. Si te pide cuenta de Neon, créala con
    tu email.
-2. Otra vez **Storage** → *Create* → **Blob** → crear y conectar.
+2. Otra vez **Storage** → *Create* → **Blob** → en el acceso elige **Private** (privado) → crear y
+   conectar a todos los entornos. **Importante:** el acceso no se puede cambiar después, y la app guarda
+   los albaranes como privados. Si lo creas como *Public*, las subidas fallan y habría que crear otro.
 
-Estas dos rellenan solas `DATABASE_URL`, `DATABASE_URL_UNPOOLED` y `BLOB_READ_WRITE_TOKEN`. No tienes
-que copiar nada.
+Estas dos rellenan solas `DATABASE_URL`, `DATABASE_URL_UNPOOLED` y `BLOB_STORE_ID`. No tienes que
+copiar nada.
 
 ### Paso 3. Correo (Resend)
 1. **resend.com** → regístrate con **tu email** (si ya tienes cuenta porque la usa el formulario de la

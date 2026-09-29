@@ -38,7 +38,7 @@ Qué hacen las migraciones (`db/migrations`, se aplican solas y en orden):
 
 ## 3. Archivos: Vercel Blob
 
-Vercel → **Storage → Create → Blob** → conéctalo al proyecto. Añade `BLOB_READ_WRITE_TOKEN`. Los archivos se guardan como privados y solo se sirven a usuarios del negocio al que pertenecen (`/api/archivos/…`). Sin este token, en Vercel la subida falla con un error claro.
+Vercel → **Storage → Create → Blob** con acceso **Private** (no se puede cambiar después) → conéctalo al proyecto. La conexión añade `BLOB_STORE_ID` y el SDK se autentica con el OIDC de Vercel, sin token fijo; los stores conectados a la antigua usan `BLOB_READ_WRITE_TOKEN`, que también vale. Los archivos se guardan como privados y solo se sirven a usuarios del negocio al que pertenecen (`/api/archivos/…`). Sin Blob conectado, en Vercel la subida falla con un error claro.
 
 ## 4. Correo: Resend
 
