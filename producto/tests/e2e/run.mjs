@@ -1,6 +1,7 @@
 // Ejecuta todas las pruebas de extremo a extremo contra E2E_BASE (por defecto http://localhost:3100).
 // Requiere la app arrancada (npm run dev, o npm run build:app && npm start) con EMAIL_PROVIDER=dev y
-// OCR_PROVIDER=mock, y Postgres accesible en DATABASE_URL.
+// OCR_PROVIDER=mock, y Postgres accesible en DATABASE_URL. Con npm start (producción) añade también
+// ALLOW_DEV_MAILBOX=1: sin buzón de pruebas, en producción los correos cuentan como no enviados.
 import { spawnSync } from "node:child_process";
 
 const suites = [

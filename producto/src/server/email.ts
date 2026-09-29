@@ -22,6 +22,9 @@ export async function sendEmail(m: Msg): Promise<boolean> {
     }
   } else if (!env.isProd) {
     console.log(`[correo:dev] Para ${m.to} · ${m.subject}\n${m.text}\n`);
+  } else if (!env.devMailbox) {
+    // En producción sin proveedor real el correo no sale: que conste como error (registros y bandeja), no en silencio
+    status = "error"; error = "Sin RESEND_API_KEY: en producción los correos no se envían";
   }
   await sys((c) => c.query(
     "insert into outbox_emails (to_email, subject, body_text, body_html, provider, status, error) values ($1,$2,$3,$4,$5,$6,$7)",

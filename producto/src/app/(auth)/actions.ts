@@ -75,9 +75,9 @@ export async function registrar(_: FormState, f: FormData): Promise<FormState> {
   });
   await withTenant(orgId, (c) => c.query("insert into locales (tenant_id, name) values ($1, $2)", [orgId, values.restaurante.slice(0, 80)]));
   const code = await issueCode(userId, "verify");
-  await sendEmail({ to: values.email, ...verifyEmail(values.nombre, code) });
+  const enviado = await sendEmail({ to: values.email, ...verifyEmail(values.nombre, code) });
   await createSession(userId, orgId);
-  redirect("/verificar");
+  redirect(enviado ? "/verificar" : "/verificar?envio=fallo");
 }
 
 export async function verificar(_: FormState, f: FormData): Promise<FormState> {
@@ -113,7 +113,7 @@ export async function reenviarCodigo(): Promise<FormState> {
   if (s.verified) redirect("/hoy");
   if (!(await rateLimit(`resend:${s.userId}`, 1, 55)) || !(await rateLimit(`resend-h:${s.userId}`, 6, 3600))) return { error: "Espera un momento antes de pedir otro código." };
   const code = await issueCode(s.userId, "verify");
-  await sendEmail({ to: s.email, ...verifyEmail(s.name, code) });
+  if (!(await sendEmail({ to: s.email, ...verifyEmail(s.name, code) }))) return { error: "No hemos podido enviar el correo. Prueba de nuevo en unos minutos." };
   return { ok: "Te hemos enviado un código nuevo." };
 }
 
@@ -129,8 +129,8 @@ export async function cambiarEmail(_: FormState, f: FormData): Promise<FormState
   if (taken) return { fields: { email: "Ya hay una cuenta con este email." }, values: { email } };
   await sys((c) => c.query("update users set email = $2 where id = $1", [s.userId, email]));
   const code = await issueCode(s.userId, "verify");
-  await sendEmail({ to: email, ...verifyEmail(s.name, code) });
-  redirect(`/verificar?cambiado=1${next ? `&next=${encodeURIComponent(safeNext(next))}` : ""}`);
+  const enviado = await sendEmail({ to: email, ...verifyEmail(s.name, code) });
+  redirect(`/verificar?cambiado=1${enviado ? "" : "&envio=fallo"}${next ? `&next=${encodeURIComponent(safeNext(next))}` : ""}`);
 }
 
 export async function entrar(_: FormState, f: FormData): Promise<FormState> {

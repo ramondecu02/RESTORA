@@ -79,18 +79,21 @@ export function CodeInput({ name, autoFocus }: { name: string; autoFocus?: boole
   );
 }
 
-export function VerificarForm({ email, changed, next }: { email: string; changed?: boolean; next?: string }) {
+export function VerificarForm({ email, changed, failed, next }: { email: string; changed?: boolean; failed?: boolean; next?: string }) {
   const [s, act] = useActionState(verificar, undefined);
   const [rs, resend, resending] = useActionState(reenviarCodigo, undefined);
   const [left, setLeft] = useState(45);
   const [edit, setEdit] = useState(false);
-  useEffect(() => { if (changed) toast("Email cambiado. Te hemos enviado un código nuevo."); }, [changed]);
+  useEffect(() => { if (changed && !failed) toast("Email cambiado. Te hemos enviado un código nuevo."); }, [changed, failed]);
   useEffect(() => { if (rs?.ok) { toast(rs.ok); setLeft(55); } }, [rs]);
   useEffect(() => { const t = setInterval(() => setLeft((x) => (x > 0 ? x - 1 : 0)), 1000); return () => clearInterval(t); }, []);
   return (
     <>
       <span className="mailic"><Icon name="mail" size={28} /></span>
-      <div className="auth-head"><h1>Confirma tu email</h1><p>Hemos enviado un código de 6 cifras a <b>{email}</b>. Caduca en 30 minutos.</p></div>
+      <div className="auth-head"><h1>Confirma tu email</h1>{failed
+        ? <p>Vamos a enviar un código de 6 cifras a <b>{email}</b>.</p>
+        : <p>Hemos enviado un código de 6 cifras a <b>{email}</b>. Caduca en 30 minutos.</p>}</div>
+      {failed ? <div className="note note-warn" role="alert"><Icon name="alert" /><p>No hemos podido enviarte el correo con el código. Pulsa «Reenviar código» en unos minutos; si sigue sin llegar, escríbenos.</p></div> : null}
       <form className="stack" action={act} noValidate>
         <FormError s={s} />
         <input type="hidden" name="next" value={next ?? ""} />
