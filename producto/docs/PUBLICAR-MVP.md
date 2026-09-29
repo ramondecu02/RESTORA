@@ -20,7 +20,8 @@ Necesitas: tu cuenta de GitHub (dueña de `ramondecu02/RESTORA`), tu email y Nod
 2. *Add New… → Project* → busca **RESTORA** → *Import*.
 3. En **Root Directory** pulsa *Edit* y elige la carpeta **`producto`**. Es lo más importante: si no,
    Vercel publicaría la web de marketing.
-4. *Framework*: Next.js (lo detecta solo). No toques *Build* ni *Install*.
+4. **Application Preset**: tiene que poner **Next.js**. Si pone *Services* («No detected services»),
+   ábrelo y elige **Next.js**. No uses el botón *Copy prompt*. No toques *Build* ni *Install*.
 5. Pulsa *Deploy*. **Va a fallar** con «Falta DATABASE_URL». Es normal: aún no hay base de datos.
 
 ✅ Tienes un proyecto en Vercel (aunque el primer despliegue salga en rojo).
