@@ -23,6 +23,9 @@ Necesitas: tu cuenta de GitHub (dueña de `ramondecu02/RESTORA`), tu email y Nod
 4. **Application Preset**: tiene que poner **Next.js**. Si pone *Services* («No detected services»),
    ábrelo y elige **Next.js**. No uses el botón *Copy prompt*. No toques *Build* ni *Install*.
 5. Pulsa *Deploy*. **Va a fallar** con «Falta DATABASE_URL». Es normal: aún no hay base de datos.
+6. **Settings → Environments → Production → Branch Tracking**: pon la rama **`claude/new-session-c92ohx`**
+   y guarda. Vercel elige `main` si existe, pero la app no está en `main`: sin este cambio, cada cambio
+   nuevo se publica como *Preview* y no en la dirección principal.
 
 ✅ Tienes un proyecto en Vercel (aunque el primer despliegue salga en rojo).
 
@@ -76,7 +79,8 @@ La lectura automática de albaranes (IA) la activamos en la Fase 2. Mientras, la
 mano y los **albaranes de ejemplo** se leen igual.
 
 ### Paso 6. Publica de nuevo
-**Deployments** → el último (en rojo) → menú **…** → *Redeploy*. En 2-3 minutos debe salir
+**Deployments** → el primero de la lista → menú **…** → *Redeploy* si pone *Production*, o
+*Promote to Production* si pone *Preview* (se reconstruye con las variables de producción). En 2-3 minutos debe salir
 **Ready** en verde. Pulsa *Visit*: verás la entrada de RESTORA en una dirección tipo
 `restora-xxxx.vercel.app`.
 
