@@ -37,6 +37,10 @@ Necesitas: tu cuenta de GitHub (dueña de `ramondecu02/RESTORA`), tu email y Nod
 Estas dos rellenan solas `DATABASE_URL`, `DATABASE_URL_UNPOOLED` y `BLOB_STORE_ID`. No tienes que
 copiar nada.
 
+Las variables de Neon que llevan contraseña salen con la etiqueta **Needs Attention**. Es un aviso de
+Vercel para secretos no marcados como *Sensitive* (lo añadió tras su incidente de seguridad de abril de
+2026). No bloquea nada y, como son nuevas, **no hace falta pulsar «Rotate Neon Secrets»**.
+
 ### Paso 3. Correo (Resend)
 1. **resend.com** → regístrate con **tu email** (si ya tienes cuenta porque la usa el formulario de la
    web, usa esa).
@@ -64,6 +68,9 @@ Proyecto → **Settings → Environment Variables**. Añade estas (entornos *Pro
 | `EMAIL_PROVIDER` | `resend` |
 | `EMAIL_FROM` | `RESTORA <onboarding@resend.dev>` |
 | `TRIAL_DAYS` | `90` |
+
+Al añadir `AUTH_SECRET` y `RESEND_API_KEY`, activa **Sensitive**. Después nadie puede leerlas desde el
+panel, ni siquiera tú, así que guárdalas antes en un sitio seguro.
 
 La lectura automática de albaranes (IA) la activamos en la Fase 2. Mientras, las compras se apuntan a
 mano y los **albaranes de ejemplo** se leen igual.
