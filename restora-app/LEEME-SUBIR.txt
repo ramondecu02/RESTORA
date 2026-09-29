@@ -1,0 +1,36 @@
+RESTORA — Subir la APP a Cloudflare (app.restoraapp.app)
+=========================================================
+
+Esta carpeta sube el PROTOTIPO de la app (donde están los pedidos a
+proveedores) al proyecto de Cloudflare Pages "restora-app".
+
+Contenido:
+  site/            La app (index.html, login.html, functions/, _headers).
+  wrangler.toml    Configuración del proyecto (nombre y carpeta de salida).
+  subir-app.bat    Windows: doble clic para subir.
+  subir-app.command  Mac/Linux: doble clic o `bash subir-app.command`.
+
+Requisitos:
+  - Node.js 20 o superior (https://nodejs.org). No hace falta nada más:
+    wrangler se ejecuta con `npx` (se descarga solo la primera vez).
+
+Cómo subir (elige una):
+
+  A) Windows: doble clic en "subir-app.bat".
+     La primera vez se abre el navegador para iniciar sesión en Cloudflare.
+
+  B) Terminal (cualquier sistema), dentro de esta carpeta:
+       npx wrangler login                 (solo la primera vez)
+       npx wrangler pages deploy site --project-name restora-app
+
+En 1-2 minutos se ve en https://app.restoraapp.app
+
+Importante:
+  - El binding de base de datos (D1) y los secretos APP_PASSWORD y
+    APP_SECRET se configuran en el panel de Cloudflare:
+    Pages -> restora-app -> Settings -> Bindings / Variables and secrets.
+    No van en estos archivos.
+  - Esto es el prototipo (demo con datos de ejemplo). La app "de verdad"
+    (Next.js + PostgreSQL, carpeta producto/ del repositorio) necesita un
+    servidor con base de datos (Vercel/Neon o similar); no corre en
+    Cloudflare Pages.
