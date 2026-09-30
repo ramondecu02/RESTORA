@@ -10,12 +10,17 @@ types.setTypeParser(1082, (x) => x); // date → 'AAAA-MM-DD'
 
 const g = globalThis as unknown as { __restoraPool?: Pool };
 
+/** pg ya trata sslmode=require (el de las URLs de Neon) como verify-full, pero lo avisa como SECURITY WARNING en
+ *  cada arranque. Se escribe verify-full: mismo comportamiento y registros limpios. */
+export const pgUrl = (url: string) =>
+  /[?&]uselibpqcompat=/.test(url) ? url : url.replace(/([?&]sslmode=)(?:prefer|require|verify-ca)(?=&|$)/, "$1verify-full");
+
 export function pool(): Pool {
   if (!g.__restoraPool) {
     const url = env.databaseUrl;
     if (!url) throw new Error("Falta DATABASE_URL");
     const p = new Pool({
-      connectionString: url,
+      connectionString: pgUrl(url),
       max: Number(process.env.PG_POOL_MAX || 5),
       idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 15_000,

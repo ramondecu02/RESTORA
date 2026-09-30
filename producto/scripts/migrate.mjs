@@ -17,7 +17,9 @@ if (!url) {
   console.error('[migrate] Falta DATABASE_URL. Conecta una base de datos Postgres (Neon) al proyecto.');
   process.exit(1);
 }
-const client = new pg.Client({ connectionString: url });
+// Igual que pgUrl() en src/server/db.ts: verify-full es lo que pg ya aplica con sslmode=require, sin el aviso
+const conn = /[?&]uselibpqcompat=/.test(url) ? url : url.replace(/([?&]sslmode=)(?:prefer|require|verify-ca)(?=&|$)/, '$1verify-full');
+const client = new pg.Client({ connectionString: conn });
 await client.connect();
 try {
   await client.query('select pg_advisory_lock(727274)');
