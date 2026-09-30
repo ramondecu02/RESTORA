@@ -32,7 +32,9 @@ export const env = {
   /** Lo pone Vercel al conectar un Blob store nuevo: el SDK se autentica con OIDC, sin token fijo. */
   get blobStoreId() { return v("BLOB_STORE_ID"); },
   get resendKey() { return v("RESEND_API_KEY"); },
-  get emailFrom() { return v("EMAIL_FROM") || "RESTORA <hola@restoraapp.app>"; },
+  /** Sin dominio verificado en Resend solo vale su remitente de pruebas, que envía únicamente al email de la
+   *  cuenta de Resend. Con restoraapp.app verificado: EMAIL_FROM=RESTORA <hola@restoraapp.app>. */
+  get emailFrom() { return v("EMAIL_FROM") || "RESTORA <onboarding@resend.dev>"; },
   get emailProvider(): "resend" | "dev" {
     const p = v("EMAIL_PROVIDER");
     if (p === "resend" || p === "dev") return p;
@@ -41,7 +43,7 @@ export const env = {
   get stripeKey() { return v("STRIPE_SECRET_KEY"); },
   get stripePrice() { return v("STRIPE_PRICE_ID"); },
   get stripeWebhookSecret() { return v("STRIPE_WEBHOOK_SECRET"); },
-  get trialDays() { const n = Number(v("TRIAL_DAYS")); return Number.isFinite(n) && n > 0 ? n : 14; },
+  get trialDays() { const n = Number(v("TRIAL_DAYS")); return Number.isFinite(n) && n > 0 ? n : 90; },
   get isProd() { return process.env.NODE_ENV === "production"; },
   /** Buzón de pruebas en /dev/correo: solo fuera de producción o si se activa a propósito. */
   get devMailbox() { return this.emailProvider === "dev" && (!this.isProd || v("ALLOW_DEV_MAILBOX") === "1"); },

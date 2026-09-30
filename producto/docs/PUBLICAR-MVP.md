@@ -62,17 +62,16 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 Copia el resultado (64 caracteres). Guárdalo en un sitio seguro y no lo cambies después.
 
 ### Paso 5. Variables en Vercel
-Proyecto → **Settings → Environment Variables**. Añade estas (entornos *Production* y *Preview*):
+Proyecto → **Settings → Environment Variables**. Solo hacen falta dos (entornos *Production* y *Preview*):
 
 | Nombre | Valor |
 | --- | --- |
 | `AUTH_SECRET` | la clave del paso 4 |
 | `RESEND_API_KEY` | la clave del paso 3 (`re_…`) |
-| `EMAIL_PROVIDER` | `resend` |
-| `EMAIL_FROM` | `RESTORA <onboarding@resend.dev>` |
-| `TRIAL_DAYS` | `90` |
 
-Al añadir `AUTH_SECRET` y `RESEND_API_KEY`, activa **Sensitive**. Después nadie puede leerlas desde el
+Lo demás tiene valor por defecto: correo desde `onboarding@resend.dev` y 90 días de prueba.
+
+Al añadir las dos, activa **Sensitive**. Después nadie puede leerlas desde el
 panel, ni siquiera tú, así que guárdalas antes en un sitio seguro.
 
 La lectura automática de albaranes (IA) la activamos en la Fase 2. Mientras, las compras se apuntan a

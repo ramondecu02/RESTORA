@@ -45,7 +45,7 @@ Vercel → **Storage → Create → Blob** con acceso **Private** (no se puede c
 1. En resend.com, **Domains → Add domain**: `restoraapp.app` (o un subdominio como `mail.restoraapp.app`).
 2. Añade en tu DNS los registros que indica (SPF y DKIM; recomendable también DMARC) y espera a que aparezca como verificado.
 3. **API Keys → Create** con permiso de envío.
-4. Variables: `RESEND_API_KEY`, `EMAIL_PROVIDER=resend`, `EMAIL_FROM=RESTORA <hola@restoraapp.app>` (el remitente debe ser del dominio verificado).
+4. Variables: `RESEND_API_KEY` y `EMAIL_FROM=RESTORA <hola@restoraapp.app>` (el remitente debe ser del dominio verificado). Con la clave puesta, `EMAIL_PROVIDER` ya vale `resend`. Sin `EMAIL_FROM` se usa `onboarding@resend.dev`, que solo envía al email de la cuenta de Resend.
 
 Con un proveedor real la app no guarda el cuerpo de los correos (llevan códigos y enlaces de un solo uso), solo destinatario, asunto y estado.
 
@@ -73,7 +73,7 @@ En Vercel → **Settings → Environment Variables** (entorno Production; Previe
 | --- | --- |
 | `AUTH_SECRET` | `openssl rand -hex 32`. Firma la capa anónima de precios; no la cambies sin motivo (al cambiarla, durante 12 semanas cada negocio contaría como dos contribuyentes distintos). |
 | `APP_URL` | `https://app.restoraapp.app` (sin barra final). Con `https`, las cookies de sesión son `Secure`. |
-| `TRIAL_DAYS` | `14` (días de prueba de cada negocio nuevo). |
+| `TRIAL_DAYS` | Días de prueba de cada negocio nuevo. Sin ella, `90`. |
 | `PG_POOL_MAX` | `5` |
 
 La lista completa, comentada, está en `producto/.env.example`.
