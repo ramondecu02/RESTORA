@@ -38,3 +38,29 @@ export function avisoPlan(org: PlanOrg, now = Date.now()): string | null {
   if (d == null || d === 0 || d > 3) return null;
   return d === 1 ? "Hoy es el último día de tu prueba gratuita." : `Te quedan ${d} días de prueba gratuita.`;
 }
+
+/** Cómo se cuenta el plan en las pantallas (Mi local, Más): un título, una frase corta para la etiqueta, el tono y, si cuenta días, los que quedan. */
+export type EstadoPlan = {
+  clave: "prueba" | "terminada" | "activa" | "impago" | "cancelada";
+  titulo: string;
+  corto: string;
+  tono: "ok" | "warn" | "bad" | null;
+  /** Días de prueba que quedan (en prueba) o de plazo para actualizar el pago (con un cobro fallido). */
+  dias: number | null;
+};
+
+const diasTxt = (n: number) => `${n} ${n === 1 ? "día" : "días"}`;
+
+export function estadoPlan(org: PlanOrg, now = Date.now()): EstadoPlan {
+  if (org.planStatus === "trial") {
+    const d = diasDePrueba(org, now);
+    if (d == null || d > 0) return { clave: "prueba", titulo: "Prueba gratuita", corto: d == null ? "Prueba gratuita" : `Prueba · ${diasTxt(d)}`, tono: d != null && d <= 3 ? "warn" : null, dias: d };
+    return { clave: "terminada", titulo: "Prueba gratuita", corto: "Prueba terminada", tono: "bad", dias: 0 };
+  }
+  if (org.planStatus === "past_due") {
+    const g = diasDeGracia(org, now);
+    return { clave: "impago", titulo: "Pago pendiente", corto: g ? `Pago pendiente · ${diasTxt(g)}` : "Pago pendiente", tono: "bad", dias: g };
+  }
+  if (org.planStatus === "canceled") return { clave: "cancelada", titulo: "Suscripción", corto: "Suscripción cancelada", tono: "bad", dias: null };
+  return { clave: "activa", titulo: "Suscripción", corto: "Suscripción activa", tono: "ok", dias: null };
+}

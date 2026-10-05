@@ -18,7 +18,7 @@ export function LocalForm({ l, canEdit }: { l: L; canEdit: boolean }) {
     <div className="fld"><label htmlFor={`lc-${k}`}>{label}</label><input id={`lc-${k}`} className="inp" value={String(f[k] ?? "")} onChange={(e) => setF({ ...f, [k]: e.target.value })} {...extra} /></div>
   );
   return (
-    <section className="card" aria-labelledby="h-local">
+    <section className="card" id="local" aria-labelledby="h-local">
       <div className="card-h"><h2 className="h3" id="h-local">Datos del local</h2>{!canEdit ? <span className="tag">Solo lectura</span> : null}</div>
       <fieldset disabled={!canEdit} className="stack-sm" style={{ border: 0, margin: 0, padding: 0 }}>
         <div className="fgrid fgrid-2">{t("name", "Nombre")}{t("ciudad", "Ciudad")}{t("address", "Dirección")}{t("postal_code", "Código postal", { inputMode: "numeric" })}</div>
@@ -86,7 +86,7 @@ export function DemoCard({ cargado }: { cargado: boolean }) {
   const [pending, start] = useTransition();
   const [ask, setAsk] = useState(false);
   return (
-    <section className="card" aria-labelledby="h-demo">
+    <section className="card" id="demo" aria-labelledby="h-demo">
       <div className="card-h"><h2 className="h3" id="h-demo">Datos de ejemplo</h2>{cargado ? <span className="tag tag-warn">Cargados</span> : null}</div>
       <p className="muted small">{cargado ? "Tienes cargado el restaurante de ejemplo (Casa Pujol). Quítalo cuando quieras: lo que hayas creado tú se queda." : "Carga un restaurante de ejemplo con seis meses de compras, platos con fotos, inventario y ventas para explorar todo sin esperar a tus datos."}</p>
       <button type="button" className={`btn btn-sm ${cargado ? "btn-2" : ""}`} disabled={pending} onClick={() => (cargado ? setAsk(true) : start(async () => done(await demo("cargar"))))}>

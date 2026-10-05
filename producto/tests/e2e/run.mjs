@@ -15,6 +15,7 @@ const suites = [
   ["Corregir y borrar (proveedores, artículos, platos, inventario, ventas, equipo)", "correcciones.mjs"],
   ["Panel Hoy (atención, mes elegido, cifras que cuentan)", "hoy.mjs"],
   ["Pantallas renovadas (fichas, filtros, orden, esqueleto)", "pantallas.mjs"],
+  ["Mi local y Más (fichas, aviso de lo que falta, plan en cada estado)", "cuenta-ui.mjs"],
   ["Coherencia entre pantallas (la misma cifra sale igual en todas)", "coherencia.mjs"],
   ["Matriz de anchos (360 a 1440, todas las pantallas)", "matriz.mjs"],
   ["Accesibilidad (axe, WCAG 2.2 AA) y foco al tabular", "a11y.mjs"],

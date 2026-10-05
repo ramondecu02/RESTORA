@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { avisoPlan, bloqueado, DIAS_DE_GRACIA, diasDeGracia, diasDePrueba } from "@/server/plan";
+import { avisoPlan, bloqueado, DIAS_DE_GRACIA, diasDeGracia, diasDePrueba, estadoPlan } from "@/server/plan";
 
 const NOW = Date.UTC(2026, 9, 5, 12);
 const en = (dias: number) => new Date(NOW + dias * 864e5).toISOString();
@@ -77,5 +77,32 @@ describe("plan: impago con 5 días de gracia (decidido el 5/10/2026)", () => {
     expect(avisoPlan(impago(2), NOW)).toContain("Tienes 3 días");
     expect(avisoPlan(impago(4.5), NOW)).toBe("No hemos podido cobrar tu suscripción. Hoy es el último día para actualizar el pago antes de que se bloquee el acceso.");
     expect(avisoPlan({ planStatus: "past_due", trialEndsAt: null }, NOW)).toBe("No hemos podido cobrar tu suscripción.");
+  });
+});
+
+describe("plan: cómo se cuenta en las pantallas", () => {
+  it("en prueba dice los días que quedan y avisa en los tres últimos", () => {
+    expect(estadoPlan({ planStatus: "trial", trialEndsAt: en(14) }, NOW)).toEqual({ clave: "prueba", titulo: "Prueba gratuita", corto: "Prueba · 14 días", tono: null, dias: 14 });
+    expect(estadoPlan({ planStatus: "trial", trialEndsAt: en(3) }, NOW)).toMatchObject({ corto: "Prueba · 3 días", tono: "warn", dias: 3 });
+    expect(estadoPlan({ planStatus: "trial", trialEndsAt: en(0.2) }, NOW)).toMatchObject({ corto: "Prueba · 1 día", tono: "warn", dias: 1 });
+  });
+
+  it("con la prueba terminada, en rojo y sin días", () => {
+    expect(estadoPlan({ planStatus: "trial", trialEndsAt: en(-1) }, NOW)).toEqual({ clave: "terminada", titulo: "Prueba gratuita", corto: "Prueba terminada", tono: "bad", dias: 0 });
+  });
+
+  it("una prueba sin fecha de fin sigue como prueba, sin días", () => {
+    expect(estadoPlan({ planStatus: "trial", trialEndsAt: null }, NOW)).toMatchObject({ clave: "prueba", corto: "Prueba gratuita", dias: null });
+  });
+
+  it("con un cobro fallido cuenta los días para actualizar el pago", () => {
+    const desde = new Date(NOW - 2 * 864e5).toISOString();
+    expect(estadoPlan({ planStatus: "past_due", trialEndsAt: null, pastDueSince: desde }, NOW)).toEqual({ clave: "impago", titulo: "Pago pendiente", corto: `Pago pendiente · ${DIAS_DE_GRACIA - 2} días`, tono: "bad", dias: DIAS_DE_GRACIA - 2 });
+    expect(estadoPlan({ planStatus: "past_due", trialEndsAt: null }, NOW)).toMatchObject({ corto: "Pago pendiente", dias: null });
+  });
+
+  it("activa en verde y cancelada en rojo", () => {
+    expect(estadoPlan({ planStatus: "active", trialEndsAt: null }, NOW)).toMatchObject({ clave: "activa", corto: "Suscripción activa", tono: "ok" });
+    expect(estadoPlan({ planStatus: "canceled", trialEndsAt: null }, NOW)).toMatchObject({ clave: "cancelada", corto: "Suscripción cancelada", tono: "bad" });
   });
 });

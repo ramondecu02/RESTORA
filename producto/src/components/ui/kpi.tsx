@@ -27,6 +27,8 @@ export type KpiProps = {
   sub?: ReactNode;
   /** Unidad pequeña junto a la cifra («platos»). */
   unit?: string;
+  /** Un estado en lugar de una cifra («Activa»): no cuenta ni lleva variación; el apoyo es `sub`. */
+  text?: string;
   /** Pinta la cifra: bien, a vigilar o mal. */
   tone?: "ok" | "warn" | "bad";
   /** Si lleva a algún sitio, toda la ficha es un enlace. */
@@ -38,13 +40,13 @@ export type KpiProps = {
   i?: number;
 };
 
-export function Kpi({ label, value, fmt, delta = null, goodWhenUp = true, deltaSuffix, spark, marca, vs = null, hint, sub, unit, tone, href, onClick, pressed, i = 0 }: KpiProps) {
-  const apoyo = value == null ? hint : delta != null && vs ? vs : sub;
+export function Kpi({ label, value, fmt, delta = null, goodWhenUp = true, deltaSuffix, spark, marca, vs = null, hint, sub, unit, text, tone, href, onClick, pressed, i = 0 }: KpiProps) {
+  const apoyo = text ? sub : value == null ? hint : delta != null && vs ? vs : sub;
   const inner = <>
     <span className="tile-lab">{label}</span>
     <div className="tile-mid">
-      <span className="tile-val"><CountUp value={value} fmt={fmt} />{unit && value != null ? <small> {unit}</small> : null}</span>
-      <Delta value={delta} goodWhenUp={goodWhenUp} suffix={deltaSuffix} />
+      <span className="tile-val">{text ?? <><CountUp value={value} fmt={fmt} />{unit && value != null ? <small> {unit}</small> : null}</>}</span>
+      {text ? null : <Delta value={delta} goodWhenUp={goodWhenUp} suffix={deltaSuffix} />}
     </div>
     {spark ? <Sparkline values={spark} marca={marca} label={`${label}: evolución`} /> : null}
     <span className="tile-vs">{apoyo ?? " "}</span>

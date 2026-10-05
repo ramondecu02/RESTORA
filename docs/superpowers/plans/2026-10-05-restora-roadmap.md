@@ -90,7 +90,9 @@ Reglas duras:
 > revisión con la guía de interfaz de Vercel y Lighthouse local (informe en `docs/superpowers/informes/2026-10-05-qa-transversal.md`) · Task 11 redactada, **pendiente de tu firma** (`docs/superpowers/mvp-terminado.md`)
 > · La ficha del proveedor ya lleva cifras (gasto, peso en tus compras, subidas, albaranes) y el gasto por mes en un solo color; la del artículo ya cumplía el sistema.
 > · La ficha de la compra guardada ya lleva cifras y la tabla a todo el ancho; la pantalla de revisión ya cumplía el sistema.
-> · **Queda** Task 9 (Cuenta, Mi local y Más; lo de Facturación espera a D1).
+> · Task 9 ✓ salvo Facturación (espera a D1): Mi local lleva las cuatro fichas del sistema común (plan, compras guardadas, equipo y food cost objetivo) y «Para dejarlo a punto» con lo que falta y tiene efecto real
+>   (código postal, comensales al día, datos de ejemplo, equipo); Más abre con la tarjeta de la cuenta y el plan; el plan se cuenta igual en las dos con `estadoPlan` (`server/plan.ts`). Bloque e2e `cuenta-ui.mjs`.
+> · **Queda** lo de Facturación, que se completa con los planes (D1).
 > Los pasos de abajo se conservan como referencia de lo que se hizo y de lo que falta.
 
 ### Task 1: [A1] Sistema de diseño compartido: KPI, movimiento, esqueletos y estados vacíos

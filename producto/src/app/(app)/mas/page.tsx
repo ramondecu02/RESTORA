@@ -3,6 +3,9 @@ import { Screen } from "@/components/shell/screen";
 import { Icon } from "@/components/icons";
 import { buildNav } from "@/components/shell/nav";
 import { requireApp } from "@/server/ctx";
+import { ROLE_LABEL } from "@/server/rbac";
+import { estadoPlan } from "@/server/plan";
+import { initials } from "@/lib/format";
 import { navBadges } from "@/server/queries/badges";
 import { salir } from "../../(auth)/actions";
 import { Negocios } from "../negocios";
@@ -14,8 +17,18 @@ export default async function Mas() {
   const ctx = await requireApp();
   const b = await navBadges(ctx);
   const items = buildNav(ctx.role, b);
+  const plan = estadoPlan(ctx.org);
   return (
     <Screen title="Más" sub={ctx.local.name}>
+      <section className="card">
+        <div className="more-list">
+          <Link className="more-i" href="/cuenta">
+            <span className="avatar" aria-hidden="true">{initials(ctx.name)}</span>
+            <span className="li-main"><b>{ctx.name}</b><small>{ROLE_LABEL[ctx.role]} · {ctx.org.name}</small></span>
+            <span className={`tag ${plan.tono ? `tag-${plan.tono}` : ""}`} style={{ marginLeft: "auto" }}>{plan.corto}</span>
+          </Link>
+        </div>
+      </section>
       {(() => {
         const groups: { title: string; items: Exclude<(typeof items)[number], { group: string }>[] }[] = [];
         for (const it of items) { if ("group" in it) groups.push({ title: it.group, items: [] }); else (groups[groups.length - 1] ?? (groups[0] = { title: "General", items: [] })).items.push(it); }
