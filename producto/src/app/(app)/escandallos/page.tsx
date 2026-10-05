@@ -16,7 +16,7 @@ import { resumenCarta } from "@/lib/menu";
 import { famRank } from "@/lib/briefing";
 import { fotoUrl } from "@/lib/fotos";
 import { diferencia, serieMensual, variacionPct } from "@/lib/series";
-import { eur, pct, qty, plural, ultimosMeses } from "@/lib/format";
+import { eur, nb, pct, qty, plural, ultimosMeses } from "@/lib/format";
 
 export const metadata = { title: "Escandallos" };
 
@@ -140,7 +140,7 @@ async function EscandallosContenido({ ctx, sp }: { ctx: AppCtx; sp: Sp }) {
           <div className="list pg-narrow">{rows.map((r) => (
             <Link key={r.id} className="li" href={`/escandallos/${r.id}`}>
               <span className="li-ic">{fotoUrl(r.foto_key) ? <img src={fotoUrl(r.foto_key)!} alt="" /> : <Icon name={r.reventa ? "tag" : "book"} />}</span>
-              <span className="li-main"><b>{r.name}</b><small>{r.familia} · coste {r.sinCoste ? "—" : eur(r.coste)} · PVP {eur(r.pvp)}</small></span>
+              <span className="li-main"><b>{r.name}</b><small>{nb(`${r.familia} · coste ${r.sinCoste ? "—" : eur(r.coste)} · PVP ${eur(r.pvp)}`)}</small></span>
               <span className="li-end"><span className={`tag ${tagCls(r.est.estado)}`}>{r.fc != null ? pct(r.fc) : r.pvp ? "—" : "Sin PVP"}</span><small>{r.est.label}</small></span>
             </Link>))}</div>
         </> : (

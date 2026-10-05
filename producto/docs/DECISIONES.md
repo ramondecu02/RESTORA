@@ -10,7 +10,7 @@ Todo esto está implementado con un valor por defecto razonable. Cada punto dice
 
 ## 2. Precio, prueba y qué pasa al terminarla
 
-- **Ahora** (decidido en octubre de 2026): 14 días de prueba con todo incluido (`TRIAL_DAYS`), sin tarjeta. Al terminar la prueba sin suscripción, o con la suscripción cancelada, **la app se bloquea**: cualquier pantalla lleva a «/bloqueado» (suscribirse o, sin Stripe configurado, contacto para activarla) y solo quedan la cuenta (exportar datos, borrar el negocio, salir) y la facturación. Los tres últimos días de prueba hay aviso arriba. Un cobro fallido no bloquea: Stripe reintenta y se avisa. El precio lo defines en Stripe (la web anuncia «desde 89 €/mes» y una oferta de fundador).
+- **Ahora** (decidido en octubre de 2026): 14 días de prueba con todo incluido (`TRIAL_DAYS`), sin tarjeta. Al terminar la prueba sin suscripción, o con la suscripción cancelada, **la app se bloquea**: cualquier pantalla lleva a «/bloqueado» (suscribirse o, sin Stripe configurado, contacto para activarla) y solo quedan la cuenta (exportar datos, borrar el negocio, salir) y la facturación. Los tres últimos días de prueba hay aviso arriba. **Un cobro fallido no bloquea de golpe: se avisa desde el primer día (barra de arriba y Facturación, con los días que quedan) y a los 5 días de impago la app se bloquea** (decidido el 5/10/2026; `past_due_since` en `organizations`, `DIAS_DE_GRACIA` en `src/server/plan.ts`). Al pagar, vuelve al momento. El precio lo defines en Stripe (la web aún anuncia «desde 89 €/mes» y una oferta de fundador: se retira en la Task 26 del plan).
 - **A decidir**: ¿Precio con o sin IVA en la pasarela (Stripe Tax)? ¿La oferta de fundador como cupón de Stripe? ¿Aviso por correo antes de que termine la prueba?
 
 ## 3. Capa anónima de precios de referencia
@@ -52,7 +52,7 @@ Respuestas a las decisiones D1–D6 del plan (`docs/superpowers/plans/2026-10-05
   aproximado sobre la API de Claude y la inteligencia.» → Hecho en [`PRECIOS-Y-COSTES.md`](PRECIOS-Y-COSTES.md) (Stripe ≈ 2,8–3,8 % del precio sin IVA al mes; IA ≈ 5 € por local y mes
   en un restaurante típico, 1,5–20 € según volumen). Faltan la elección de planes, nombres y precios.
 - **Prueba gratuita (D3):** se mantienen los **14 días**.
-- **Impago (D4):** se **bloquea a los 5 días de impago** (no 7). Aplica a la app; el aviso empieza el primer día (Task 23 del plan).
+- **Impago (D4):** se **bloquea a los 5 días de impago** (no 7). **Hecho**: el aviso empieza el primer día y a los 5 días la app lleva a «No hemos podido cobrar tu suscripción» (pagar, descargar los datos o salir). Faltan los correos de cobro fallido y los reintentos propios (Task 23 del plan).
 - **«Inteligencia» (D6):** se hace lo propuesto: **«Avisos» pasa a ser el centro de inteligencia** (priorizado por impacto en euros, con acción directa). Hoy no usa IA; si se le añade
   un modelo de lenguaje, el coste es ~0,45 € por local y mes.
 - **Marca y redes (D5):** «redes sociales e imagen de marca se tienen que crear»: **no existen todavía**. La web no debe enseñar enlaces a redes hasta que existan; se prepara un kit

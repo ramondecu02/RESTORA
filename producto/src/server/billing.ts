@@ -51,7 +51,7 @@ export async function checkoutUrl(orgId: string, email: string, orgName: string)
   const customer = await clienteDe(orgId, email, orgName);
   const vig = suscripcionVigente(await subsDe(customer));
   if (vig && suscripcionViva(vig)) {
-    await sys((c) => c.query("update organizations set plan_status = $2, stripe_subscription_id = $3 where id = $1 and stripe_customer_id = $4", [orgId, planDeSuscripcion(vig.status), vig.id, customer]));
+    await sys((c) => c.query("update organizations set plan_status = $2, stripe_subscription_id = $3, past_due_since = case when $2 = 'past_due' then coalesce(past_due_since, now()) else null end where id = $1 and stripe_customer_id = $4", [orgId, planDeSuscripcion(vig.status), vig.id, customer]));
     return null;
   }
   // Solo un pago abierto por cliente: si se pagara en dos pestañas habría dos suscripciones
@@ -126,7 +126,7 @@ async function sincronizar(c: Db, customer: string, orgHint: string | null) {
   }
   if (!org) return;
   const vig = suscripcionVigente(await subsDe(customer));
-  if (vig) await c.query("update organizations set plan_status = $2, stripe_subscription_id = $3 where id = $1", [org.id, planDeSuscripcion(vig.status), vig.id]);
+  if (vig) await c.query("update organizations set plan_status = $2, stripe_subscription_id = $3, past_due_since = case when $2 = 'past_due' then coalesce(past_due_since, now()) else null end where id = $1", [org.id, planDeSuscripcion(vig.status), vig.id]);
 }
 
 export async function handleWebhook(raw: string, sig: string): Promise<{ ok: boolean; status: number; msg?: string }> {

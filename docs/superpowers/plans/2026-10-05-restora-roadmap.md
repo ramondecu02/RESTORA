@@ -4,7 +4,7 @@
 
 **Goal:** Dejar RESTORA lista para cobrar de verdad y venderse en directo: producto pulido y coherente (A), aislamiento entre negocios verificado (B), cobro con Stripe (C), web de producto terminado (D) y un plan de salida a mercado preparado pero sin activar (E).
 
-**Architecture:** Un solo producto (`producto/`: Next 16 + PostgreSQL con RLS en Vercel/Neon) y una web de marketing separada (raíz del repo: Next estático en Cloudflare Pages). Cinco áreas con dependencias explícitas (ver «Qué bloquea a qué»). Cada tarea termina con un commit verificable (pruebas unitarias + los 8 bloques e2e en verde).
+**Architecture:** Un solo producto (`producto/`: Next 16 + PostgreSQL con RLS en Vercel/Neon) y una web de marketing separada (raíz del repo: Next estático en Cloudflare Pages). Cinco áreas con dependencias explícitas (ver «Qué bloquea a qué»). Cada tarea termina con un commit verificable (pruebas unitarias + los 9 bloques e2e en verde).
 
 **Tech Stack:** Next 16 (App Router), React 19, PostgreSQL 16 + RLS, Stripe, Resend, Vercel Blob, Anthropic API (lectura de albaranes), Playwright (e2e), Vitest (unitarias), Cloudflare Pages/D1 (web).
 
@@ -21,7 +21,7 @@
 - **Diseño responsive:** la app mide **la zona de contenido**, no la ventana: contenedor `pg` (columnas a 940 px de contenido; el escandallo a 1000) y contenedor `app` solo para el armazón (barra lateral, cabecera, hojas). Matriz de comprobación: 390 · 768 · 1093 · 1280 · 1440.
 - **Datos:** migraciones aditivas e idempotentes en `producto/db/migrations/`; toda tabla con `tenant_id` lleva RLS; ninguna consulta de negocio fuera de `withTenant()`.
 - **Rama y despliegue:** se trabaja en `claude/new-session-c92ohx`; cada push despliega a producción en Vercel (la app) — solo se hace push con las pruebas en verde. La web se publica aparte con `actualizar-restora.bat` (opción P), solo tras aprobación.
-- **Calidad:** `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` y `node tests/e2e/run.mjs` (8 bloques) en verde antes de cada commit que toque `producto/`.
+- **Calidad:** `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` y `node tests/e2e/run.mjs` (9 bloques) en verde antes de cada commit que toque `producto/`.
 - **Atribución en commits:** los trailers que pide el entorno (Co-Authored-By y Claude-Session).
 
 ## Estado de partida (hechos comprobados en esta sesión)
@@ -36,7 +36,7 @@
 | **Varios locales por negocio** | **NO implementado**: el esquema tiene `locales`/`local_id`, pero `loadLocal()` toma siempre el primero (`order by created_at limit 1`); no hay selector ni alta de locales. La web promete «comparar entre locales» (perfil Pequeño grupo) | `ctx.ts` línea 50, `lib/copy/precios.ts` |
 | Stripe | Implementado y **apagado**: Checkout, portal, webhook con idempotencia (`stripe_events`) y estados de suscripción; **un solo precio** (`STRIPE_PRICE_ID`), sin planes, sin datos fiscales, sin reintentos propios | `billing.ts`, `api/stripe/webhook` |
 | Web | Con lenguaje de fundadores en `lib/site-copy.ts`, `lib/dictionaries.ts`, `lib/copy/{precios,contacto,sobre,preguntas,legal}.ts`, `app/[locale]/precios/page.tsx`, `contacto/page.tsx`; pendientes con `TODO(Ramon)`: redes, foto, vídeo, dónde se alojan los datos | `grep` |
-| Pruebas | 312 unitarias + 8 bloques e2e (alta, recorrido 52 pantallas, flujos, RLS, prueba gratuita, calidad de lectura, borrado, Hoy) | `tests/` |
+| Pruebas | 320 unitarias + 9 bloques e2e (alta, recorrido 52 pantallas, flujos, RLS, prueba gratuita y bloqueo —con el impago a 5 días—, calidad de lectura, borrado, Hoy, pantallas renovadas) | `tests/` |
 
 ## Decisiones del propietario (estado a 5 de octubre de 2026)
 
@@ -47,7 +47,7 @@ Registradas con sus palabras en `producto/docs/DECISIONES.md`, punto 8.
 | **D1** | **Precios y nombres de plan definitivos** | **Pendiente.** El propietario pidió primero el cálculo de la comisión de Stripe y del coste de IA por local: hecho en `producto/docs/PRECIOS-Y-COSTES.md` (Stripe ≈ 2,8–3,8 % del precio sin IVA al mes; IA ≈ 5 € por local y mes, 1,5–20 € según volumen; ≈ 8 céntimos por albarán) | Faltan cuántos planes, nombres, precios (mensual/anual, con o sin IVA), si hay límite de albaranes por plan y precio por local adicional. Bloquea Tasks 19–25, 28 y 35. **No se implementa ninguna cifra hasta tenerlo** |
 | **D2** | Alcance multi-local | **Pendiente** (no contestada; el «coste por local» sugiere que el cobro puede ser por local) | Bloquea Tasks 15–17 y el copy de «Grupo» en la web. Mi recomendación sigue siendo V1 con un restaurante por negocio y multi-local en V2, y retirar de la web lo de «comparar entre locales» mientras tanto |
 | **D3** | Prueba gratuita | **Decidido: se mantienen los 14 días** (sin tarjeta, como ahora) | Task 21 y 23 |
-| **D4** | Impago | **Decidido: se bloquea a los 5 días de impago** (aviso desde el primer día). Siguen pendientes los **datos fiscales** (razón social, NIF, domicilio, régimen de IVA) | Task 23 usa **5 días** de gracia (no 7); Tasks 22 y 29 esperan los datos fiscales |
+| **D4** | Impago | **Decidido y hecho: se bloquea a los 5 días de impago** (aviso desde el primer día). Siguen pendientes los **datos fiscales** (razón social, NIF, domicilio, régimen de IVA) | Falta el correo de cobro fallido (Task 23); Tasks 22 y 29 esperan los datos fiscales |
 | **D5** | Material real de la web | **Parcial.** Las redes sociales y la imagen de marca **no existen y hay que crearlas**; hay que **cambiar el teléfono de la web** (falta el número nuevo) y **rellenar la web con imágenes generadas**. Sin contestar: región de los datos (Neon) y qué sellos son verídicos | Tasks 27–29 y nuevas Tasks 31b–31d (más abajo). Mientras no existan, la web no enseña enlaces a redes |
 | **D6** | Qué es «Inteligencia» | **Decidido: «Avisos» pasa a ser el centro de inteligencia** (priorizado por impacto en euros, con acción directa). Hoy no usa IA | Task 8 puede ejecutarse |
 
@@ -83,6 +83,11 @@ Reglas duras:
 ---
 
 ## ÁREA A — Interfaz y producto (V1)
+
+> **Estado a 5 de octubre de 2026 (hecho directamente, sin subagentes, por ser la prioridad de la Fase 2):** Task 1 (sistema común: `Kpi`, `Atencion`, `Esqueleto`, `SelectNav`, series mensuales) ✓ ·
+> Tasks 2–7 (Compras, Escandallos, Carta, Proveedores, Inventario, Ventas) ✓ con su bloque e2e `pantallas.mjs` · Task 8 (Avisos como centro de inteligencia) ✓ salvo los estados persistentes «resuelto/ignorado»
+> · **Quedan** Task 9 (Cuenta, Mi local, Facturación y Más), las fichas de detalle (compra, plato, proveedor, artículo), Task 10 (matriz de anchos con todas las rutas y accesibilidad con axe) y Task 11 (criterios de «MVP terminado»).
+> Los pasos de abajo se conservan como referencia de lo que se hizo y de lo que falta.
 
 ### Task 1: [A1] Sistema de diseño compartido: KPI, movimiento, esqueletos y estados vacíos
 
@@ -267,7 +272,8 @@ Reglas duras:
 **Files:** Modify `producto/src/server/plan.ts` (`gracia`), `email.ts` (plantillas), `billing.ts`; Test `tests/unit/plan.test.ts`.
 **Interfaces:** Produce: `past_due` → aviso en la app (planbar) → correo diario de cobro fallido → bloqueo al agotar la gracia → reactivación inmediata al pagar.
 
-- [ ] **Step 1:** Tests de tiempos (día 0, 3, 5, 6): el aviso empieza el día 0 y **el bloqueo llega a los 5 días de impago** (decidido por el propietario). **Step 2:** Implementar (`past_due_since` en `organizations`, migración aditiva). **Step 3:** Commit.
+- [x] **Hecho el 5/10 (sin esperar a D1):** `past_due_since` (migración `0008`), `bloqueado()` a los 5 días, `diasDeGracia()`, aviso con los días que quedan, pantalla `/bloqueado` para el impago, pruebas unitarias y un escenario e2e (día 2 avisa, día 6 bloquea, pagar desbloquea).
+- [ ] **Falta:** correo diario de cobro fallido (Resend) y reintentos propios si Stripe no los cubre; comprobarlo con los relojes de Stripe (Task 24).
 
 ### Task 24: [C6] Pruebas con relojes de Stripe y paso a producción
 

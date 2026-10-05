@@ -3,6 +3,7 @@ import { Screen } from "@/components/shell/screen";
 import { Icon } from "@/components/icons";
 import { requireApp, hasPerm } from "@/server/ctx";
 import { stripeOn } from "@/server/billing";
+import { diasDeGracia } from "@/server/plan";
 import { fecha } from "@/lib/format";
 import { CONTACTO_EMAIL, CONTACTO_TEL, CONTACTO_WHATSAPP } from "@/lib/contacto";
 import { Pagar } from "./pagar";
@@ -17,6 +18,7 @@ export default async function Facturacion({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const st = ctx.org.planStatus;
   const dias = diasHasta(ctx.org.trialEndsAt);
+  const gracia = diasDeGracia(ctx.org);
   const [label, cls] = ESTADO[st] ?? [st, "tag"];
   return (
     <Screen title="Facturación" sub="Tu plan y tus pagos" back="/cuenta">
@@ -25,7 +27,7 @@ export default async function Facturacion({ searchParams }: { searchParams: Prom
         <div className="card-h"><h2 className="h3">Tu plan</h2><span className={`tag ${cls}`}>{label}</span></div>
         {st === "trial" ? <p>{dias != null && dias > 0 ? `Te quedan ${dias} días de prueba (hasta el ${fecha(ctx.org.trialEndsAt, { day: "numeric", month: "long" })}). Tienes acceso completo durante la prueba.` : "Tu prueba ha terminado. Suscríbete para seguir usando RESTORA: tus datos siguen guardados."}</p> : null}
         {st === "active" ? <p>Todo en orden. Puedes cambiar la tarjeta, descargar facturas o cancelar desde el portal de pagos.</p> : null}
-        {st === "past_due" ? <p>No hemos podido cobrar el último recibo. Actualiza la tarjeta para no perder el acceso.</p> : null}
+        {st === "past_due" ? <p>No hemos podido cobrar el último recibo. {gracia != null && gracia > 0 ? `Tienes ${gracia} ${gracia === 1 ? "día" : "días"} para actualizar la tarjeta antes de que se bloquee el acceso.` : "Actualiza la tarjeta para no perder el acceso."}</p> : null}
         {st === "canceled" ? <p>Tu suscripción está cancelada. Tus datos siguen aquí: suscríbete de nuevo cuando quieras.</p> : null}
         {stripeOn() ? <Pagar activo={st === "active" || st === "past_due"} tieneCliente={!!ctx.org.stripeCustomerId} />
           : <div className="note"><Icon name="info" /><p>Para activar tu suscripción, escríbenos por <a className="link" href={CONTACTO_WHATSAPP} target="_blank" rel="noopener">WhatsApp al {CONTACTO_TEL}</a> o a <a className="link" href={`mailto:${CONTACTO_EMAIL}`}>{CONTACTO_EMAIL}</a> y la dejamos lista en el día.</p></div>}

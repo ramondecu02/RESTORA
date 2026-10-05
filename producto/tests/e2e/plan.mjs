@@ -72,6 +72,34 @@ try {
     if (r.status() === 402) throw new Error("la subida sigue bloqueada");
   });
 
+  // Impago: avisa desde el primer día y bloquea a los 5 días
+  await sql("update organizations set plan_status = 'past_due', past_due_since = now() - interval '2 days' where id = $1", [id]);
+  await step("con 2 días de impago la app funciona y avisa de los días que quedan", async () => {
+    await page.goto(BASE + "/compras");
+    if (ruta() !== "/compras") throw new Error("ha ido a " + ruta());
+    await page.getByText(/No hemos podido cobrar tu suscripción\. Tienes 3 días para actualizar el pago/).waitFor();
+  });
+  await sql("update organizations set past_due_since = now() - interval '6 days' where id = $1", [id]);
+  await step("con 5 días de impago, Hoy y Compras mandan a /bloqueado, que habla de pagar y no de suscribirse", async () => {
+    for (const p of ["/hoy", "/compras", "/escandallos"]) {
+      await page.goto(BASE + p);
+      if (ruta() !== "/bloqueado") throw new Error(`${p} → ${ruta()}`);
+    }
+    await page.getByRole("heading", { name: "No hemos podido cobrar tu suscripción" }).waitFor();
+    if (await page.getByText("Tu prueba gratuita ha terminado").count()) throw new Error("habla de la prueba en vez del impago");
+  });
+  await step("con 5 días de impago la facturación y la API de subida se comportan como en un bloqueo", async () => {
+    await page.goto(BASE + "/cuenta/facturacion");
+    if (ruta() !== "/cuenta/facturacion") throw new Error("facturación → " + ruta());
+    const r = await subir();
+    if (r.status() !== 402) throw new Error("subida: estado " + r.status());
+  });
+  await sql("update organizations set plan_status = 'active', past_due_since = null where id = $1", [id]);
+  await step("al pagar, vuelve a funcionar", async () => {
+    await page.goto(BASE + "/hoy");
+    if (ruta() !== "/hoy") throw new Error("ha ido a " + ruta());
+  });
+
   await sql("update organizations set plan_status = 'canceled', trial_ends_at = now() + interval '5 days' where id = $1", [id]);
   await step("con la suscripción cancelada, bloqueado aunque quedaran días de prueba", async () => {
     await page.goto(BASE + "/hoy");

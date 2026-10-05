@@ -175,12 +175,12 @@ try {
     await cab.nth(2).focus();
     await page.keyboard.press("Enter");
     if ((await cab.nth(2).getAttribute("aria-expanded")) !== "true") throw new Error("no se abre con el teclado");
-    await page.getByRole("tab", { name: /^Para vigilar/ }).click();
+    await page.getByRole("button", { name: /^Para vigilar/ }).click();
     if (!(await cab.count())) throw new Error("«Para vigilar» no enseña nada");
-    await page.getByRole("tab", { name: /^Acción recomendada/ }).click();
-    const accion = num(await page.getByRole("tab", { name: /^Acción recomendada/ }).locator(".cnt").innerText());
+    await page.getByRole("button", { name: /^Acción recomendada/ }).click();
+    const accion = num(await page.getByRole("button", { name: /^Acción recomendada/ }).locator(".cnt").innerText());
     if (accion === 0 && !(await page.getByText("No hay avisos con ese filtro").count())) throw new Error("sin avisos que pidan acción debería decirlo");
-    await page.getByRole("tab", { name: /^Todos/ }).click();
+    await page.getByRole("button", { name: /^Todos/ }).click();
     const mas = page.getByRole("button", { name: /^Ver \d+ más/ });
     if (total > 8) {
       if (total !== 8) { /* se enseñan 8 de entrada */ }

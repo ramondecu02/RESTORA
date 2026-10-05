@@ -8,7 +8,7 @@ import { all, withTenant } from "@/server/db";
 import { requireApp, type AppCtx } from "@/server/ctx";
 import { priceAlerts } from "@/server/domain/avisos";
 import { estadoFC, foodCost } from "@/lib/costing";
-import { eur, fecha, pct } from "@/lib/format";
+import { eur, fecha, nb, pct } from "@/lib/format";
 import { ListaAvisos } from "./lista";
 
 export const metadata = { title: "Avisos" };
@@ -54,7 +54,7 @@ async function AvisosContenido({ ctx }: { ctx: AppCtx }) {
         <section className="card" aria-labelledby="h-fuera">
           <div className="card-h"><h2 className="h3" id="h-fuera">Platos fuera de su objetivo</h2></div>
           <div className="list">{fuera.map(({ s, fc }) => (
-            <Link key={s.id} className="li" href={`/escandallos/${s.id}`}><span className="li-main"><b>{s.name}</b><small>Objetivo {s.fcObjetivo} % · coste {eur(s.coste)} · PVP {eur(s.pvp)}</small></span><span className="li-end"><span className="tag tag-bad">{pct(fc)}</span></span></Link>))}</div>
+            <Link key={s.id} className="li" href={`/escandallos/${s.id}`}><span className="li-main"><b>{s.name}</b><small>{nb(`Objetivo ${s.fcObjetivo} % · coste ${eur(s.coste)} · PVP ${eur(s.pvp)}`)}</small></span><span className="li-end"><span className="tag tag-bad">{pct(fc)}</span></span></Link>))}</div>
         </section>
       ) : null}
       {data.sinPrecio.length ? (

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { capitalize, fecha, fechaLarga, fechaNum, isoDate, ultimosMeses } from "@/lib/format";
+import { capitalize, fecha, fechaLarga, fechaNum, isoDate, nb, ultimosMeses } from "@/lib/format";
 import { decodeFlash } from "@/components/ui/toast";
 
 describe("fechas en hora de Madrid", () => {
@@ -59,5 +59,15 @@ describe("ultimosMeses", () => {
   it("cuenta hacia atrás cruzando el año", () => {
     expect(ultimosMeses(6, "2026-02-15")).toEqual(["2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02"]);
     expect(ultimosMeses(1, "2026-12-31")).toEqual(["2026-12"]);
+  });
+});
+
+describe("nb: la unidad se queda pegada a su cifra", () => {
+  it("pega € y % al número y PVP/coste/objetivo a su cifra", () => {
+    expect(nb("Entrantes · coste 3,25 € · PVP 9,50 €")).toBe("Entrantes · coste\u00a03,25\u00a0€ · PVP\u00a09,50\u00a0€");
+    expect(nb("Objetivo 30 % · media 28,7 %")).toBe("Objetivo\u00a030\u00a0% · media 28,7\u00a0%");
+  });
+  it("no toca las palabras que no van seguidas de cifra", () => {
+    expect(nb("coste del plato sin precio")).toBe("coste del plato sin precio");
   });
 });

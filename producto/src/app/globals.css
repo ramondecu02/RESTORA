@@ -1261,7 +1261,7 @@ a.barh-row:hover .barh-l, button.barh-row:hover .barh-l { color: var(--brand); t
 
 
 /* ================= Sistema común: fichas, atención y esqueletos en todas las pantallas ================= */
-.tiles-row > .tile { min-height: 116px; animation: rise .42s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 55ms); }
+.tiles-row > .tile { min-height: 116px; animation: rise .42s var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 55ms); }
 .tile-ok .tile-val { color: var(--ok); }
 .tile-warn .tile-val { color: var(--warn); }
 .tile-bad .tile-val { color: var(--bad); }

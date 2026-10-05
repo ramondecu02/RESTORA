@@ -18,6 +18,8 @@ export const qty = (n: number | null | undefined, maxD = 3) => {
   if (n == null || !Number.isFinite(n)) return "—";
   return new Intl.NumberFormat("es-ES", { maximumFractionDigits: maxD, useGrouping: "always" }).format(Math.round(n * 1000) / 1000);
 };
+/** Pega la unidad a su cifra («9,50 €», «30 %», «PVP 9,50 €») para que un salto de línea no deje el símbolo solo. */
+export const nb = (t: string) => t.replace(/ (€|%)/g, "\u00a0$1").replace(/\b(PVP|coste|objetivo|Objetivo) (?=[\d—])/g, "$1\u00a0");
 export const kEur = (n: number) => (Math.abs(n) >= 1000 ? fmtN(n / 1000, 1) + " k€" : fmtN(n, 0) + " €");
 /** Convierte texto con coma o punto decimal a número. "1.234,56" → 1234.56; "0.25" → 0.25. */
 export function parseNum(v: unknown): number | null {

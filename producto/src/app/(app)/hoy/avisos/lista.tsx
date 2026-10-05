@@ -27,11 +27,11 @@ export function ListaAvisos({ avisos }: { avisos: Aviso[] }) {
   const alternar = (id: string) => setAbiertos((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const elegir = (f: Filtro) => { setFiltro(f); setMostrar(PASO); };
   const chip = (f: Filtro, texto: string, n: number) => (
-    <button type="button" role="tab" aria-selected={filtro === f} className={`chip ${filtro === f ? "is-on" : ""}`} onClick={() => elegir(f)}>{texto} <span className="cnt">{n}</span></button>
+    <button type="button" aria-pressed={filtro === f} className={`chip ${filtro === f ? "is-on" : ""}`} onClick={() => elegir(f)}>{texto} <span className="cnt">{n}</span></button>
   );
   return (
     <section className="stack-sm" aria-label="Avisos de precio">
-      <div className="chips" role="tablist" aria-label="Filtrar avisos">
+      <div className="chips" role="group" aria-label="Filtrar avisos">
         {chip("todos", "Todos", avisos.length)}
         {chip("accion", "Acción recomendada", accion.length)}
         {chip("vigilar", "Para vigilar", vigilar.length)}
