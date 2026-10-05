@@ -8,10 +8,11 @@
   },
   "scripts": {
     "dev": "next dev --port 3100",
-    "build": "node scripts/migrate.mjs && next build",
+    "build": "node scripts/migrate.mjs && node scripts/audit-tenancy.mjs && next build",
     "build:app": "next build",
     "start": "next start --port 3100",
     "migrate": "node scripts/migrate.mjs",
+    "audit:tenancy": "node scripts/audit-tenancy.mjs",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

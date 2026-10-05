@@ -36,6 +36,8 @@ Qué hacen las migraciones (`db/migrations`, se aplican solas y en orden):
 - `0004` comprobación diferida de referencias (para borrar conjuntos de recetas y el negocio completo);
 - `0005` el rol de la app no puede leer tablas globales (contraseñas, sesiones, códigos, invitaciones).
 
+Justo después de las migraciones, `npm run build` ejecuta la **auditoría de aislamiento** (`scripts/audit-tenancy.mjs`, con la misma conexión que las migraciones). Si una tabla con `tenant_id` no tiene RLS activada y forzada con sus políticas, si una tabla nueva sin `tenant_id` no está justificada como global, si el rol de la app puede saltarse RLS o tocar las cuentas, o si un `sys()` del código toca una tabla de negocio, **el despliegue falla antes de publicar** y el registro del build dice qué tabla es y qué le falta. Qué comprueba y la revisión de los usos de `sys()`: `docs/DECISIONES.md`, apartado 9. Para ejecutarla a mano: `npm run audit:tenancy`.
+
 ## 3. Archivos: Vercel Blob
 
 Vercel → **Storage → Create → Blob** con acceso **Private** (no se puede cambiar después) → conéctalo al proyecto. La conexión añade `BLOB_STORE_ID` y el SDK se autentica con el OIDC de Vercel, sin token fijo; los stores conectados a la antigua usan `BLOB_READ_WRITE_TOKEN`, que también vale. Los archivos se guardan como privados y solo se sirven a usuarios del negocio al que pertenecen (`/api/archivos/…`). Sin Blob conectado, en Vercel la subida falla con un error claro.
@@ -112,5 +114,6 @@ El webhook es idempotente (cada evento se aplica una sola vez) y atómico (si al
 
 - **Logs**: Vercel → Logs. Prefijos útiles: `[accion]` (error inesperado en una acción), `[ocr]` (lectura fallida), `[correo]` (envío fallido), `[subida]`, `[archivos]`, `[db]`.
 - **Actualizar**: cada push a la rama de producción despliega y aplica las migraciones nuevas. Las migraciones son solo hacia delante; para deshacer, una migración nueva.
+- **Si la auditoría de aislamiento bloquea un despliegue urgente**: arregla lo que dice el registro (casi siempre, una tabla nueva sin RLS). Solo en una emergencia, y sabiendo que ese despliegue sale sin comprobar el aislamiento, se puede saltar con la variable `SKIP_TENANCY_AUDIT=1` en el despliegue (el build lo deja escrito en el registro); quítala después.
 - **Pruebas antes de publicar**: `npm run lint && npm run typecheck && npm test`, y `npm run e2e` contra una copia local o de preview (ver README).
 - **Privacidad**: en la política de privacidad de la web pública deben figurar como encargados Vercel, Neon, Anthropic, Resend y Stripe, y la capa anónima de precios (ver `docs/DECISIONES.md`). Borrar el negocio desde Cuenta elimina sus datos y archivos.

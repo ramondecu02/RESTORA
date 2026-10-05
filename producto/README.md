@@ -22,7 +22,7 @@ Esta carpeta es la app (Next.js). La web pública está en la raíz del reposito
 ## Técnica
 
 - **Next.js 16** (App Router, server actions, `proxy.ts`) y **React 19**. Sin librería de componentes: CSS propio con tokens, modo claro/oscuro y consultas de contenedor.
-- **PostgreSQL** (Neon en producción) con **Row Level Security** en las 17 tablas de negocio. Toda consulta de datos de un negocio pasa por `withTenant()` (`src/server/db.ts`): transacción, rol sin privilegios `restora_app` (sin `BYPASSRLS`) y `app.tenant_id`. Aunque una consulta olvide un `WHERE`, la base de datos no devuelve datos de otro negocio.
+- **PostgreSQL** (Neon en producción) con **Row Level Security** en todas las tablas de negocio (forzada y con políticas por `app.tenant_id`; `npm run build` ejecuta `scripts/audit-tenancy.mjs` y falla si una tabla nueva no la tiene). Toda consulta de datos de un negocio pasa por `withTenant()` (`src/server/db.ts`): transacción, rol sin privilegios `restora_app` (sin `BYPASSRLS`) y `app.tenant_id`. Aunque una consulta olvide un `WHERE`, la base de datos no devuelve datos de otro negocio.
 - **Claude** (`@anthropic-ai/sdk`) para leer albaranes y cartas con salida estructurada (Zod). Se registra modelo, tokens, coste y tiempo de cada lectura.
 - **Vercel Blob** (privado) para fotos y PDF; en local, disco (`.storage/`). Los archivos se sirven por `/api/archivos/…` comprobando el negocio.
 - **Resend** para el correo; en local los correos se guardan en la base y se ven en `/dev/correo`.
@@ -67,6 +67,7 @@ Para explorar sin subir nada: Cuenta → **Cargar datos de ejemplo** (seis meses
 ```bash
 npm run lint && npm run typecheck && npm test     # lint, tipos y 44 pruebas unitarias
 npm run e2e                                       # con la app arrancada (dev o build + start)
+npm run audit:tenancy                             # auditoría de aislamiento entre negocios (RLS en cada tabla, usos de sys())
 ```
 
 `npm run e2e` ejecuta, contra `E2E_BASE` (por defecto `http://localhost:3100`):
