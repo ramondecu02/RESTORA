@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { Screen } from "@/components/shell/screen";
+import { Kpi, Kpis } from "@/components/ui/kpi";
 import { all, isUuid, one, withTenant } from "@/server/db";
 import { requireApp, hasPerm } from "@/server/ctx";
 import { getCatalog } from "@/server/queries/catalog";
@@ -96,6 +97,8 @@ export default async function DocPage({ params, searchParams }: { params: Promis
   const byIva = new Map<number, number>();
   for (const l of det.lineas) byIva.set(l.iva, (byIva.get(l.iva) ?? 0) + l.importe);
   const title = doc.kind === "factura" ? "Factura" : "Albarán";
+  const suben = det.lineas.filter((l) => l.variacion != null && l.variacion > 0).length;
+  const bajan = det.lineas.filter((l) => l.variacion != null && l.variacion < 0).length;
 
   if (sp.guardado === "1") {
     const subidas = (res?.cambios ?? []).filter((x) => x.variacion > 0).sort((a, b) => b.variacion - a.variacion);
@@ -175,58 +178,60 @@ export default async function DocPage({ params, searchParams }: { params: Promis
   return (
     <Screen title={`${title} ${doc.numero ?? ""}`.trim()} sub={`${doc.proveedor ?? "Sin proveedor"} · ${fecha(doc.fecha, { day: "numeric", month: "long", year: "numeric" })}`} back="/compras"
       actions={hasPerm(ctx, "compras") ? <span className="only-wide"><BorrarDoc id={doc.id} status={doc.status} kind={doc.kind} /></span> : undefined}>
-      <div className="list-grid">
-        <div className="stack">
-          <section className="card">
-            <div className="card-h"><h2 className="h3">Líneas</h2><span className="tag">{det.lineas.length}</span></div>
-            <div className="tbl-wrap pg-wide"><table className="tbl">
-              <thead><tr><th>Producto</th><th className="r">Cantidad</th><th className="r">Precio</th><th className="r">Coste neto</th><th className="r">Variación</th><th className="r">IVA</th><th className="r">Importe</th></tr></thead>
-              <tbody>{det.lineas.map((l) => (
-                <tr key={l.idx}>
-                  <td><Link className="link" href={`/articulos/${l.articulo_id}`}>{l.name}</Link><div className="xs muted" style={{ fontFamily: "var(--mono)" }}>{l.texto}</div></td>
-                  <td className="r">{qty(l.cantidad)} {l.unidad_compra}{l.bonificadas ? ` +${qty(l.bonificadas)}` : ""}</td>
-                  <td className="r">{eur(l.precio, l.precio < 1 ? 3 : 2)}{l.descuento ? <div className="xs muted">−{l.descuento} %</div> : null}</td>
-                  <td className="r">{eur(l.coste_unit)}/{l.unit}</td>
-                  <td className="r">{l.variacion != null ? <span className={`tag ${l.variacion > 0 ? "tag-bad" : "tag-ok"}`}>{l.variacion > 0 ? "+" : "−"}{pct(Math.abs(l.variacion))}</span> : <span className="muted">=</span>}</td>
-                  <td className="r">{l.iva} %</td>
-                  <td className="r"><b>{eur(l.importe)}</b></td>
-                </tr>))}</tbody>
-            </table></div>
-            <div className="list pg-narrow">{det.lineas.map((l) => (
-              <Link key={l.idx} className="li" href={`/articulos/${l.articulo_id}`}>
-                <span className="li-main"><b>{l.name}</b><small>{qty(l.cantidad)} {l.unidad_compra} × {eur(l.precio)} · {eur(l.coste_unit)}/{l.unit}</small></span>
-                <span className="li-end"><b>{eur(l.importe)}</b>{l.variacion != null ? <span className={`tag ${l.variacion > 0 ? "tag-bad" : "tag-ok"}`}>{l.variacion > 0 ? "+" : "−"}{pct(Math.abs(l.variacion))}</span> : null}</span>
-              </Link>))}</div>
-            {ignored.length ? <p className="hint">Además: {ignored.map((l) => `${l.texto} (${eur(l.importe)})`).join(", ")} · no son productos, solo cuentan para el total.</p> : null}
-          </section>
-          <div className="only-narrow">{hasPerm(ctx, "compras") ? <BorrarDoc id={doc.id} status={doc.status} kind={doc.kind} /> : null}</div>
-        </div>
-        <div className="stack">
-          <section className="card">
-            <h2 className="h3">Resumen</h2>
-            <dl className="cfg">
-              <div><dt>Proveedor</dt><dd>{doc.proveedor_id ? <Link className="link" href={`/proveedores/${doc.proveedor_id}`}>{doc.proveedor}</Link> : "—"}</dd></div>
-              <div><dt>Fecha</dt><dd>{fechaNum(doc.fecha)}</dd></div>
-              {[...byIva.entries()].sort((a, b) => a[0] - b[0]).map(([r, b]) => <div key={r}><dt>Base {r} %</dt><dd>{eur(b)} · IVA {eur(b * r / 100)}</dd></div>)}
-              <div><dt>Base imponible</dt><dd>{eur(doc.base)}</dd></div>
-              <div><dt>IVA</dt><dd>{eur(doc.cuota)}</dd></div>
-              <div><dt>Total</dt><dd>{eur(doc.total)}</dd></div>
-            </dl>
-          </section>
-          {files.length ? (
-            <section className="card">
-              <h2 className="h3">Documento original</h2>
-              <div className="pages">{files.map((f, i) => (
-                <a key={i} className="pg" href={f.url} target="_blank" rel="noopener" aria-label={`Abrir página ${i + 1}`}>
-                  {f.mime.startsWith("image/") ? <img src={f.url} alt="" /> : <><Icon name="file" /><span>PDF</span></>}<span className="pg-n">{i + 1}</span>
-                </a>))}</div>
-            </section>
-          ) : null}
+      <Kpis label={`Resumen del ${title.toLowerCase()}`}>
+        <Kpi i={0} label="Total" value={doc.total} fmt="eur" hint="Sin total en el documento" sub={`base ${eur(doc.base)} · IVA ${eur(doc.cuota)}`} />
+        <Kpi i={1} label="Productos" value={det.lineas.length} fmt="int" sub={ignored.length ? `y ${plural(ignored.length, "línea", "líneas")} que no ${ignored.length === 1 ? "es" : "son"} producto` : "con su precio al día"} />
+        <Kpi i={2} label="Suben de precio" value={suben} fmt="int" tone={suben ? "warn" : "ok"} sub={suben ? "más caros que su compra anterior" : "ninguno sube"} />
+        <Kpi i={3} label="Bajan de precio" value={bajan} fmt="int" tone={bajan ? "ok" : undefined} sub={bajan ? "más baratos que su compra anterior" : "ninguno baja"} />
+      </Kpis>
+      <section className="card">
+        <div className="card-h"><h2 className="h3">Líneas</h2><span className="tag">{det.lineas.length}</span></div>
+        <div className="tbl-wrap pg-wide"><table className="tbl">
+          <thead><tr><th>Producto</th><th className="r">Cantidad</th><th className="r">Precio</th><th className="r">Coste neto</th><th className="r">Variación</th><th className="r">IVA</th><th className="r">Importe</th></tr></thead>
+          <tbody>{det.lineas.map((l) => (
+            <tr key={l.idx}>
+              <td><Link className="link" href={`/articulos/${l.articulo_id}`}>{l.name}</Link><div className="xs muted" style={{ fontFamily: "var(--mono)" }}>{l.texto}</div></td>
+              <td className="r">{qty(l.cantidad)} {l.unidad_compra}{l.bonificadas ? ` +${qty(l.bonificadas)}` : ""}</td>
+              <td className="r">{eur(l.precio, l.precio < 1 ? 3 : 2)}{l.descuento ? <div className="xs muted">−{l.descuento} %</div> : null}</td>
+              <td className="r">{eur(l.coste_unit)}/{l.unit}</td>
+              <td className="r">{l.variacion != null ? <span className={`tag ${l.variacion > 0 ? "tag-bad" : "tag-ok"}`}>{l.variacion > 0 ? "+" : "−"}{pct(Math.abs(l.variacion))}</span> : <span className="muted">=</span>}</td>
+              <td className="r">{l.iva} %</td>
+              <td className="r"><b>{eur(l.importe)}</b></td>
+            </tr>))}</tbody>
+        </table></div>
+        <div className="list pg-narrow">{det.lineas.map((l) => (
+          <Link key={l.idx} className="li" href={`/articulos/${l.articulo_id}`}>
+            <span className="li-main"><b>{l.name}</b><small>{qty(l.cantidad)} {l.unidad_compra} × {eur(l.precio)} · {eur(l.coste_unit)}/{l.unit}</small></span>
+            <span className="li-end"><b>{eur(l.importe)}</b>{l.variacion != null ? <span className={`tag ${l.variacion > 0 ? "tag-bad" : "tag-ok"}`}>{l.variacion > 0 ? "+" : "−"}{pct(Math.abs(l.variacion))}</span> : null}</span>
+          </Link>))}</div>
+        {ignored.length ? <p className="hint">Además: {ignored.map((l) => `${l.texto} (${eur(l.importe)})`).join(", ")} · no son productos, solo cuentan para el total.</p> : null}
+      </section>
+      <div className="only-narrow">{hasPerm(ctx, "compras") ? <BorrarDoc id={doc.id} status={doc.status} kind={doc.kind} /> : null}</div>
+      <div className="two">
+        <section className="card">
+          <h2 className="h3">Resumen</h2>
+          <dl className="cfg">
+            <div><dt>Proveedor</dt><dd>{doc.proveedor_id ? <Link className="link" href={`/proveedores/${doc.proveedor_id}`}>{doc.proveedor}</Link> : "—"}</dd></div>
+            <div><dt>Fecha</dt><dd>{fechaNum(doc.fecha)}</dd></div>
+            {[...byIva.entries()].sort((a, b) => a[0] - b[0]).map(([r, b]) => <div key={r}><dt>Base {r} %</dt><dd>{eur(b)} · IVA {eur(b * r / 100)}</dd></div>)}
+            <div><dt>Base imponible</dt><dd>{eur(doc.base)}</dd></div>
+            <div><dt>IVA</dt><dd>{eur(doc.cuota)}</dd></div>
+            <div><dt>Total</dt><dd>{eur(doc.total)}</dd></div>
+          </dl>
           <p className="hint">
             {doc.source === "manual" ? "Apuntado a mano" : `Leído automáticamente${doc.ocr_ms ? ` en ${Math.round(doc.ocr_ms / 1000)} s` : ""}`}
             {doc.created_by_name ? ` por ${doc.created_by_name}` : ""} · guardado el {fecha(doc.saved_at ? new Date(doc.saved_at).toISOString() : null, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.
           </p>
-        </div>
+        </section>
+        {files.length ? (
+          <section className="card">
+            <h2 className="h3">Documento original</h2>
+            <div className="pages">{files.map((f, i) => (
+              <a key={i} className="pg" href={f.url} target="_blank" rel="noopener" aria-label={`Abrir página ${i + 1}`}>
+                {f.mime.startsWith("image/") ? <img src={f.url} alt="" /> : <><Icon name="file" /><span>PDF</span></>}<span className="pg-n">{i + 1}</span>
+              </a>))}</div>
+          </section>
+        ) : null}
       </div>
     </Screen>
   );
