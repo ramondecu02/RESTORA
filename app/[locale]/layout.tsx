@@ -28,6 +28,10 @@ const serif = Instrument_Serif({
 // to avoid a flash of the wrong palette.
 const THEME_SCRIPT = `(function(){try{document.documentElement.classList.add('js');var t=localStorage.getItem('restora-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.dataset.theme=t;}catch(e){}})();`;
 
+// Reveal what is already on the first screen as soon as the HTML is parsed, instead of after hydration (template.tsx does the same later
+// for the rest). Keeps the first screen from staying invisible for seconds on a slow phone.
+const EARLY_REVEAL_SCRIPT = `(function(){try{if(!document.documentElement.classList.contains('js'))return;var vh=window.innerHeight,rm=matchMedia('(prefers-reduced-motion: reduce)').matches;document.querySelectorAll('.reveal,.reveal-group').forEach(function(el){if(rm||el.getBoundingClientRect().top<vh*0.92)el.classList.add('is-visible')})}catch(e){}})();`;
+
 export const dynamicParams = false;
 
 export function generateStaticParams() {
@@ -67,6 +71,7 @@ export default async function LocaleLayout(props: {
         {props.children}
         <FloatingActions locale={typedLocale} labels={getSiteCopy(typedLocale).floating} />
         <UtmLinks />
+        <script dangerouslySetInnerHTML={{ __html: EARLY_REVEAL_SCRIPT }} />
       </body>
     </html>
   );
