@@ -69,7 +69,8 @@ Proyecto → **Settings → Environment Variables**. Solo hacen falta dos (entor
 | `AUTH_SECRET` | la clave del paso 4 |
 | `RESEND_API_KEY` | la clave del paso 3 (`re_…`) |
 
-Lo demás tiene valor por defecto: correo desde `onboarding@resend.dev` y 90 días de prueba.
+Lo demás tiene valor por defecto: correo desde `onboarding@resend.dev` y 14 días de prueba. Al terminar la prueba sin
+suscripción, la app se bloquea hasta que el negocio se suscribe (ver la Fase 4).
 
 Al añadir las dos, activa **Sensitive**. Después nadie puede leerlas desde el
 panel, ni siquiera tú, así que guárdalas antes en un sitio seguro.

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/server/session";
+import { env } from "@/server/env";
 import { RegistroForm } from "../forms";
 
 export const metadata = { title: "Crea tu cuenta" };
@@ -10,7 +11,7 @@ export default async function Registro() {
   if (s) redirect(s.verified ? "/hoy" : "/verificar");
   return (
     <>
-      <div className="auth-head"><h1>Crea tu cuenta</h1><p>Tus albaranes, leídos. Tus platos, con su coste real. Sin tarjeta.</p></div>
+      <div className="auth-head"><h1>Crea tu cuenta</h1><p>Tus albaranes, leídos. Tus platos, con su coste real. {env.trialDays} días gratis, sin tarjeta.</p></div>
       <RegistroForm />
       <p className="auth-alt"><span>¿Ya tienes cuenta?</span><Link className="link" href="/entrar">Entrar</Link></p>
     </>

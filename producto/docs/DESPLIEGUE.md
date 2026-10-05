@@ -73,7 +73,7 @@ En Vercel → **Settings → Environment Variables** (entorno Production; Previe
 | --- | --- |
 | `AUTH_SECRET` | `openssl rand -hex 32`. Firma la capa anónima de precios; no la cambies sin motivo (al cambiarla, durante 12 semanas cada negocio contaría como dos contribuyentes distintos). |
 | `APP_URL` | `https://app.restoraapp.app` (sin barra final). Con `https`, las cookies de sesión son `Secure`. |
-| `TRIAL_DAYS` | Días de prueba de cada negocio nuevo. Sin ella, `90`. |
+| `TRIAL_DAYS` | Días de prueba de cada negocio nuevo. Sin ella, `14`. Al terminar sin suscripción la app se bloquea: solo quedan facturación, la cuenta (exportar datos, borrar el negocio) y salir. |
 | `PG_POOL_MAX` | `5` |
 
 La lista completa, comentada, está en `producto/.env.example`.

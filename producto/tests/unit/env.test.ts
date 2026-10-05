@@ -20,9 +20,9 @@ describe("configuración por defecto", () => {
     expect(env.emailProvider).toBe("resend");
   });
 
-  it("sin TRIAL_DAYS la prueba dura 90 días", () => {
+  it("sin TRIAL_DAYS la prueba dura 14 días", () => {
     delete process.env.TRIAL_DAYS;
-    expect(env.trialDays).toBe(90);
+    expect(env.trialDays).toBe(14);
     process.env.TRIAL_DAYS = "30";
     expect(env.trialDays).toBe(30);
   });

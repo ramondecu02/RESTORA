@@ -43,7 +43,7 @@ export const env = {
   get stripeKey() { return v("STRIPE_SECRET_KEY"); },
   get stripePrice() { return v("STRIPE_PRICE_ID"); },
   get stripeWebhookSecret() { return v("STRIPE_WEBHOOK_SECRET"); },
-  get trialDays() { const n = Number(v("TRIAL_DAYS")); return Number.isFinite(n) && n > 0 ? n : 90; },
+  get trialDays() { const n = Number(v("TRIAL_DAYS")); return Number.isFinite(n) && n > 0 ? n : 14; },
   get isProd() { return process.env.NODE_ENV === "production"; },
   /** Buzón de pruebas en /dev/correo: solo fuera de producción o si se activa a propósito. */
   get devMailbox() { return this.emailProvider === "dev" && (!this.isProd || v("ALLOW_DEV_MAILBOX") === "1"); },

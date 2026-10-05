@@ -7,6 +7,7 @@ import { can } from "@/server/rbac";
 import { rateLimit } from "@/server/ratelimit";
 import { deleteFile, extFor, putFile, sniffMime } from "@/server/storage";
 import { processDocumento } from "@/server/domain/compras";
+import { bloqueado } from "@/server/plan";
 
 export const maxDuration = 300;
 const MAX_TOTAL = 4.4 * 1024 * 1024;
@@ -15,6 +16,7 @@ export async function POST(req: NextRequest) {
   const ctx = await getAppCtx();
   if (!ctx) return NextResponse.json({ error: "Tu sesión ha caducado. Vuelve a entrar." }, { status: 401 });
   if (!can(ctx.role, "compras")) return NextResponse.json({ error: "Tu rol no permite subir documentos." }, { status: 403 });
+  if (bloqueado(ctx.org)) return NextResponse.json({ error: "Tu prueba gratuita ha terminado. Suscríbete para seguir subiendo documentos." }, { status: 402 });
   if (!(await rateLimit(`upload:${ctx.tenantId}`, 80, 3600))) return NextResponse.json({ error: "Has subido muchos documentos en poco tiempo. Espera unos minutos." }, { status: 429 });
   let form: FormData;
   try { form = await req.formData(); } catch { return NextResponse.json({ error: "No hemos recibido el archivo. Prueba otra vez." }, { status: 400 }); }

@@ -5,12 +5,14 @@ import { isUuid, one, withTenant } from "@/server/db";
 import { can } from "@/server/rbac";
 import { randomToken } from "@/server/crypto";
 import { deleteFile, extFor, putFile, sniffMime } from "@/server/storage";
+import { bloqueado } from "@/server/plan";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const ctx = await getAppCtx();
   if (!ctx) return NextResponse.json({ error: "Tu sesión ha caducado." }, { status: 401 });
   if (!can(ctx.role, "escandallos")) return NextResponse.json({ error: "Tu rol no permite cambiar fotos." }, { status: 403 });
+  if (bloqueado(ctx.org)) return NextResponse.json({ error: "Tu prueba gratuita ha terminado. Suscríbete para seguir subiendo fotos." }, { status: 402 });
   if (!isUuid(id)) return NextResponse.json({ error: "Receta no válida." }, { status: 400 });
   const form = await req.formData().catch(() => null);
   const f = form?.get("foto");

@@ -5,6 +5,7 @@ import { withTenant } from "@/server/db";
 import { requireApp, hasPerm } from "@/server/ctx";
 import { ROLE_LABEL } from "@/server/rbac";
 import { demoCargado } from "@/server/demo/seed";
+import { bloqueado } from "@/server/plan";
 import { salir } from "../../(auth)/actions";
 import { Negocios } from "../negocios";
 import { LocalForm, PerfilForm, PasswordForm, TemaForm, DemoCard, OtrasSesiones, EliminarNegocio } from "./forms";
@@ -12,7 +13,7 @@ import { LocalForm, PerfilForm, PasswordForm, TemaForm, DemoCard, OtrasSesiones,
 export const metadata = { title: "Mi local" };
 
 export default async function Cuenta() {
-  const ctx = await requireApp();
+  const ctx = await requireApp({ permitirBloqueo: true });
   const demo = await withTenant(ctx.tenantId, (c) => demoCargado(c, ctx.local.id));
   const canLocal = hasPerm(ctx, "local:editar");
   const local = { name: ctx.local.name, address: ctx.local.address, postal_code: ctx.local.postal_code, ciudad: ctx.local.ciudad, lema: ctx.local.lema,
@@ -21,6 +22,7 @@ export default async function Cuenta() {
     ["escandallos", "Escandallos", "escandallos"], ["ventas", "Ventas", "ventas"]] as const).filter(([, , p]) => hasPerm(ctx, p));
   return (
     <Screen title="Mi local" sub={`${ctx.org.name} · tu rol: ${ROLE_LABEL[ctx.role]}`}>
+      {bloqueado(ctx.org) ? <div className="note note-warn" role="status"><Icon name="lock" /><p>Tu prueba gratuita ha terminado. Aquí puedes descargar tus datos o borrar el negocio. <Link className="link" href="/bloqueado">Cómo seguir usando RESTORA</Link></p></div> : null}
       <div className="two">
         <div className="stack">
           {/* La clave rehace el formulario cuando cambian los datos guardados: nunca se edita (ni se guarda) una copia antigua */}

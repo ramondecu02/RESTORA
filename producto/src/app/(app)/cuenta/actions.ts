@@ -35,7 +35,7 @@ export async function guardarLocal(input: { name: string; address: string; posta
 
 export async function guardarPerfil(name: string): Promise<Result> {
   return run(async () => {
-    const ctx = await requireApp();
+    const ctx = await requireApp({ permitirBloqueo: true });
     if (name.trim().length < 2) throw new UserError("Escribe tu nombre.");
     await sys((c) => c.query("update users set name = $2 where id = $1", [ctx.userId, name.trim().slice(0, 80)]));
     refresh();
@@ -45,7 +45,7 @@ export async function guardarPerfil(name: string): Promise<Result> {
 
 export async function cambiarPassword(actual: string, nueva: string): Promise<Result> {
   return run(async () => {
-    const ctx = await requireApp();
+    const ctx = await requireApp({ permitirBloqueo: true });
     if (nueva.length < 8) throw new UserError("La contraseña nueva necesita al menos 8 caracteres.");
     if (!(await rateLimit(`pw:${ctx.userId}`, 6, 900))) throw new UserError("Demasiados intentos. Espera unos minutos.");
     const u = await sys((c) => one<{ password_hash: string }>(c, "select password_hash from users where id = $1", [ctx.userId]));
@@ -59,7 +59,7 @@ export async function cambiarPassword(actual: string, nueva: string): Promise<Re
 
 export async function cerrarOtrasSesiones(): Promise<Result> {
   return run(async () => {
-    const ctx = await requireApp();
+    const ctx = await requireApp({ permitirBloqueo: true });
     await destroyUserSessions(ctx.userId, ctx.sessionId);
     return { ok: true, msg: "Sesiones cerradas en los demás dispositivos." };
   });
@@ -77,7 +77,7 @@ export async function demo(accion: "cargar" | "quitar"): Promise<Result> {
 
 export async function eliminarNegocio(confirmacion: string): Promise<Result> {
   const r = await run(async () => {
-    const ctx = await requireApp();
+    const ctx = await requireApp({ permitirBloqueo: true });
     requirePerm(ctx, "facturacion");
     if (confirmacion.trim().toLowerCase() !== ctx.org.name.trim().toLowerCase()) throw new UserError("Escribe el nombre exacto del negocio para confirmar.");
     // Primero se cancela la suscripción: si Stripe falla no se borra nada y se puede volver a intentar
@@ -173,7 +173,7 @@ export async function quitarMiembro(userId: string): Promise<Result> {
 // ---- Facturación ----
 export async function irAPagar(): Promise<Result<string>> {
   const r = await run(async () => {
-    const ctx = await requireApp();
+    const ctx = await requireApp({ permitirBloqueo: true });
     requirePerm(ctx, "facturacion");
     if (!stripeOn()) throw new UserError("Los pagos aún no están configurados en esta instalación.");
     const url = await checkoutUrl(ctx.tenantId, ctx.email, ctx.org.name);
@@ -186,7 +186,7 @@ export async function irAPagar(): Promise<Result<string>> {
 }
 export async function irAPortal(): Promise<Result<string>> {
   const r = await run(async () => {
-    const ctx = await requireApp();
+    const ctx = await requireApp({ permitirBloqueo: true });
     requirePerm(ctx, "facturacion");
     if (!stripeOn()) throw new UserError("Los pagos aún no están configurados en esta instalación.");
     return { ok: true as const, data: await portalUrl(ctx.tenantId) };

@@ -4,6 +4,7 @@ import { Icon } from "@/components/icons";
 import { requireApp, hasPerm } from "@/server/ctx";
 import { stripeOn } from "@/server/billing";
 import { fecha } from "@/lib/format";
+import { CONTACTO_EMAIL, CONTACTO_TEL, CONTACTO_WHATSAPP } from "@/lib/contacto";
 import { Pagar } from "./pagar";
 
 export const metadata = { title: "Facturación" };
@@ -11,7 +12,7 @@ const diasHasta = (d: string | Date | null) => (d ? Math.ceil((new Date(d).getTi
 const ESTADO: Record<string, [string, string]> = { trial: ["Prueba gratuita", "tag-warn"], active: ["Suscripción activa", "tag-ok"], past_due: ["Pago pendiente", "tag-bad"], canceled: ["Suscripción cancelada", "tag-bad"] };
 
 export default async function Facturacion({ searchParams }: { searchParams: Promise<{ ok?: string }> }) {
-  const ctx = await requireApp();
+  const ctx = await requireApp({ permitirBloqueo: true });
   if (!hasPerm(ctx, "facturacion")) redirect("/cuenta");
   const sp = await searchParams;
   const st = ctx.org.planStatus;
@@ -22,12 +23,12 @@ export default async function Facturacion({ searchParams }: { searchParams: Prom
       {sp.ok ? <div className="note note-ok"><Icon name="check" /><p>¡Gracias! Tu suscripción está en marcha. Puede tardar unos segundos en aparecer como activa.</p></div> : null}
       <section className="card">
         <div className="card-h"><h2 className="h3">Tu plan</h2><span className={`tag ${cls}`}>{label}</span></div>
-        {st === "trial" ? <p>{dias != null && dias > 0 ? `Te quedan ${dias} días de prueba (hasta el ${fecha(ctx.org.trialEndsAt, { day: "numeric", month: "long" })}).` : "Tu prueba ha terminado. Suscríbete para seguir subiendo albaranes."} Tienes acceso completo durante la prueba.</p> : null}
+        {st === "trial" ? <p>{dias != null && dias > 0 ? `Te quedan ${dias} días de prueba (hasta el ${fecha(ctx.org.trialEndsAt, { day: "numeric", month: "long" })}). Tienes acceso completo durante la prueba.` : "Tu prueba ha terminado. Suscríbete para seguir usando RESTORA: tus datos siguen guardados."}</p> : null}
         {st === "active" ? <p>Todo en orden. Puedes cambiar la tarjeta, descargar facturas o cancelar desde el portal de pagos.</p> : null}
         {st === "past_due" ? <p>No hemos podido cobrar el último recibo. Actualiza la tarjeta para no perder el acceso.</p> : null}
         {st === "canceled" ? <p>Tu suscripción está cancelada. Tus datos siguen aquí: suscríbete de nuevo cuando quieras.</p> : null}
         {stripeOn() ? <Pagar activo={st === "active" || st === "past_due"} tieneCliente={!!ctx.org.stripeCustomerId} />
-          : <div className="note"><Icon name="info" /><p>Todavía no se puede pagar desde aquí. Te avisaremos antes de que termine tu prueba y, mientras tanto, tienes acceso completo.</p></div>}
+          : <div className="note"><Icon name="info" /><p>Para activar tu suscripción, escríbenos por <a className="link" href={CONTACTO_WHATSAPP} target="_blank" rel="noopener">WhatsApp al {CONTACTO_TEL}</a> o a <a className="link" href={`mailto:${CONTACTO_EMAIL}`}>{CONTACTO_EMAIL}</a> y la dejamos lista en el día.</p></div>}
       </section>
       <section className="card">
         <div className="card-h"><h2 className="h3">Qué incluye</h2></div>

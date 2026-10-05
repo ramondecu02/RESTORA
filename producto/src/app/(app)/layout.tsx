@@ -9,12 +9,13 @@ import { requireApp } from "@/server/ctx";
 import { navBadges } from "@/server/queries/badges";
 import { ROLE_LABEL, can } from "@/server/rbac";
 import { initials } from "@/lib/format";
-import { avisoPlan } from "@/server/billing";
+import { avisoPlan } from "@/server/plan";
 import Link from "next/link";
 import { ThemeSync } from "./mas/theme";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const ctx = await requireApp();
+  // Cada página decide si se puede usar con la prueba terminada: el marco se pinta igual
+  const ctx = await requireApp({ permitirBloqueo: true });
   const b = await navBadges(ctx);
   const items = buildNav(ctx.role, b);
   const aviso = avisoPlan(ctx.org);

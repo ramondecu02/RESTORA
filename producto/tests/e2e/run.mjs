@@ -9,6 +9,7 @@ const suites = [
   ["Recorrido de pantallas (390 y 1280)", "recorrido.mjs"],
   ["Flujos con comprobación en base de datos", "flujos.mjs"],
   ["Aislamiento entre negocios (RLS)", "rls.mjs"],
+  ["Prueba gratuita y bloqueo", "plan.mjs"],
 ];
 let failed = 0;
 for (const [name, file] of suites) {

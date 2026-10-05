@@ -145,12 +145,3 @@ export async function handleWebhook(raw: string, sig: string): Promise<{ ok: boo
   if (dup) return { ok: true, status: 200, msg: "repetido" };
   return { ok: true, status: 200 };
 }
-
-/** Aviso del plan para la barra superior: solo cuando hay que hacer algo y los pagos están activados. */
-export function avisoPlan(org: { planStatus: string; trialEndsAt: string | null }): string | null {
-  if (!stripeOn()) return null;
-  if (org.planStatus === "past_due") return "No hemos podido cobrar tu suscripción.";
-  if (org.planStatus === "canceled") return "Tu suscripción está cancelada. Tus datos siguen aquí.";
-  if (org.planStatus === "trial" && org.trialEndsAt && new Date(org.trialEndsAt).getTime() < Date.now()) return "Tu prueba gratuita ha terminado.";
-  return null;
-}

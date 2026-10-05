@@ -4,6 +4,7 @@ import { cache } from "react";
 import { all, one, sys, withTenant } from "./db";
 import { getSession, type SessionData } from "./session";
 import { can, type Perm, type Role } from "./rbac";
+import { bloqueado } from "./plan";
 
 export type Briefing = { rol?: string; objetivo?: string; compras?: string; albaranes?: string; tipo?: string };
 export type OrgInfo = {
@@ -57,8 +58,9 @@ export const getAppCtx = cache(async (): Promise<AppCtx | null> => {
   return { ...o.s, org: o.org, local, tenantId: o.org.id, role: o.org.role };
 });
 
-/** Para páginas de la app: exige sesión, email verificado, negocio y alta completada. */
-export async function requireApp(): Promise<AppCtx> {
+/** Para páginas y acciones de la app: exige sesión, email verificado, negocio y alta completada. Con la prueba terminada
+ *  (o la suscripción cancelada) manda a /bloqueado, salvo en lo que debe seguir funcionando: pagar, la cuenta y salir. */
+export async function requireApp(opts?: { permitirBloqueo?: boolean }): Promise<AppCtx> {
   const o = await getOrg();
   if (!o) redirect("/entrar");
   if (!o.s.verified) redirect("/verificar");
@@ -66,6 +68,7 @@ export async function requireApp(): Promise<AppCtx> {
   if (!o.org.onboardingDone && o.org.role === "propietario") redirect("/bienvenida");
   const ctx = await getAppCtx();
   if (!ctx) redirect("/alta/local");
+  if (!opts?.permitirBloqueo && bloqueado(ctx.org)) redirect("/bloqueado");
   return ctx;
 }
 /** Para el alta guiada: sesión + email verificado + negocio. */
