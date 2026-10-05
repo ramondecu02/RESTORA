@@ -7,6 +7,7 @@ import { getSiteCopy } from "@/lib/site-copy";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { pageMetadata } from "@/lib/seo";
 import { FloatingActions } from "@/components/site/floating-actions";
+import { UtmLinks } from "@/components/site/utm-links";
 import { isLocale, LOCALES, type Locale } from "@/lib/types";
 
 const inter = Inter({
@@ -65,6 +66,7 @@ export default async function LocaleLayout(props: {
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {props.children}
         <FloatingActions locale={typedLocale} labels={getSiteCopy(typedLocale).floating} />
+        <UtmLinks />
       </body>
     </html>
   );

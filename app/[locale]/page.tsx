@@ -16,6 +16,8 @@ import { HomeIntelligence } from "@/components/home/intelligence";
 import { HomeClosing } from "@/components/home/closing";
 import { HomeVideo } from "@/components/home/video";
 import { NewsletterSection } from "@/components/site/newsletter-section";
+import { JsonLd } from "@/components/site/json-ld";
+import { softwareLd } from "@/lib/structured-data";
 import { ShareBand } from "@/components/site/share-band";
 
 const label: React.CSSProperties = {
@@ -45,6 +47,7 @@ export default async function HomePage(props: {
   return (
     <>
       <SiteNav copy={copy} locale={locale} overlay />
+      <JsonLd data={softwareLd(locale)} />
       <main>
         <HomeHero copy={copy} locale={locale} />
         <HomeVideo copy={copy} locale={locale} />

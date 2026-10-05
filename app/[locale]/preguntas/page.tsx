@@ -11,6 +11,8 @@ import { SiteFooter } from "@/components/site/footer";
 import { PageHead } from "@/components/pages/page-head";
 import { Frame } from "@/components/home/frame";
 import { NewsletterSection } from "@/components/site/newsletter-section";
+import { JsonLd } from "@/components/site/json-ld";
+import { faqLd } from "@/lib/structured-data";
 
 export async function generateMetadata(props: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await props.params;
@@ -29,6 +31,7 @@ export default async function PreguntasPage(props: {
   return (
     <>
       <SiteNav copy={copy} locale={locale} />
+      <JsonLd data={faqLd(locale)} />
       <main>
         <PageHead eyebrow={c.hero.eyebrow} title={c.hero.title} sub={c.hero.sub} />
 
