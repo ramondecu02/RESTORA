@@ -25,10 +25,29 @@ export function TipLayer() {
       tip.style.left = x + "px"; tip.style.top = y + "px";
     };
     const hide = () => { cur = null; tip.hidden = true; };
+    // Con el teclado: al enfocar un punto o una barra se enseña el mismo detalle que con el ratón
+    const onFocus = (e: FocusEvent) => {
+      const t = (e.target as Element | null)?.closest?.("[data-tip]");
+      if (!t || !(e.target as HTMLElement).matches?.(":focus-visible")) return;
+      cur = t;
+      const parts = (t.getAttribute("data-tip") || "").split("|");
+      tip.replaceChildren();
+      const b = document.createElement("b"); b.textContent = parts[0]; tip.appendChild(b);
+      for (const p of parts.slice(1)) { const s = document.createElement("span"); s.textContent = p; s.style.display = "block"; tip.appendChild(s); }
+      tip.hidden = false;
+      const r = t.getBoundingClientRect();
+      const w = tip.offsetWidth;
+      tip.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px";
+      tip.style.top = r.bottom + 8 + "px";
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") hide(); };
+    document.addEventListener("focusin", onFocus);
+    document.addEventListener("focusout", hide);
+    document.addEventListener("keydown", onKey);
     document.addEventListener("pointermove", show);
     document.addEventListener("pointerdown", hide);
     window.addEventListener("scroll", hide, true);
-    return () => { document.removeEventListener("pointermove", show); document.removeEventListener("pointerdown", hide); window.removeEventListener("scroll", hide, true); };
+    return () => { document.removeEventListener("pointermove", show); document.removeEventListener("pointerdown", hide); window.removeEventListener("scroll", hide, true); document.removeEventListener("focusin", onFocus); document.removeEventListener("focusout", hide); document.removeEventListener("keydown", onKey); };
   }, []);
   return <div id="tip" ref={ref} hidden role="tooltip" />;
 }

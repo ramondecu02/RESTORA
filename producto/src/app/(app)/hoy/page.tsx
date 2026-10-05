@@ -1,12 +1,16 @@
 import Link from "next/link";
+import { Suspense, type ReactNode } from "react";
 import { Icon, type IconName } from "@/components/icons";
 import { Screen } from "@/components/shell/screen";
 import { Tour } from "@/components/shell/tour";
-import { BarsH, Delta, Donut, Gauge, LineChart, PALETTE, Sparkline } from "@/components/charts";
+import { BarsH, Donut, PALETTE } from "@/components/charts";
+import { CountUp } from "@/components/ui/count-up";
+import { PanelMes } from "./panel";
+import { HoyEsqueleto } from "./esqueleto";
 import { requireApp, hasPerm } from "@/server/ctx";
 import { one, sys } from "@/server/db";
 import { hoyData } from "@/server/queries/hoy";
-import { capitalize, eur, eur0, fechaLarga, kEur, pct, plural, qty, lista, fcPar, ultimosMeses, fecha, isoDate } from "@/lib/format";
+import { capitalize, eur, eur0, fechaLarga, kEur, pct, plural, qty, lista, ultimosMeses, fecha } from "@/lib/format";
 import { pvpParaFc } from "@/lib/costing";
 
 export const metadata = { title: "Hoy" };
@@ -23,8 +27,17 @@ const HERO0P: Record<string, string> = {
 };
 
 export default async function Hoy({ searchParams }: { searchParams: Promise<{ tour?: string }> }) {
+  // Primero la sesión y el plan (si toca, redirige antes de enviar nada); después el contenido, que llega con su esqueleto
   const ctx = await requireApp();
   const sp = await searchParams;
+  return (
+    <Screen title="Hoy" sub={ctx.local.name} fab>
+      <Suspense fallback={<HoyEsqueleto />}><HoyContenido ctx={ctx} tour={sp.tour === "1"} /></Suspense>
+    </Screen>
+  );
+}
+
+async function HoyContenido({ ctx, tour }: { ctx: Awaited<ReturnType<typeof requireApp>>; tour: boolean }) {
   const d = await hoyData(ctx);
   const team = await sys((c) => one<{ m: number; i: number }>(c, "select (select count(*)::int from memberships where org_id = $1) as m, (select count(*)::int from invitations where org_id = $1 and accepted_at is null and expires_at > now()) as i", [ctx.tenantId]));
   const first = ctx.name.split(/\s+/)[0];
@@ -52,13 +65,13 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
     ? months.map((m, i) => (i === 5 ? (d.res.ingresos ? d.res.ingresos / (comHoy * 30) : null) : H.has(m) && CT.get(m) ? H.get(m)!.neto / CT.get(m)! : null))
     : serie((h) => (h.uds ? h.neto / h.uds : null), d.res.ticketUnidad);
   const comS = months.map((m, i) => (i === 5 ? comHoy : C.get(m) ?? null));
-  const delta = (s: (number | null)[]) => { const v = s.filter((x): x is number => x != null); return v.length > 1 && v[v.length - 2] ? ((v[v.length - 1] - v[v.length - 2]) / Math.abs(v[v.length - 2])) * 100 : null; };
+  const largas = months.map((m) => fecha(m + "-15", { month: "long", year: "numeric" }));
   // Familias: las 5 que más margen dejan con color propio; el resto, juntas en «Otras»
   const famTop = d.familias.slice(0, d.familias.length > 6 ? 5 : 6);
   const famColor = (f: string) => { const i = famTop.findIndex((x) => x.familia === f); return i >= 0 ? PALETTE[i] : "var(--chart-otros)"; };
   const resto = d.familias.slice(famTop.length);
-  const fams = [...famTop.map((f) => ({ label: f.familia, value: f.margen, color: famColor(f.familia) })),
-    ...(resto.length ? [{ label: `Otras familias (${resto.length})`, value: resto.reduce((s, f) => s + f.margen, 0), color: "var(--chart-otros)" }] : [])];
+  const fams = [...famTop.map((f) => ({ label: f.familia, value: f.margen, color: famColor(f.familia), href: `/escandallos?fam=${encodeURIComponent(f.familia)}` })),
+    ...(resto.length ? [{ label: `Otras familias (${resto.length})`, value: resto.reduce((s, f) => s + f.margen, 0), color: "var(--chart-otros)", href: "/escandallos" }] : [])];
   const top = d.alerts[0];
   const salCls = d.salud.estado === "ok" ? "ok" : d.salud.estado === "warn" ? "warn" : "crit";
 
@@ -73,17 +86,29 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
   ].filter((x) => x.show);
   const pendientes = checklist.filter((x) => !x.done).length;
 
-  const insights: { ic: IconName; cls?: string; t: string; p: string; a?: [string, string]; w: number }[] = [];
-  if (d.fuera.length) insights.push({ ic: "alert", cls: "bad", t: `${plural(d.fuera.length, "plato está", "platos están")} por encima de su food cost objetivo`, p: lista(d.fuera.map((f) => f.name)) + ". Revisa su precio o sus cantidades.", a: ["Ver escandallos", "/escandallos?f=fuera"], w: obj === "margen" || obj === "carta" ? 3 : 2 });
-  if (d.alerts.length > 1) insights.push({ ic: "trendUp", cls: "warn", t: `${plural(d.alerts.length, "subida de precio afecta", "subidas de precio afectan")} a tus platos`, p: `Suman ${eur0(d.alerts.reduce((s, a) => s + a.impactoMes, 0))} más al mes si no haces nada.`, a: ["Ver avisos", "/hoy/avisos"], w: obj === "prov" ? 3 : 2 });
-  if (d.bajos.length) insights.push({ ic: "cart", cls: "warn", t: `${plural(d.bajos.length, "producto bajo mínimo", "productos bajo mínimo")}`, p: lista(d.bajos.map((b) => b.name)) + ". Prepara el pedido desde el inventario.", a: ["Preparar pedido", "/inventario"], w: 1 });
+  // Lo que pide una decisión hoy, de más a menos grave. El resto de la pantalla es información de fondo.
+  type Foco = { tono: "bad" | "warn" | "info"; ic: IconName; k: string; t: string; p: string; fig?: [ReactNode, string]; a: [string, string]; b?: [string, string] };
+  const focos: Foco[] = [];
+  if (top) focos.push({ tono: top.salen.length ? "bad" : "warn", ic: "trendUp", k: "Subida de precio", t: `${top.name} sube un ${pct(top.variacion)}`,
+    p: `De ${eur(top.antes)} a ${eur(top.ahora)}/${top.unit}${top.proveedor ? ` en ${top.proveedor}` : ""}. Afecta a ${plural(top.platos.length, "plato", "platos")}. ${top.salen.length ? `${lista(top.salen.map((x) => x.name))} ${top.salen.length === 1 ? "pasa" : "pasan"} de tu objetivo.` : "Ninguno se sale del objetivo."}`,
+    fig: [<CountUp key="f" value={top.impactoMes} fmt="eur" />, "más al mes"], a: [`Valorar ${top.platos[0].name}`, `/escandallos/${top.platos[0].id}`], b: ["Ver todos los avisos", "/hoy/avisos"] });
+  if (d.fuera.length) focos.push({ tono: "bad", ic: "alert", k: "Food cost", t: `${plural(d.fuera.length, "plato está", "platos están")} por encima de su objetivo`, p: lista(d.fuera.map((f) => f.name)) + ". Revisa su precio o sus cantidades.",
+    fig: [<CountUp key="f" value={d.fuera.length} fmt="int" />, d.fuera.length === 1 ? "plato" : "platos"], a: ["Ver escandallos", "/escandallos?f=fuera"] });
+  if (d.alerts.length > 1) focos.push({ tono: "warn", ic: "trendUp", k: "Precios", t: `${plural(d.alerts.length, "subida de precio afecta", "subidas de precio afectan")} a tus platos`, p: "Es lo que sumarían al mes si no haces nada.",
+    fig: [<CountUp key="f" value={d.alerts.reduce((x, a) => x + a.impactoMes, 0)} fmt="eur0" />, "más al mes"], a: ["Ver avisos", "/hoy/avisos"] });
+  if (d.bajos.length) focos.push({ tono: "warn", ic: "cart", k: "Stock", t: `${plural(d.bajos.length, "producto bajo mínimo", "productos bajo mínimo")}`, p: lista(d.bajos.map((b) => b.name)) + ". Prepara el pedido desde el inventario.",
+    fig: [<CountUp key="f" value={d.bajos.length} fmt="int" />, d.bajos.length === 1 ? "producto" : "productos"], a: ["Preparar pedido", "/inventario"] });
   const sinPvp = d.stats.filter((s) => !s.pvp).length;
-  if (sinPvp) insights.push({ ic: "tag", t: `${plural(sinPvp, "plato sin precio", "platos sin precio")} de carta`, p: "Sin PVP no podemos calcular su food cost ni su margen.", a: ["Poner precios", "/escandallos"], w: obj === "carta" ? 3 : 1 });
-  insights.sort((a, b) => b.w - a.w);
+  if (sinPvp) focos.push({ tono: "info", ic: "tag", k: "Carta", t: `${plural(sinPvp, "plato sin precio", "platos sin precio")} de carta`, p: "Sin PVP no podemos calcular su food cost ni su margen.", a: ["Poner precios", "/escandallos"] });
+  const orden = { bad: 0, warn: 1, info: 2 } as const;
+  focos.sort((x, y) => orden[x.tono] - orden[y.tono]);
+  const estadoTxt = salCls === "ok" ? "Todo bajo control" : salCls === "warn" ? "Requiere seguimiento" : "Requiere acción";
 
   return (
-    <Screen title="Hoy" sub={ctx.local.name} fab>
-      <div className="greet"><p>{capitalize(fechaLarga(new Date()))}</p><h2>Hola, {first}</h2></div>
+    <>
+      <div className="hoy-head">
+        <div className="greet"><p>{capitalize(fechaLarga(new Date()))}</p><h2>Hola, {first}</h2></div>
+      </div>
       {d.docs.map((doc) => (
         <div key={doc.id} className="banner" role="status">
           {doc.status === "leyendo" || doc.status === "subido" ? <span className="spin" aria-hidden="true" /> : <span className={`li-ic ${doc.status === "error" ? "bad" : "warn"}`}><Icon name={doc.status === "error" ? "alert" : "receipt"} /></span>}
@@ -97,6 +122,28 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
 
       <div className="hoy-grid">
         <div className="hoy-col">
+          {dashboard ? (
+            <section className="focus" aria-labelledby="h-foco">
+              <div className="focus-h">
+                <h2 className="h2" id="h-foco">{focos.length ? "Requiere tu atención" : "Hoy no hay nada urgente"}{focos.length ? <span className="focus-n">{focos.length}</span> : null}</h2>
+                <span className={`salud ${salCls}`}><Icon name={salCls === "ok" ? "check" : "alert"} size={14} /> {estadoTxt}</span>
+              </div>
+              {focos.length ? (
+                <div className="focus-list">{focos.slice(0, 4).map((f, i) => (
+                  <article className={`fc fc-${f.tono}`} key={f.t} style={{ ["--i" as string]: i }}>
+                    <div className="fc-k"><Icon name={f.ic} size={16} /> {f.k}</div>
+                    <h3 className="fc-t">{f.t}</h3>
+                    {f.fig ? <p className="fc-fig"><b>{f.fig[0]}</b> <small>{f.fig[1]}</small></p> : null}
+                    <p className="fc-p">{f.p}</p>
+                    <div className="fc-a"><Link className="btn btn-2 btn-xs" href={f.a[1]}>{f.a[0]}</Link>{f.b ? <Link className="btn btn-3 btn-xs" href={f.b[1]}>{f.b[0]}</Link> : null}</div>
+                  </article>))}</div>
+              ) : (
+                <div className="fc fc-ok"><div className="fc-k"><Icon name="check" size={16} /> Todo en orden</div><p className="fc-p">Tu carta está dentro del objetivo y no hay productos bajo mínimo. Cuando algo se mueva, te lo decimos aquí.</p></div>
+              )}
+              {focos.length > 4 ? <Link className="linkbtn" href="/hoy/avisos">Ver todos los avisos <Icon name="arrowR" size={16} /></Link> : null}
+            </section>
+          ) : null}
+
           {!dashboard ? (
             <section className="hero" data-tour="hero">
               {stage === 0 ? <>
@@ -117,80 +164,42 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
               </>}
             </section>
           ) : (
-            <section className="dash" data-tour="hero" aria-labelledby="h-sit">
-              <div className="dash-top">
-                <Gauge value={d.res.fc != null ? d.res.fc * 100 : null} target={fcObj} caption={`La marca negra es tu objetivo del ${fcObj} %`} />
-                <div className="dash-copy">
-                  <span className={`salud ${salCls}`}><Icon name={salCls === "ok" ? "check" : "alert"} size={14} /> {salCls === "ok" ? "Todo bajo control" : salCls === "warn" ? "Requiere seguimiento" : "Requiere acción"}</span>
-                  <p className="eyebrow">Situación general · {capitalize(fecha(isoDate(), { month: "long", year: "numeric" }))}</p>
-                  <h2 id="h-sit">{d.salud.title}</h2>
-                  <p>{plural(d.fuera.length, "plato fuera de objetivo", "platos fuera de objetivo")} y {plural(d.bajos.length, "producto bajo mínimo", "productos bajo mínimo")}. El resto, en orden.</p>
-                </div>
-              </div>
-              {verVentas ? <><div className="tiles">
-                {([["Margen del mes", margenS, eur0], ["Ventas del mes", ventasS, eur0], [comHoy ? "Ticket por comensal" : "Ticket medio", ticketS, (n: number) => eur(n)], ["Comensales/día", comS, (n: number) => qty(n, 0)]] as const).map(([l, s, f]) => {
-                  const cur = s[5];
-                  return (
-                    <div className="tile" key={l}>
-                      <span className="tile-lab">{l}</span>
-                      <div className="tile-mid"><span className="tile-val">{cur != null ? f(cur) : "—"}</span><Delta value={delta([...s])} /></div>
-                      <Sparkline values={s.filter((x): x is number => x != null)} label={`${l}: evolución`} />
-                    </div>
-                  );
-                })}
-              </div>
-              {!d.hist.length ? <p className="hint">El mes en curso se calcula con tus unidades al mes y tus costes de hoy. Importa ventas para ver la evolución real.</p> : null}</> : null}
-            </section>
+            <div data-tour="hero">
+              <PanelMes cortas={months.map(mLabel)} largas={largas.map(capitalize)} fc={fcSerie} margen={margenS} ventas={ventasS} ticket={ticketS} comensales={comS}
+                fcObjetivo={fcObj} porComensal={!!comHoy} verVentas={verVentas} hayHistorico={d.hist.length > 0} />
+            </div>
           )}
 
-          {top ? (
-            <section className={`ins ${top.salen.length ? "bad" : ""}`} aria-labelledby="h-top">
-              <span className={`ins-ic ${top.salen.length ? "bad" : "warn"}`}><Icon name="trendUp" /></span>
-              <div className="ins-b">
-                <p className="ins-t" id="h-top">{top.name} ha subido un {pct(top.variacion)} en la última compra</p>
-                <p className="ins-p">Pasa de {eur(top.antes)} a {eur(top.ahora)}/{top.unit}{top.proveedor ? ` en ${top.proveedor}` : ""}. Afecta a {plural(top.platos.length, "plato", "platos")}. {top.salen.length ? `${top.salen.map((x) => x.name).join(", ")} ${top.salen.length === 1 ? "pasa" : "pasan"} de tu objetivo.` : "Ningún plato se sale del objetivo con esta subida."}</p>
-                <div className="ins-figs">
-                  <div className="ins-fig"><small>Coste extra al mes</small><b>{eur(top.impactoMes)}</b></div>
-                  <div className="ins-fig"><small>Food cost de la carta</small><b>{fcPar(top.fcAntes, top.fcDespues)}</b></div>
-                </div>
-                <div className="ins-acts"><Link className="btn btn-2 btn-xs" href={`/escandallos/${top.platos[0].id}`}>Valorar {top.platos[0].name}</Link><Link className="btn btn-3 btn-xs" href="/hoy/avisos">Ver todos los avisos</Link></div>
-              </div>
+          {!dashboard && stage === 0 ? (
+            <section className="ghosts" aria-label="Lo que verás aquí">
+              {([["receipt", "Tus precios al día", "Cada albarán actualiza lo que te cuesta cada ingrediente."], ["book", "El coste de cada plato", "Tus escandallos se recalculan solos."], ["truck", "Quién te vende más barato", "Comparamos proveedores en euros al año."]] as const).map(([ic, t, p]) => (
+                <div className="ghost" key={t}><span className="ghost-ic"><Icon name={ic} /></span><div><b>{t}</b><small>{p}</small></div></div>))}
+            </section>
+          ) : null}
+          {!dashboard && stage > 0 && focos.length ? (
+            <section className="focus" aria-labelledby="h-foco">
+              <div className="focus-h"><h2 className="h2" id="h-foco">Para hoy<span className="focus-n">{focos.length}</span></h2></div>
+              <div className="focus-list">{focos.slice(0, 4).map((f, i) => (
+                <article className={`fc fc-${f.tono}`} key={f.t} style={{ ["--i" as string]: i }}>
+                  <div className="fc-k"><Icon name={f.ic} size={16} /> {f.k}</div>
+                  <h3 className="fc-t">{f.t}</h3>
+                  <p className="fc-p">{f.p}</p>
+                  <div className="fc-a"><Link className="btn btn-2 btn-xs" href={f.a[1]}>{f.a[0]}</Link></div>
+                </article>))}</div>
             </section>
           ) : null}
 
           {dashboard && verVentas ? (
-            <div className="two two-eq">
-              <section className="card card-fill" aria-labelledby="h-fc">
-                <div className="card-h"><h2 className="h3" id="h-fc">Food cost de la carta</h2><span className="muted small">6 meses</span></div>
-                <LineChart fill values={fcSerie} labels={months.map(mLabel)} unit="%" target={fcObj} fmt={(n) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 }) + " %"} />
-              </section>
-              <section className="card" aria-labelledby="h-fam">
-                <div className="card-h"><h2 className="h3" id="h-fam">Margen por familia</h2><span className="muted small">al mes</span></div>
-                <Donut items={fams} fmt={eur0} centerTop={kEur(d.res.margen)} centerSub="margen al mes" label="Margen por familia de la carta" />
-              </section>
-            </div>
+            <section className="card" aria-labelledby="h-fam">
+              <div className="card-h"><h2 className="h3" id="h-fam">Margen por familia</h2><span className="muted small">al mes · pulsa una familia para ver sus platos</span></div>
+              <Donut items={fams} fmt={eur0} centerTop={kEur(d.res.margen)} centerSub="margen al mes" label="Margen por familia de la carta" />
+            </section>
           ) : null}
 
           {dashboard && verVentas && d.aporta.length ? (
             <section className="card" aria-labelledby="h-ap">
-              <div className="card-h"><h2 className="h3" id="h-ap">Aportación por plato</h2><span className="muted small">Margen al mes · toca para abrirlo</span></div>
+              <div className="card-h"><h2 className="h3" id="h-ap">Aportación por plato</h2><span className="muted small">Margen al mes · toca un plato para abrirlo</span></div>
               <BarsH fmt={eur0} rows={d.aporta.map((a) => ({ label: a.name, value: a.value, href: `/escandallos/${a.id}`, color: famColor(a.familia) }))} />
-            </section>
-          ) : null}
-
-          {insights.length ? (
-            <section className="stack-sm" aria-labelledby="h-ins">
-              <h2 className="h3" id="h-ins">Para hoy</h2>
-              <div className="ins-list">{insights.map((x, i) => (
-                <article className="ins" key={i}>
-                  <span className={`ins-ic ${x.cls ?? ""}`}><Icon name={x.ic} /></span>
-                  <div className="ins-b"><p className="ins-t">{x.t}</p><p className="ins-p">{x.p}</p>{x.a ? <Link className="btn btn-2 btn-xs" href={x.a[1]}>{x.a[0]}</Link> : null}</div>
-                </article>))}</div>
-            </section>
-          ) : !dashboard && stage === 0 ? (
-            <section className="ghosts" aria-label="Lo que verás aquí">
-              {([["receipt", "Tus precios al día", "Cada albarán actualiza lo que te cuesta cada ingrediente."], ["book", "El coste de cada plato", "Tus escandallos se recalculan solos."], ["truck", "Quién te vende más barato", "Comparamos proveedores en euros al año."]] as const).map(([ic, t, p]) => (
-                <div className="ghost" key={t}><span className="ghost-ic"><Icon name={ic} /></span><div><b>{t}</b><small>{p}</small></div></div>))}
             </section>
           ) : null}
         </div>
@@ -214,8 +223,8 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
                 <span className="li-end"><b>{b.dias >= 99 ? "—" : `${qty(b.dias, 0)} d`}</b><small>cobertura</small></span></Link>))}</div>
               : <p className="muted small">Todo por encima del mínimo.</p>}
             <div className="stats" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
-              <div className="stat"><span className="stat-k">Compras del mes</span><span className="stat-v">{eur0(d.comprasMes)}</span><span className="stat-s">sin IVA</span></div>
-              <div className="stat"><span className="stat-k">Valor del almacén</span><span className="stat-v">{eur0(d.valorAlmacen)}</span><span className="stat-s">a precio de compra</span></div>
+              <div className="stat"><span className="stat-k">Compras del mes</span><span className="stat-v"><CountUp value={d.comprasMes} fmt="eur0" /></span><span className="stat-s">sin IVA</span></div>
+              <div className="stat"><span className="stat-k">Valor del almacén</span><span className="stat-v"><CountUp value={d.valorAlmacen} fmt="eur0" /></span><span className="stat-s">a precio de compra</span></div>
             </div>
           </section>
           <section className="card" aria-labelledby="h-cfg">
@@ -229,11 +238,11 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
           </section>
         </div>
       </div>
-      <Tour k="hoy" show={sp.tour === "1" || !ctx.prefs.seen?.hoy} steps={[
+      <Tour k="hoy" show={tour || !ctx.prefs.seen?.hoy} steps={[
         { sel: '[data-tour="hero"]', h: "Esto es Hoy", p: "Cada día te decimos qué mirar y qué hacer primero. Nunca verás esta pantalla vacía." },
         { sel: ['[data-tour="add-top"]', '[data-tour="add-fab"]'], h: "Todo entra por Añadir", p: "Albaranes y facturas, artículos nuevos, platos y tu carta. Un solo sitio." },
         { sel: ['[data-tour="side"]', '[data-tour="tabs"]'], h: "Tu menú", p: "Compras, Escandallos y el resto. Ves lo que corresponde a tu rol." },
       ]} />
-    </Screen>
+    </>
   );
 }

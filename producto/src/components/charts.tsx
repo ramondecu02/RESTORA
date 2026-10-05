@@ -8,51 +8,31 @@ const niceTop = (max: number) => {
   return Math.ceil(max * 1.1);
 };
 
-export function Sparkline({ values, color = "var(--accent)", w = 120, h = 30, label }: { values: number[]; color?: string; w?: number; h?: number; label?: string }) {
-  const v = values.filter((x) => Number.isFinite(x));
+/** Mini evolución. `marca`: posición (0 = el primer valor) del punto que se resalta; por defecto, el último. Los huecos (null) se saltan. */
+export function Sparkline({ values, color = "var(--accent)", w = 120, h = 30, label, marca }: { values: (number | null)[]; color?: string; w?: number; h?: number; label?: string; marca?: number }) {
+  const v = values.filter((x): x is number => x != null && Number.isFinite(x));
   if (v.length < 2) return <svg className="spark" viewBox={`0 0 ${w} ${h}`} aria-hidden="true" />;
   const min = Math.min(...v), max = Math.max(...v), span = max - min || 1;
-  const pts = v.map((x, i) => [(i / (v.length - 1)) * (w - 4) + 2, h - 3 - ((x - min) / span) * (h - 8)]);
-  const d = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
-  const last = pts[pts.length - 1];
+  const n = values.length;
+  const pts = values.map((x, i) => (x == null || !Number.isFinite(x) ? null : ([(i / (n - 1)) * (w - 4) + 2, h - 3 - ((x - min) / span) * (h - 8)] as const)));
+  const ok = pts.filter((p): p is readonly [number, number] => p != null);
+  const d = ok.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  const first = ok[0], last = ok[ok.length - 1];
+  const sel = marca != null && pts[marca] ? pts[marca]! : last;
   return (
     <svg className="spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
-      <path d={`${d} L${last[0]} ${h} L${pts[0][0]} ${h} Z`} fill={color} opacity=".12" />
-      <path d={d} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-      <circle cx={last[0]} cy={last[1]} r="2.6" fill={color} />
+      <path d={`${d} L${last[0]} ${h} L${first[0]} ${h} Z`} fill={color} opacity=".12" />
+      <path className="spark-l" d={d} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      <circle className="spark-d" cx={sel[0]} cy={sel[1]} r="2.8" fill={color} />
     </svg>
   );
 }
 
-/** Semicírculo de food cost con marca del objetivo. */
-export function Gauge({ value, max = 48, target, caption }: { value: number | null; max?: number; target: number; caption?: string }) {
-  const r = 95, cx = 115, cy = 118;
-  const ang = (x: number) => Math.PI * (1 - Math.min(1, Math.max(0, x / max)));
-  const pt = (a: number, rr = r) => [cx + rr * Math.cos(a), cy - rr * Math.sin(a)];
-  const v = value ?? 0;
-  const [x1, y1] = pt(Math.PI), [x2, y2] = pt(ang(v));
-  const ok = value != null && v <= target;
-  const warn = value != null && v > target && v <= target + 3;
-  const color = value == null ? "var(--line-2)" : ok ? "var(--ok)" : warn ? "var(--warn-dot)" : "var(--bad)";
-  const [tx1, ty1] = pt(ang(target), r - 14), [tx2, ty2] = pt(ang(target), r + 14);
-  const large = 0;
-  return (
-    <div className="gauge">
-      <svg viewBox="0 0 230 140" role="img" aria-label={value == null ? "Food cost sin datos" : `Food cost ${v.toFixed(1)} %, objetivo ${target} %`}>
-        <path d={`M${x1} ${y1} A${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke="var(--sunk)" strokeWidth="16" strokeLinecap="round" />
-        {value != null && v > 0 ? <path d={`M${x1} ${y1} A${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`} fill="none" stroke={color} strokeWidth="16" strokeLinecap="round" /> : null}
-        <line x1={tx1} y1={ty1} x2={tx2} y2={ty2} stroke="var(--ink)" strokeWidth="3" data-tip={`Objetivo|${target} %`} />
-        <text x={cx} y={cy - 18} textAnchor="middle" style={{ fontSize: 34, fontWeight: 700, fill: "var(--ink)" }}>{value == null ? "—" : v.toLocaleString("es-ES", { maximumFractionDigits: 1 }) + " %"}</text>
-        <text x={cx} y={cy + 4} textAnchor="middle" style={{ fontSize: 12, fill: "var(--muted)" }}>food cost · objetivo {target} %</text>
-      </svg>
-      {caption ? <p className="gauge-cap">{caption}</p> : null}
-    </div>
-  );
-}
-
 /** Línea con etiquetas en HTML: el trazo se estira al ancho disponible y el texto no se encoge nunca. */
-export function LineChart({ values, labels, unit = "", target, color = "var(--accent)", h = 220, fill = false, fmt, maxLabels = 6 }: {
+export function LineChart({ values, labels, unit = "", target, color = "var(--accent)", h = 220, fill = false, fmt, maxLabels = 6, selected, onSelect }: {
   values: (number | null)[]; labels: string[]; unit?: string; target?: number; color?: string; w?: number; h?: number; fill?: boolean; fmt?: (n: number) => string; maxLabels?: number;
+  /** Posición del punto elegido (se resalta con una guía vertical) y, si se da `onSelect`, los puntos se pueden pulsar. */
+  selected?: number; onSelect?: (i: number) => void;
 }) {
   const f = fmt ?? ((n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 2 }) + (unit ? " " + unit : ""));
   const vals = values.filter((x): x is number => x != null && Number.isFinite(x));
@@ -78,12 +58,15 @@ export function LineChart({ values, labels, unit = "", target, color = "var(--ac
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {grid.map((g) => <line key={g} className="grid" x1="0" x2="100" y1={Y(g)} y2={Y(g)} vectorEffect="non-scaling-stroke" />)}
           {target != null ? <line className="obj" x1="0" x2="100" y1={Y(target)} y2={Y(target)} vectorEffect="non-scaling-stroke" /> : null}
+          {selected != null && pts[selected] ? <line className="lc-guide" x1={X(selected)} x2={X(selected)} y1="0" y2="100" vectorEffect="non-scaling-stroke" /> : null}
           {valid.length > 1 ? <path d={`${segs.join(" ")} L${valid[valid.length - 1][0]} 100 L${valid[0][0]} 100 Z`} fill={color} opacity=".08" /> : null}
           {segs.map((d, i) => <path key={i} d={d} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />)}
         </svg>
         {grid.map((g) => <span key={g} className="lc-y" style={{ top: `${Y(g)}%` }} aria-hidden="true">{num(g)}</span>)}
         {target != null ? <span className="lc-obj" style={{ top: `${Y(target)}%` }} aria-hidden="true">objetivo {num(target)}{unit ? " " + unit : ""}</span> : null}
-        {pts.map((p, i) => (p ? <span key={i} className="lc-pt" style={{ left: `${p[0]}%`, top: `${p[1]}%` }} data-tip={`${labels[i]}|${f(values[i]!)}`} aria-hidden="true" /> : null))}
+        {pts.map((p, i) => (p ? (onSelect
+          ? <button type="button" key={i} className={`lc-pt ${selected === i ? "is-sel" : ""}`} style={{ left: `${p[0]}%`, top: `${p[1]}%` }} data-tip={`${labels[i]}|${f(values[i]!)}`} aria-label={`${labels[i]}: ${f(values[i]!)}`} aria-pressed={selected === i} onClick={() => onSelect(i)} />
+          : <span key={i} className={`lc-pt ${selected === i ? "is-sel" : ""}`} style={{ left: `${p[0]}%`, top: `${p[1]}%` }} data-tip={`${labels[i]}|${f(values[i]!)}`} aria-hidden="true" />) : null))}
       </div>
       <div className="lc-x" aria-hidden="true">{labels.map((l, i) => (showLabel(i) ? <span key={i} style={{ left: `${X(i)}%` }}>{l}</span> : null))}</div>
     </div>
@@ -92,7 +75,7 @@ export function LineChart({ values, labels, unit = "", target, color = "var(--ac
 
 export const PALETTE = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-6)", "var(--chart-8)", "var(--chart-5)", "var(--chart-7)"];
 
-export function Donut({ items, fmt, centerTop, centerSub, label }: { items: { label: string; value: number; color?: string }[]; fmt: (n: number) => string; centerTop: string; centerSub: string; label: string }) {
+export function Donut({ items, fmt, centerTop, centerSub, label }: { items: { label: string; value: number; color?: string; href?: string }[]; fmt: (n: number) => string; centerTop: string; centerSub: string; label: string }) {
   const total = items.reduce((s, i) => s + Math.max(0, i.value), 0);
   const R = 62, C = 2 * Math.PI * R;
   let acc = 0;
@@ -103,18 +86,19 @@ export function Donut({ items, fmt, centerTop, centerSub, label }: { items: { la
         {total > 0 ? items.map((it, i) => {
           const v = Math.max(0, it.value), len = (v / total) * C, off = acc;
           acc += len;
-          return <circle key={it.label} className="seg" cx="85" cy="85" r={R} fill="none" stroke={it.color ?? PALETTE[i % PALETTE.length]} strokeWidth="22"
-            strokeDasharray={`${Math.max(0, len - 1.5)} ${C}`} strokeDashoffset={-off} transform="rotate(-90 85 85)" data-tip={`${it.label}|${fmt(v)} · ${((v / total) * 100).toFixed(0)} %`} />;
+          return <circle key={it.label} className="seg dn-seg" cx="85" cy="85" r={R} fill="none" stroke={it.color ?? PALETTE[i % PALETTE.length]} strokeWidth="22"
+            strokeDasharray={`${Math.max(0, len - 1.5)} ${C}`} strokeDashoffset={-off} transform="rotate(-90 85 85)" data-tip={`${it.label}|${fmt(v)} · ${((v / total) * 100).toFixed(0)} %`}
+            style={{ ["--len" as string]: Math.max(0, len - 1.5), ["--C" as string]: C, ["--i" as string]: i }} />;
         }) : null}
         <text x="85" y="84" textAnchor="middle" style={{ fontSize: 22, fontWeight: 700, fill: "var(--ink)" }}>{centerTop}</text>
         <text x="85" y="103" textAnchor="middle" style={{ fontSize: 11.5, fill: "var(--muted)" }}>{centerSub}</text>
       </svg>
       <div className="donut-legend">
-        {items.map((it, i) => (
-          <div className="dl-i" key={it.label} data-tip={`${it.label}|${fmt(it.value)} · ${total ? ((it.value / total) * 100).toFixed(0) : 0} %`}>
-            <i style={{ background: it.color ?? PALETTE[i % PALETTE.length] }} /><span>{it.label}</span><b>{fmt(it.value)}</b>
-          </div>
-        ))}
+        {items.map((it, i) => {
+          const tip = `${it.label}|${fmt(it.value)} · ${total ? ((it.value / total) * 100).toFixed(0) : 0} %`;
+          const inner = <><i style={{ background: it.color ?? PALETTE[i % PALETTE.length] }} /><span>{it.label}</span><b>{fmt(it.value)}</b></>;
+          return it.href ? <Link className="dl-i dl-link" key={it.label} href={it.href} data-tip={tip}>{inner}</Link> : <div className="dl-i" key={it.label} data-tip={tip}>{inner}</div>;
+        })}
       </div>
     </div>
   );
@@ -127,7 +111,7 @@ export function BarsH({ rows, fmt }: { rows: { label: string; value: number; hre
       {rows.map((r, i) => {
         const inner: ReactNode = <>
           <span className="barh-l">{r.label}</span>
-          <span className="barh-t"><span className="barh-f" style={{ display: "block", width: `${Math.max(3, (Math.abs(r.value) / max) * 100)}%`, background: r.value < 0 ? "var(--bad)" : r.color ?? PALETTE[i % PALETTE.length] }} /></span>
+          <span className="barh-t"><span className="barh-f" style={{ display: "block", width: `${Math.max(3, (Math.abs(r.value) / max) * 100)}%`, background: r.value < 0 ? "var(--bad)" : r.color ?? PALETTE[i % PALETTE.length], ["--i" as string]: i }} /></span>
           <span className="barh-v">{fmt(r.value)}</span>
         </>;
         return r.href

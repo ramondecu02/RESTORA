@@ -14,7 +14,7 @@ import { eur, pct, qty, plural } from "@/lib/format";
 
 export const metadata = { title: "Escandallos" };
 
-export default async function Escandallos({ searchParams }: { searchParams: Promise<{ f?: string; q?: string }> }) {
+export default async function Escandallos({ searchParams }: { searchParams: Promise<{ f?: string; q?: string; fam?: string }> }) {
   const ctx = await requireApp();
   const sp = await searchParams;
   const { stats } = await withTenant(ctx.tenantId, (c) => dishStats(c, ctx.local));
@@ -26,7 +26,8 @@ export default async function Escandallos({ searchParams }: { searchParams: Prom
     return { ...s, fc, est, margen: s.pvp && !s.sinCoste ? neto(s.pvp, ctx.local.iva_venta) - s.coste : null };
   });
   const esFuera = (r: (typeof filas)[number]) => r.en_carta && (r.est.estado === "warn" || r.est.estado === "crit");
-  const rows = filas.filter((r) => (!q || r.name.toLowerCase().includes(q)) && (sp.f !== "fuera" || esFuera(r)) && (sp.f !== "borrador" || !r.en_carta))
+  const fam = (sp.fam ?? "").slice(0, 60);
+  const rows = filas.filter((r) => (!q || r.name.toLowerCase().includes(q)) && (!fam || r.familia === fam) && (sp.f !== "fuera" || esFuera(r)) && (sp.f !== "borrador" || !r.en_carta))
     .sort((a, b) => famRank(a.familia) - famRank(b.familia) || a.familia.localeCompare(b.familia) || a.name.localeCompare(b.name));
   const res = resumenCarta(stats.filter((s) => s.en_carta));
   const fuera = filas.filter(esFuera).length;
@@ -49,6 +50,7 @@ export default async function Escandallos({ searchParams }: { searchParams: Prom
           <Link className={`chip ${!sp.f ? "is-on" : ""}`} href={f()}>Todos</Link>
           <Link className={`chip ${sp.f === "fuera" ? "is-on" : ""}`} href={f("fuera")}>Fuera de objetivo <span className="cnt">{fuera}</span></Link>
           <Link className={`chip ${sp.f === "borrador" ? "is-on" : ""}`} href={f("borrador")}>Fuera de carta</Link>
+          {fam ? <Link className="chip is-on" href="/escandallos" aria-label={`Quitar el filtro de ${fam}`}>{fam} <Icon name="close" size={14} /></Link> : null}
         </div>
       </div>
       <section className="card" data-tour="esc-list">
