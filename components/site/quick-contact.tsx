@@ -45,7 +45,7 @@ export function QuickContact({ quick, locale, tone = "light" }: { quick: SiteCop
   }
 
   const dark = tone === "dark";
-  const errStyle: React.CSSProperties = { color: dark ? "#f0b9a6" : "var(--down)", fontSize: 12.5 };
+  const errStyle: React.CSSProperties = { color: dark ? "#f0b9a6" : "var(--down-ink)", fontSize: 12.5 };
 
   if (status === "success") {
     return (

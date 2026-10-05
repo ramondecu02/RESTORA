@@ -80,11 +80,11 @@ export default async function PreguntasPage(props: {
             className="reveal mx-auto max-w-[1080px]"
             style={{ minHeight: "clamp(320px, 36vw, 420px)", display: "flex", alignItems: "center" }}
           >
-            <div aria-hidden="true" style={{ position: "absolute", inset: 0, zIndex: 1, background: "linear-gradient(180deg, rgba(8,13,10,0.55) 0%, rgba(8,13,10,0.78) 100%)" }} />
+            <div aria-hidden="true" className="scrim" style={{ position: "absolute", inset: 0, zIndex: 1 }} />
             <div aria-hidden="true" className="grain" style={{ position: "absolute", inset: 0, zIndex: 1 }} />
             <div style={{ position: "relative", zIndex: 3, width: "100%", padding: "clamp(28px, 4vw, 54px)", textAlign: "center" }}>
               <h2 className="display-serif" style={{ color: "#fff", fontSize: "clamp(27px, 3.5vw, 42px)", margin: 0 }}>{c.still.title}</h2>
-              <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 16.5, margin: "14px auto 0", maxWidth: "44ch", lineHeight: 1.6 }}>{c.still.sub}</p>
+              <p style={{ color: "rgba(255,255,255,0.92)", fontSize: 16.5, margin: "14px auto 0", maxWidth: "44ch", lineHeight: 1.6 }}>{c.still.sub}</p>
               <Link href={`/${locale}/contacto`} className="btn" style={{ marginTop: 26, padding: "14px 26px", fontSize: 15.5, background: "#fff", color: "#12211a", border: "1px solid #fff" }}>
                 {c.still.cta}
                 <ArrowRight size={16} strokeWidth={2} />

@@ -40,6 +40,12 @@
   --sand: #e7dcc6;
   --up: #2e8b57;
   --down: #c66a4a;
+  /* Para TEXTO (--up/--down se quedan para rellenos, puntos y trazos): un tono más oscuro que llega a 4,5:1 sobre la superficie y sobre su tinte del 12 % */
+  --up-ink: #1c6a40;
+  --down-ink: #a24a2d;
+  /* El verde profundo de marca, igual en los dos temas: fondo de los paneles con texto blanco (--brand pasa a verde claro en oscuro) */
+  --brand-deep: #1e3d2f;
+  --earth-ink: #7a5f38;
   color-scheme: light;
 }
 
@@ -61,6 +67,10 @@
     --sand: #3a3428;
     --up: #5bb98b;
     --down: #e08a6c;
+    --up-ink: #5bb98b;
+    --down-ink: #e08a6c;
+    --brand-deep: #1e3d2f;
+    --earth-ink: #d6b88f;
     color-scheme: dark;
   }
 }
@@ -82,6 +92,10 @@
   --sand: #3a3428;
   --up: #5bb98b;
   --down: #e08a6c;
+  --up-ink: #5bb98b;
+  --down-ink: #e08a6c;
+  --brand-deep: #1e3d2f;
+  --earth-ink: #d6b88f;
   color-scheme: dark;
 }
 
@@ -898,3 +912,26 @@
   }
 }
 
+/* ---- Velos de las bandas de foto con texto encima ----
+   Lo bastante oscuros bajo el texto para llegar a 4,5:1 incluso sobre las zonas claras de la foto (se mide con píxeles reales: docs/marketing/imagenes.md).
+   .scrim cubre todo el ancho; .scrim-left deja ver la foto a la derecha en escritorio; en móvil el texto ocupa todo el ancho y los dos son iguales. */
+.scrim {
+  background: linear-gradient(180deg, rgba(8, 13, 10, 0.5) 0%, rgba(8, 13, 10, 0.68) 42%, rgba(8, 13, 10, 0.9) 100%);
+}
+.scrim-left {
+  background:
+    linear-gradient(90deg, rgba(8, 13, 10, 0.64) 0%, rgba(8, 13, 10, 0.5) 52%, rgba(8, 13, 10, 0.1) 100%),
+    linear-gradient(180deg, rgba(8, 13, 10, 0.2) 0%, rgba(8, 13, 10, 0.42) 44%, rgba(8, 13, 10, 0.86) 100%);
+}
+@media (max-width: 767px) {
+  .scrim,
+  .scrim-left {
+    background: linear-gradient(180deg, rgba(8, 13, 10, 0.64) 0%, rgba(8, 13, 10, 0.76) 42%, rgba(8, 13, 10, 0.92) 100%);
+  }
+}
+/* Portada: por debajo de 1024 px el mensaje ocupa todo el ancho, así que se oscurece toda la foto (un tinte sobre su propio velo) */
+@media (max-width: 1023px) {
+  .veil-mobile {
+    box-shadow: inset 0 0 0 100vmax rgba(7, 12, 9, 0.34);
+  }
+}

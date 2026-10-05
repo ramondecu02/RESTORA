@@ -65,6 +65,7 @@ export function HomeHero({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
       {/* legibility layers */}
       <div
         aria-hidden="true"
+        className="veil-mobile"
         style={{ position: "absolute", inset: 0, zIndex: 1, background: "linear-gradient(96deg, rgba(7,12,9,0.94) 0%, rgba(7,12,9,0.84) 28%, rgba(7,12,9,0.46) 56%, rgba(7,12,9,0.18) 76%, rgba(7,12,9,0.5) 100%)" }}
       />
       <div
@@ -79,7 +80,7 @@ export function HomeHero({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
       >
         {/* Message */}
         <div>
-          <div className="editorial-eyebrow rise-in" style={{ color: "rgba(255,255,255,0.6)" }}>
+          <div className="editorial-eyebrow rise-in" style={{ color: "rgba(255,255,255,0.8)" }}>
             {h.eyebrow}
           </div>
           <h1
@@ -90,7 +91,7 @@ export function HomeHero({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
           </h1>
           <p
             className="rise-in"
-            style={{ animationDelay: "0.16s", color: "rgba(255,255,255,0.76)", fontSize: "clamp(16px, 1.45vw, 18.5px)", lineHeight: 1.65, margin: "24px 0 0", maxWidth: "47ch" }}
+            style={{ animationDelay: "0.16s", color: "rgba(255,255,255,0.86)", fontSize: "clamp(16px, 1.45vw, 18.5px)", lineHeight: 1.65, margin: "24px 0 0", maxWidth: "47ch" }}
           >
             {h.sub}
           </p>
@@ -124,7 +125,7 @@ export function HomeHero({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
               <span style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 600 }}>
                 RESTORA · hoy
               </span>
-              <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{copy.demo.label}</span>
+              <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(255,255,255,0.7)" }}>{copy.demo.label}</span>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
@@ -156,7 +157,7 @@ export function HomeHero({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
 
             <div style={{ height: 1, background: "rgba(255,255,255,0.12)", margin: "18px 0 14px" }} />
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 14 }}>
-              <span style={{ fontSize: 11.5, color: "rgba(255,255,255,0.5)", lineHeight: 1.4, maxWidth: "16ch" }}>
+              <span style={{ fontSize: 11.5, color: "rgba(255,255,255,0.64)", lineHeight: 1.4, maxWidth: "16ch" }}>
                 Evolución de compras · 30 días
               </span>
               <Spark />

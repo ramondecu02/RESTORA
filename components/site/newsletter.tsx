@@ -86,13 +86,13 @@ export function NewsletterSignup({ nl, locale }: { nl: SiteCopy["newsletter"]; l
           {loading ? nl.sending : nl.cta}
         </button>
       </div>
-      {errors.email && <span role="alert" style={{ color: "var(--down)", fontSize: 12.5 }}>{errors.email}</span>}
+      {errors.email && <span role="alert" style={{ color: "var(--down-ink)", fontSize: 12.5 }}>{errors.email}</span>}
       <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5, cursor: "pointer" }}>
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} style={{ marginTop: 3, width: 16, height: 16, accentColor: "var(--brand)", flexShrink: 0 }} aria-invalid={errors.consent ? "true" : undefined} />
         <span>{nl.consent}</span>
       </label>
-      {errors.consent && <span role="alert" style={{ color: "var(--down)", fontSize: 12.5 }}>{errors.consent}</span>}
-      {status === "error" && <p role="alert" style={{ color: "var(--down)", fontSize: 13, margin: 0 }}>{nl.errGeneric}</p>}
+      {errors.consent && <span role="alert" style={{ color: "var(--down-ink)", fontSize: 12.5 }}>{errors.consent}</span>}
+      {status === "error" && <p role="alert" style={{ color: "var(--down-ink)", fontSize: 13, margin: 0 }}>{nl.errGeneric}</p>}
 
       <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}>
         <label>

@@ -114,17 +114,14 @@ export default async function FuncionalidadesPage(props: {
             className="reveal mx-auto max-w-[1280px]"
             style={{ minHeight: "clamp(360px, 42vw, 480px)", display: "flex", alignItems: "flex-end" }}
           >
-            <div
-              aria-hidden="true"
-              style={{ position: "absolute", inset: 0, zIndex: 1, background: "linear-gradient(180deg, rgba(8,13,10,0.25) 0%, rgba(8,13,10,0.55) 45%, rgba(8,13,10,0.88) 100%)" }}
-            />
+            <div aria-hidden="true" className="scrim-left" style={{ position: "absolute", inset: 0, zIndex: 1 }} />
             <div aria-hidden="true" className="grain" style={{ position: "absolute", inset: 0, zIndex: 1 }} />
             <div style={{ position: "relative", zIndex: 3, width: "100%", padding: "clamp(26px, 4vw, 54px)" }}>
-              <div className="editorial-eyebrow" style={{ color: "rgba(255,255,255,0.62)" }}>{c.closing.eyebrow}</div>
+              <div className="editorial-eyebrow" style={{ color: "rgba(255,255,255,0.86)" }}>{c.closing.eyebrow}</div>
               <h2 className="display-serif" style={{ color: "#fff", fontSize: "clamp(27px, 3.7vw, 46px)", margin: "14px 0 0", maxWidth: "20ch" }}>
                 {c.closing.title}
               </h2>
-              <p style={{ color: "rgba(255,255,255,0.78)", fontSize: 16.5, margin: "14px 0 0", maxWidth: "52ch", lineHeight: 1.65 }}>{c.closing.sub}</p>
+              <p style={{ color: "rgba(255,255,255,0.92)", fontSize: 16.5, margin: "14px 0 0", maxWidth: "52ch", lineHeight: 1.65 }}>{c.closing.sub}</p>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 26, flexWrap: "wrap" }}>
                 {c.closing.chain.map((step, i) => (
                   <div key={step} style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -133,7 +130,7 @@ export default async function FuncionalidadesPage(props: {
                     >
                       {step}
                     </span>
-                    {i < c.closing.chain.length - 1 && <ArrowRight size={15} strokeWidth={2} color="rgba(255,255,255,0.45)" />}
+                    {i < c.closing.chain.length - 1 && <ArrowRight size={15} strokeWidth={2} color="rgba(255,255,255,0.7)" />}
                   </div>
                 ))}
               </div>

@@ -54,7 +54,7 @@ export default async function SobreNosotrosPage(props: { params: Promise<{ local
               <h2 className="display-serif" style={{ fontSize: "clamp(30px, 4vw, 50px)", margin: "16px 0 0" }}>{c.who.name}</h2>
               {ABOUT_BIO_READY && (
                 <>
-                  <p className="mono" style={{ fontSize: 13.5, color: "var(--earth)", margin: "10px 0 0", fontWeight: 600 }}>{c.who.role}</p>
+                  <p className="mono" style={{ fontSize: 13.5, color: "var(--earth-ink)", margin: "10px 0 0", fontWeight: 600 }}>{c.who.role}</p>
                   <div style={{ marginTop: 22, display: "flex", flexDirection: "column", gap: 14 }}>
                     {c.who.bio.map((p) => (
                       <p key={p} style={{ fontSize: 16.5, lineHeight: 1.7, margin: 0, color: "var(--muted)", maxWidth: "58ch" }}>{p}</p>
@@ -100,14 +100,14 @@ export default async function SobreNosotrosPage(props: { params: Promise<{ local
             className="reveal mx-auto max-w-[1180px]"
             style={{ minHeight: "clamp(380px, 44vw, 520px)", display: "flex", alignItems: "flex-end" }}
           >
-            <div aria-hidden="true" style={{ position: "absolute", inset: 0, zIndex: 1, background: "linear-gradient(180deg, rgba(8,13,10,0.3) 0%, rgba(8,13,10,0.6) 45%, rgba(8,13,10,0.9) 100%)" }} />
+            <div aria-hidden="true" className="scrim" style={{ position: "absolute", inset: 0, zIndex: 1 }} />
             <div aria-hidden="true" className="grain" style={{ position: "absolute", inset: 0, zIndex: 1 }} />
             <div style={{ position: "relative", zIndex: 3, width: "100%", padding: "clamp(26px, 4vw, 54px)" }}>
-              <div className="editorial-eyebrow" style={{ color: "rgba(255,255,255,0.62)" }}>{c.thesis.eyebrow}</div>
+              <div className="editorial-eyebrow" style={{ color: "rgba(255,255,255,0.86)" }}>{c.thesis.eyebrow}</div>
               <blockquote className="display-serif" style={{ color: "#fff", fontSize: "clamp(28px, 3.8vw, 48px)", margin: "14px 0 0", maxWidth: "18ch" }}>
                 «{c.thesis.quote}»
               </blockquote>
-              <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 16.5, margin: "16px 0 0", maxWidth: "56ch", lineHeight: 1.65 }}>{c.thesis.body}</p>
+              <p style={{ color: "rgba(255,255,255,0.92)", fontSize: 16.5, margin: "16px 0 0", maxWidth: "56ch", lineHeight: 1.65 }}>{c.thesis.body}</p>
             </div>
           </Frame>
 

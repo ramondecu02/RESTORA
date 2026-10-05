@@ -70,7 +70,7 @@ export default async function HomePage(props: {
               <div style={{ fontWeight: 700, fontSize: 15, marginTop: 7 }}>Distribuidora Mediterránea</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 9, marginTop: 5 }}>
                 <span style={{ fontSize: 19, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>1.240 €</span>
-                <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--down)" }}>+4,2%</span>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--down-ink)" }}>+4,2%</span>
               </div>
             </OverlayCard>
           }
@@ -94,7 +94,7 @@ export default async function HomePage(props: {
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14 }}>Tomate rama</div>
                   <div style={{ fontSize: 12.5, color: "var(--muted)", fontVariantNumeric: "tabular-nums" }}>
-                    1,85 €/kg <span style={{ color: "var(--down)", fontWeight: 700 }}>↑12%</span>
+                    1,85 €/kg <span style={{ color: "var(--down-ink)", fontWeight: 700 }}>↑12%</span>
                   </div>
                 </div>
               </div>

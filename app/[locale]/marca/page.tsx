@@ -98,7 +98,7 @@ export default async function MarcaPage(props: { params: Promise<{ locale: strin
                   RESTORA
                 </span>
               </div>
-              <span className="mono" style={{ fontSize: 10.5, letterSpacing: "0.06em", color: "#75786B" }}>
+              <span className="mono" style={{ fontSize: 10.5, letterSpacing: "0.06em", color: "#5f6356" }}>
                 LOCKUP · SOBRE CLARO
               </span>
             </div>

@@ -59,7 +59,7 @@ export function LegalArticle({
               <ul style={{ listStyle: "none", margin: "14px 0 0", padding: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "8px 18px" }}>
                 {legal.pendingFields.map((f) => (
                   <li key={f} className="mono" style={{ fontSize: 13, color: "var(--ink)", display: "flex", gap: 8, alignItems: "baseline" }}>
-                    <span style={{ color: "var(--earth)", fontWeight: 700 }}>·</span>
+                    <span style={{ color: "var(--earth-ink)", fontWeight: 700 }}>·</span>
                     {f}
                   </li>
                 ))}

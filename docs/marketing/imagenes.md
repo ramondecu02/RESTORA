@@ -19,7 +19,8 @@
    (`npm run test:web`) falla si falta el catalán o si un texto es idéntico en los dos idiomas.
 5. **Transparencia**: el pie de la web avisa de que las imágenes son ilustrativas y algunas están generadas con IA y de que no son clientes ni equipos reales (`footer.imagesNote`). Se mantiene
    mientras haya imágenes generadas en la web.
-6. Formato final `.webp`. Las variantes responsive las genera `npm run build:cf` (`scripts/gen-image-variants.mjs`). Los originales (unos 3 MB cada uno) **no se guardan en el repositorio**:
+6. **Texto sobre foto: el velo.** Toda banda con foto y texto encima lleva uno de los velos de `app/globals.css` (`.scrim`, a todo el ancho, o `.scrim-left`, que deja ver la foto a la derecha en escritorio; la portada usa `.veil-mobile`), con el texto en blanco al 0,86 o más. Con una foto nueva hay que mirar el resultado y pasar `npm run qa:web`: mide con píxeles reales el punto más claro de la foto detrás de cada línea y exige 4,5:1.
+7. Formato final `.webp`. Las variantes responsive las genera `npm run build:cf` (`scripts/gen-image-variants.mjs`). Los originales (unos 3 MB cada uno) **no se guardan en el repositorio**:
    guárdalos en tu disco.
 
 ## Huecos y de dónde sale cada imagen

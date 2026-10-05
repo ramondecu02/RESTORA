@@ -36,6 +36,7 @@ const headLabel: React.CSSProperties = {
 
 function Delta({ value, up }: { value: string; up?: boolean }) {
   const color = up ? "var(--down)" : "var(--up)";
+  const ink = up ? "var(--down-ink)" : "var(--up-ink)";
   return (
     <span
       style={{
@@ -45,7 +46,7 @@ function Delta({ value, up }: { value: string; up?: boolean }) {
         fontSize: 11.5,
         fontWeight: 700,
         fontVariantNumeric: "tabular-nums",
-        color,
+        color: ink,
         background: `color-mix(in srgb, ${color} 12%, transparent)`,
         border: `1px solid color-mix(in srgb, ${color} 26%, transparent)`,
         borderRadius: 999,
@@ -142,7 +143,7 @@ function Escandallo({ d, t }: { d: Extract<Demo, { kind: "escandallo" }>; t: Chr
                 fontWeight: 700,
                 marginTop: 5,
                 fontVariantNumeric: "tabular-nums",
-                color: "good" in t && t.good ? "var(--up)" : "var(--ink)",
+                color: "good" in t && t.good ? "var(--up-ink)" : "var(--ink)",
               }}
             >
               {t.value}
@@ -250,7 +251,7 @@ function Inventario({ d, t }: { d: Extract<Demo, { kind: "inventario" }>; t: Chr
                 style={{
                   fontWeight: 700,
                   fontVariantNumeric: "tabular-nums",
-                  color: low ? "var(--down)" : "var(--muted)",
+                  color: low ? "var(--down-ink)" : "var(--muted)",
                   whiteSpace: "nowrap",
                 }}
               >
@@ -285,7 +286,7 @@ function Rentabilidad({ d, t }: { d: Extract<Demo, { kind: "rentabilidad" }>; t:
                 textTransform: "uppercase",
                 padding: "4px 10px",
                 borderRadius: 999,
-                color: c.good ? "var(--up)" : "var(--down)",
+                color: c.good ? "var(--up-ink)" : "var(--down-ink)",
                 background: c.good ? "color-mix(in srgb, var(--up) 12%, transparent)" : "color-mix(in srgb, var(--down) 12%, transparent)",
                 border: `1px solid ${c.good ? "color-mix(in srgb, var(--up) 28%, transparent)" : "color-mix(in srgb, var(--down) 28%, transparent)"}`,
               }}
@@ -295,7 +296,7 @@ function Rentabilidad({ d, t }: { d: Extract<Demo, { kind: "rentabilidad" }>; t:
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14, fontSize: 13 }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "var(--muted)" }}>{t.foodCost}</span>
-                <span className="mono" style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", color: c.good ? "var(--up)" : "var(--down)" }}>{c.foodCost}</span>
+                <span className="mono" style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", color: c.good ? "var(--up-ink)" : "var(--down-ink)" }}>{c.foodCost}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "var(--muted)" }}>{t.margen}</span>
@@ -316,7 +317,7 @@ function Rentabilidad({ d, t }: { d: Extract<Demo, { kind: "rentabilidad" }>; t:
 
 function Insight({ d }: { d: Extract<Demo, { kind: "insight" }> }) {
   return (
-    <div style={{ ...card, background: "var(--brand)", border: "1px solid var(--brand)", color: "var(--on-brand)" }}>
+    <div style={{ ...card, background: "var(--brand-deep)", border: "1px solid var(--brand-deep)", color: "#fff" }}>
       <div style={{ padding: "20px 20px 18px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <Lightbulb size={16} strokeWidth={2} color="#8fd3b0" />

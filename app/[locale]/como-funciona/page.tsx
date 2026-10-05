@@ -128,10 +128,10 @@ export default async function ComoFuncionaPage(props: {
             className="reveal mx-auto max-w-[1280px]"
             style={{ minHeight: "clamp(400px, 46vw, 520px)", display: "flex", alignItems: "flex-end" }}
           >
-            <div aria-hidden="true" style={{ position: "absolute", inset: 0, zIndex: 1, background: "linear-gradient(180deg, rgba(8,13,10,0.24) 0%, rgba(8,13,10,0.55) 42%, rgba(8,13,10,0.9) 100%)" }} />
+            <div aria-hidden="true" className="scrim" style={{ position: "absolute", inset: 0, zIndex: 1 }} />
             <div aria-hidden="true" className="grain" style={{ position: "absolute", inset: 0, zIndex: 1 }} />
             <div style={{ position: "relative", zIndex: 3, width: "100%", padding: "clamp(26px, 4vw, 54px)" }}>
-              <div className="editorial-eyebrow" style={{ color: "rgba(255,255,255,0.62)" }}>{c.reassure.eyebrow}</div>
+              <div className="editorial-eyebrow" style={{ color: "rgba(255,255,255,0.86)" }}>{c.reassure.eyebrow}</div>
               <h2 className="display-serif" style={{ color: "#fff", fontSize: "clamp(27px, 3.6vw, 44px)", margin: "14px 0 0", maxWidth: "20ch" }}>
                 {c.reassure.title}
               </h2>
@@ -141,7 +141,7 @@ export default async function ComoFuncionaPage(props: {
                     <Check size={17} strokeWidth={2.6} color="#8fd3b0" style={{ flexShrink: 0, marginTop: 3 }} />
                     <div>
                       <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{it.title}</div>
-                      <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 13.5, margin: "5px 0 0", lineHeight: 1.55 }}>{it.body}</p>
+                      <p style={{ color: "rgba(255,255,255,0.88)", fontSize: 13.5, margin: "5px 0 0", lineHeight: 1.55 }}>{it.body}</p>
                     </div>
                   </div>
                 ))}

@@ -131,6 +131,11 @@ Los valores permitidos se validan en la capa de aplicación
 | `npm run build`    | Build de producción                       |
 | `npm run start`    | Sirve el build                            |
 | `npm run lint`     | ESLint                                     |
+| `npm run build:cf` | Exportación estática para Cloudflare Pages (`out/`) |
+| `npm run test:web` | Pruebas de la web: imágenes, promesas, fundadores, UTM y SEO |
+| `npm run qa:web`   | QA de `out/`: desbordes, consola, accesibilidad y contraste (`-- --rapido` para una pasada corta) |
+| `npm run checklist`| Regenera los PDF de la checklist de food cost |
+| `npm run capturas` | Regenera las capturas reales de la app (necesita la app en marcha en local) |
 | `npm run db:deploy`| Aplica migraciones (`prisma migrate deploy`) |
 | `npm run db:migrate`| Crea/aplica migración en dev             |
 | `npm run db:seed`  | Inserta leads de ejemplo                   |

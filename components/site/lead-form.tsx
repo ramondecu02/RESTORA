@@ -59,7 +59,7 @@ export function SiteLeadForm({ lead, trust, locale }: { lead: SiteCopy["lead"]; 
       <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <span className="field-label">{lead.fName}</span>
         <input type="text" className="field-input" placeholder={lead.fNamePh} value={restaurant} onChange={(e) => setRestaurant(e.target.value)} aria-invalid={errors.restaurant ? "true" : undefined} autoComplete="organization" />
-        {errors.restaurant && <span role="alert" style={{ color: "var(--down)", fontSize: 12.5 }}>{errors.restaurant}</span>}
+        {errors.restaurant && <span role="alert" style={{ color: "var(--down-ink)", fontSize: 12.5 }}>{errors.restaurant}</span>}
       </label>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14 }}>
@@ -74,7 +74,7 @@ export function SiteLeadForm({ lead, trust, locale }: { lead: SiteCopy["lead"]; 
         <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <span className="field-label">{lead.fCity}</span>
           <input type="text" className="field-input" placeholder={lead.fCityPh} value={city} onChange={(e) => setCity(e.target.value)} aria-invalid={errors.city ? "true" : undefined} autoComplete="address-level2" />
-          {errors.city && <span role="alert" style={{ color: "var(--down)", fontSize: 12.5 }}>{errors.city}</span>}
+          {errors.city && <span role="alert" style={{ color: "var(--down-ink)", fontSize: 12.5 }}>{errors.city}</span>}
         </label>
       </div>
 
@@ -95,7 +95,7 @@ export function SiteLeadForm({ lead, trust, locale }: { lead: SiteCopy["lead"]; 
       <button type="submit" className="btn btn-brand" style={{ marginTop: 6, padding: 15, fontSize: 16 }} disabled={loading}>
         {loading ? lead.sending : `${lead.submit} →`}
       </button>
-      {status === "error" && <p role="alert" style={{ color: "var(--down)", fontSize: 13, textAlign: "center", margin: 0 }}>{lead.errGeneric}</p>}
+      {status === "error" && <p role="alert" style={{ color: "var(--down-ink)", fontSize: 13, textAlign: "center", margin: 0 }}>{lead.errGeneric}</p>}
       <p style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", margin: "2px 0 0" }}>{lead.note}</p>
       <p style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", margin: 0 }}>
         {lead.privacyPre}{" "}

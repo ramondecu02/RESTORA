@@ -61,7 +61,7 @@ export default async function PreciosPage(props: {
 
             <div
               className="hover-lift"
-              style={{ position: "relative", overflow: "hidden", background: "var(--brand)", color: "var(--on-brand)", border: "1px solid var(--brand)", borderRadius: 20, padding: "clamp(26px, 3vw, 38px)", display: "flex", flexDirection: "column", boxShadow: "0 40px 84px -46px rgba(30,61,47,0.5)" }}
+              style={{ position: "relative", overflow: "hidden", background: "var(--brand-deep)", color: "#fff", border: "1px solid var(--brand-deep)", borderRadius: 20, padding: "clamp(26px, 3vw, 38px)", display: "flex", flexDirection: "column", boxShadow: "0 40px 84px -46px rgba(30,61,47,0.5)" }}
             >
               <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 22px)", pointerEvents: "none" }} />
               <div style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 8, alignSelf: "flex-start", background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 999, padding: "6px 13px", fontSize: 12, fontWeight: 600 }}>
@@ -78,7 +78,7 @@ export default async function PreciosPage(props: {
                   </div>
                 ))}
               </div>
-              <Link href={`/${locale}/contacto`} className="btn" style={{ position: "relative", marginTop: 28, padding: 14, fontSize: 15.5, justifyContent: "center", background: "#fff", color: "var(--brand)", border: "1px solid #fff" }}>
+              <Link href={`/${locale}/contacto`} className="btn" style={{ position: "relative", marginTop: 28, padding: 14, fontSize: 15.5, justifyContent: "center", background: "#fff", color: "#12211a", border: "1px solid #fff" }}>
                 {p.plansCta} →
               </Link>
             </div>

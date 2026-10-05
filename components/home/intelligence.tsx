@@ -45,7 +45,7 @@ export function HomeIntelligence({ copy, locale }: { copy: SiteCopy; locale: Loc
                       {step}
                     </span>
                   </div>
-                  {i < c.steps.length - 1 && <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 17, marginBottom: 22 }}>→</span>}
+                  {i < c.steps.length - 1 && <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 17, marginBottom: 22 }}>→</span>}
                 </div>
               );
             })}

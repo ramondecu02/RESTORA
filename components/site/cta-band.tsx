@@ -10,8 +10,8 @@ export function CtaBand({ copy }: { copy: SiteCopy }) {
         style={{
           position: "relative",
           overflow: "hidden",
-          background: "var(--brand)",
-          color: "var(--on-brand)",
+          background: "var(--brand-deep)",
+          color: "#fff",
           borderRadius: 28,
           padding: "clamp(44px, 6vw, 72px)",
           textAlign: "center",
@@ -41,7 +41,7 @@ export function CtaBand({ copy }: { copy: SiteCopy }) {
         <a
           href={APP_SIGNUP_URL}
           className="btn"
-          style={{ position: "relative", marginTop: 26, padding: "14px 26px", fontSize: 15.5, background: "#fff", color: "var(--brand)", border: "1px solid #fff" }}
+          style={{ position: "relative", marginTop: 26, padding: "14px 26px", fontSize: 15.5, background: "#fff", color: "#12211a", border: "1px solid #fff" }}
         >
           {copy.hero.ctaPrimary} →
         </a>

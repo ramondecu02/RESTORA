@@ -13,6 +13,7 @@
 | Velocidad (móvil) | ◐ | Lighthouse móvil sobre la exportación servida con compresión, CPU 4× más lenta: **inicio 93–94, Sobre nosotros 94–95, Precios 97–98, Contacto 97**; accesibilidad, buenas prácticas y SEO, 100. LCP simulado 2,3–3,1 s (el criterio del plan, < 2,5 s, solo lo cumple Precios en simulación; en un portátil real la foto principal pinta a ~0,3 s). Falta medirlo con visitantes reales cuando se active Cloudflare Web Analytics |
 | Chat | ✓ | Botón flotante de WhatsApp (`components/site/floating-actions.tsx`); no hay chat propio |
 | Responsive 375 / 768 / 1440 | ✓ | Sin desbordes ni imágenes rotas en ES y CA a 390, 768 y 1280 px (comprobado con Playwright sobre la exportación) |
+| Accesibilidad y contraste (WCAG 2.2 AA) | ✓ | `npm run qa:web`: las 22 páginas (ES y CA) a 390, 768 y 1280 px, en tema claro y oscuro, sin ninguna violación de axe, y los textos sobre foto o degradado (que axe no sabe medir) medidos con píxeles reales: 4,5:1 como mínimo. Quedan por probar con un lector de pantalla real |
 | Sobre nosotros | ◐ | Página con foto de ambientación sin caras. El cargo y la biografía de Ramon **no se enseñan** hasta que sean reales (`ABOUT_BIO_READY` en `lib/site.ts`) |
 | Formulario de contacto | ✓ en código | Formulario de demo, contacto rápido y checklist → `functions/api/leads.js` (campo trampa, 5 envíos por minuto y por IP, D1 y aviso por Resend). **Hay que comprobar en producción** que `RESEND_API_KEY` y `LEAD_NOTIFY_TO` están en Cloudflare |
 | Redes sociales reales | ✗ | Aún no existen: el pie no enseña ninguna (`SOCIAL_LINKS` en `lib/site.ts`). Las cuentas las crea el propietario; el kit está en `docs/marketing/marca/` |
@@ -73,4 +74,5 @@ Vigilado por `tests/web/promesas.test.ts` y `tests/web/no-founder.test.ts`.
 
 - Pruebas: `npm run test:web` (imágenes, pendientes, fundadores, promesas, utm, SEO y datos estructurados).
 - Velocidad: `npm run build:cf`, servir `out/` con compresión y pasar Lighthouse móvil (sin compresión la home sale muy por debajo; el servidor de pruebas debe imitar a Cloudflare).
+- Desbordes, imágenes rotas, consola, accesibilidad y contraste: `npm run build:cf && npm run qa:web` (`-- --rapido` para solo castellano y dos anchos). Sirve `out/` con compresión, recorre las páginas del sitemap y falla (código 1) si encuentra algo. Necesita Chromium (`CHROMIUM_PATH`), igual que `npm run checklist`.
 - Después de cambiar la checklist: `npm run checklist` regenera los dos PDF.
