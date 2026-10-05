@@ -44,6 +44,22 @@ Todo esto está implementado con un valor por defecto razonable. Cada punto dice
 - **Ahora**: cada negocio puede descargar sus datos en CSV (Cuenta → Tus datos) y borrar el negocio entero con sus archivos. Siguiendo la guía, los datos viven en la UE (Neon y funciones de Vercel en Frankfurt); las fotos se envían a la API de Claude para leerlas (según las condiciones comerciales de Anthropic, los datos de la API no se usan para entrenar modelos).
 - **A decidir**: texto de la política de privacidad (encargados: Vercel, Neon, Anthropic, Resend, Stripe) y cuánto tiempo guardar las fotos de los albaranes (ahora, hasta que el usuario borre el albarán o el negocio).
 
+## 8. Decisiones del propietario (5 de octubre de 2026)
+
+Respuestas a las decisiones D1–D6 del plan (`docs/superpowers/plans/2026-10-05-restora-roadmap.md`), con sus palabras:
+
+- **Precios (D1) — pendiente.** «Para el tema de precios como producto hay que calcular qué comisión se llevaría Stripe por los cobros mensuales, y el coste por local
+  aproximado sobre la API de Claude y la inteligencia.» → Hecho en [`PRECIOS-Y-COSTES.md`](PRECIOS-Y-COSTES.md) (Stripe ≈ 2,8–3,8 % del precio sin IVA al mes; IA ≈ 5 € por local y mes
+  en un restaurante típico, 1,5–20 € según volumen). Faltan la elección de planes, nombres y precios.
+- **Prueba gratuita (D3):** se mantienen los **14 días**.
+- **Impago (D4):** se **bloquea a los 5 días de impago** (no 7). Aplica a la app; el aviso empieza el primer día (Task 23 del plan).
+- **«Inteligencia» (D6):** se hace lo propuesto: **«Avisos» pasa a ser el centro de inteligencia** (priorizado por impacto en euros, con acción directa). Hoy no usa IA; si se le añade
+  un modelo de lenguaje, el coste es ~0,45 € por local y mes.
+- **Marca y redes (D5):** «redes sociales e imagen de marca se tienen que crear»: **no existen todavía**. La web no debe enseñar enlaces a redes hasta que existan; se prepara un kit
+  de marca (avatar, portadas, imagen para compartir) para crearlas.
+- **Web:** cambiar el teléfono (falta el número nuevo) y **rellenar la web con imágenes generadas**. Las imágenes generadas se usan como ambientación y producto, nunca como retratos de
+  clientes o de equipo («testimonios» con caras inventadas) ni sellos de confianza.
+
 ## Fuera de alcance en esta versión
 
 - Integración directa con TPV (se importan ventas en CSV, que exportan casi todos).

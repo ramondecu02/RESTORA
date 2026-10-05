@@ -38,16 +38,18 @@
 | Web | Con lenguaje de fundadores en `lib/site-copy.ts`, `lib/dictionaries.ts`, `lib/copy/{precios,contacto,sobre,preguntas,legal}.ts`, `app/[locale]/precios/page.tsx`, `contacto/page.tsx`; pendientes con `TODO(Ramon)`: redes, foto, vídeo, dónde se alojan los datos | `grep` |
 | Pruebas | 312 unitarias + 8 bloques e2e (alta, recorrido 52 pantallas, flujos, RLS, prueba gratuita, calidad de lectura, borrado, Hoy) | `tests/` |
 
-## Decisiones que necesito del propietario (bloquean tareas concretas)
+## Decisiones del propietario (estado a 5 de octubre de 2026)
 
-| ID | Decisión | Qué bloquea | Mi recomendación |
+Registradas con sus palabras en `producto/docs/DECISIONES.md`, punto 8.
+
+| ID | Decisión | Estado | Qué desbloquea / qué falta |
 | --- | --- | --- | --- |
-| **D1** | **Precios y nombres de plan definitivos**: cuántos planes, cuánto cuestan, mensual/anual, IVA incluido o no, qué incluye cada uno | Tasks 19–25, 28 (página de precios), 35 | Pocos planes (2–3), precios sin IVA visibles y con IVA al pagar, plan anual con 2 meses gratis. **No empiezo a implementar planes hasta tenerlo** |
-| **D2** | **Alcance multi-local**: ¿V1 = «un negocio = un restaurante» (lo que hay y está verificado) y «grupo» = varios negocios con vista consolidada después? ¿O multi-local real dentro de un negocio ya? | Tasks 15–17 y el copy de «Grupo» en la web | V1 con un restaurante por negocio; multi-local en V2. Mientras, **retirar de la web** lo que prometa comparar locales |
-| **D3** | **Prueba gratuita**: hoy son 14 días sin tarjeta y bloqueo al acabar. ¿Se mantiene? ¿Se pide tarjeta al empezar? | Task 21 y 23 | Mantener 14 días sin tarjeta (menos fricción) |
-| **D4** | **Datos fiscales de RESTORA** (razón social, NIF, domicilio, régimen de IVA) y política de impago (días de gracia antes de bloquear) | Tasks 22–23, 29 (términos de contratación) | 7 días de gracia con aviso diario |
-| **D5** | Material real: URLs de redes sociales, foto de Ramon (Sobre nosotros), vídeo de presentación (¿lo grabas tú? te preparo el guion), dónde se alojan los datos (región Neon), qué sellos son verídicos | Tasks 28–29 | Solo sellos demostrables (RGPD declarado, alojamiento UE si es cierto, pago seguro por Stripe) |
-| **D6** | **Qué es «Inteligencia»**: no existe como sección. ¿Es «Avisos» (decisiones con impacto en euros) o algo nuevo? | Task 8 | Convertir «Avisos» en el centro de inteligencia (priorizado, con impacto, resoluble) |
+| **D1** | **Precios y nombres de plan definitivos** | **Pendiente.** El propietario pidió primero el cálculo de la comisión de Stripe y del coste de IA por local: hecho en `producto/docs/PRECIOS-Y-COSTES.md` (Stripe ≈ 2,8–3,8 % del precio sin IVA al mes; IA ≈ 5 € por local y mes, 1,5–20 € según volumen; ≈ 8 céntimos por albarán) | Faltan cuántos planes, nombres, precios (mensual/anual, con o sin IVA), si hay límite de albaranes por plan y precio por local adicional. Bloquea Tasks 19–25, 28 y 35. **No se implementa ninguna cifra hasta tenerlo** |
+| **D2** | Alcance multi-local | **Pendiente** (no contestada; el «coste por local» sugiere que el cobro puede ser por local) | Bloquea Tasks 15–17 y el copy de «Grupo» en la web. Mi recomendación sigue siendo V1 con un restaurante por negocio y multi-local en V2, y retirar de la web lo de «comparar entre locales» mientras tanto |
+| **D3** | Prueba gratuita | **Decidido: se mantienen los 14 días** (sin tarjeta, como ahora) | Task 21 y 23 |
+| **D4** | Impago | **Decidido: se bloquea a los 5 días de impago** (aviso desde el primer día). Siguen pendientes los **datos fiscales** (razón social, NIF, domicilio, régimen de IVA) | Task 23 usa **5 días** de gracia (no 7); Tasks 22 y 29 esperan los datos fiscales |
+| **D5** | Material real de la web | **Parcial.** Las redes sociales y la imagen de marca **no existen y hay que crearlas**; hay que **cambiar el teléfono de la web** (falta el número nuevo) y **rellenar la web con imágenes generadas**. Sin contestar: región de los datos (Neon) y qué sellos son verídicos | Tasks 27–29 y nuevas Tasks 31b–31d (más abajo). Mientras no existan, la web no enseña enlaces a redes |
+| **D6** | Qué es «Inteligencia» | **Decidido: «Avisos» pasa a ser el centro de inteligencia** (priorizado por impacto en euros, con acción directa). Hoy no usa IA | Task 8 puede ejecutarse |
 
 ## Qué bloquea a qué
 
@@ -260,12 +262,12 @@ Reglas duras:
 
 - [ ] **Step 1:** Test de validación de NIF/CIF español. **Step 2:** Formulario + sincronización. **Step 3:** Commit.
 
-### Task 23: [C5] Impagos: reintentos, avisos y bloqueo con gracia (D4)
+### Task 23: [C5] Impagos: reintentos, avisos y bloqueo a los 5 días (D4)
 
 **Files:** Modify `producto/src/server/plan.ts` (`gracia`), `email.ts` (plantillas), `billing.ts`; Test `tests/unit/plan.test.ts`.
 **Interfaces:** Produce: `past_due` → aviso en la app (planbar) → correo diario de cobro fallido → bloqueo al agotar la gracia → reactivación inmediata al pagar.
 
-- [ ] **Step 1:** Tests de tiempos (día 0, 3, 7, 8). **Step 2:** Implementar. **Step 3:** Commit.
+- [ ] **Step 1:** Tests de tiempos (día 0, 3, 5, 6): el aviso empieza el día 0 y **el bloqueo llega a los 5 días de impago** (decidido por el propietario). **Step 2:** Implementar (`past_due_since` en `organizations`, migración aditiva). **Step 3:** Commit.
 
 ### Task 24: [C6] Pruebas con relojes de Stripe y paso a producción
 
@@ -326,6 +328,27 @@ Reglas duras:
 **Interfaces:** Produce: metadatos únicos por página, imágenes sociales, `hreflang`.
 
 - [ ] **Step 1:** Test de metadatos por ruta. **Step 2:** Implementar. **Step 3:** Commit.
+
+### Task 31b: [D6b] Teléfono de la web: cambiarlo en un solo sitio (decidido el 5/10; falta el número nuevo)
+
+**Files:** Modify `lib/site.ts` (teléfono y WhatsApp), los textos que lo escriban a mano (`grep` del número actual en `lib/**`, `app/**`, `components/**`, `public/**`, `functions/**`); Create `tests/web/telefono.test.ts`.
+**Interfaces:** Produce: el número nuevo en cabecera, pie, botón de WhatsApp, Contacto y textos legales, y **el antiguo en ninguna parte** (la prueba falla si reaparece). Consume el número que dé el propietario.
+
+- [ ] **Step 1:** Pedir el número nuevo (con prefijo) y si es el mismo para llamadas y WhatsApp. **Step 2:** Test que falla si el número antiguo aparece en el repositorio de la web. **Step 3:** Centralizar en `lib/site.ts` y sustituir. **Step 4:** `npm run build` (raíz) y comprobar ES/CA. **Step 5:** Commit. *(No se publica sin aprobación: Task 32.)*
+
+### Task 31c: [D6c] Kit de marca para redes sociales (las redes y la imagen de marca hay que crearlas)
+
+**Files:** Create `scripts/marca.mjs` (SVG → PNG con Playwright, reproducible), `public/marca/*` (avatar 1080×1080 y 400×400; portadas LinkedIn 1584×396, X 1500×500, Facebook 820×312 y YouTube 2560×1440; imagen para compartir 1200×630; plantillas de publicación 1080×1350 e historia 1080×1920; logotipo en color, blanco y monocromo), `docs/marketing/marca.md` (uso del logotipo, colores, tipografía, nombres de usuario propuestos, descripciones en ES/CA); Modify `lib/site.ts` (`redes` vacío: el pie solo enseña las que existan).
+**Interfaces:** Consume los tokens de marca (`#1E3D2F`, `#3E8E6A`, `#14201A`, `#F5F6F3`, Inter) y el símbolo de la app; produce los archivos y la lista de nombres de usuario. **Crear las cuentas lo hace el propietario** (necesitan su identidad y verificación); el pie de la web no enseña ninguna red hasta que exista (sin enlaces vacíos ni redes falsas).
+
+- [ ] **Step 1:** Propuesta de nombres de usuario y descripciones (ES/CA). **Step 2:** `scripts/marca.mjs` genera todos los formatos. **Step 3:** Prueba que comprueba tamaños exactos y que el pie no muestra redes sin URL. **Step 4:** Revisión visual por el propietario. **Step 5:** Commit. *(Crear los perfiles no es publicidad: la directriz del 05/10 solo veta la publicidad de pago.)*
+
+### Task 31d: [D6d] Imágenes generadas para rellenar la web
+
+**Files:** Create `docs/marketing/imagenes.md` (un encargo por hueco de la web: formato, proporción, paleta, estilo y texto alternativo), `scripts/capturas.mjs` (capturas reales del producto, Task 27); Modify `public/images/*` y los componentes de cada hueco; reutiliza `scripts/gen-image-variants.mjs` (variantes responsive).
+**Interfaces:** Produce: cada hueco de la web con imagen y `alt` (inicio, funcionalidades, cómo funciona, precios, «Sobre nosotros», imagen para compartir), sin fotos ni vídeo pendientes de la persona. **Claude no genera imágenes**: los huecos de ambientación se rellenan con las que genere el propietario con su herramienta de imágenes (o con una clave de API de un proveedor de imágenes guardada como secreto, nunca en el repositorio); lo que sí se genera aquí son las capturas reales del producto y las ilustraciones vectoriales de marca. **Reglas:** las imágenes generadas se usan para ambientación y producto, **nunca como retratos de clientes o equipo, testimonios ni sellos de confianza**.
+
+- [ ] **Step 1:** Inventario de huecos (`grep` de `TODO(Ramon)` y de las imágenes actuales) y encargo por hueco. **Step 2:** Capturas reales del producto (390/1280) con datos de ejemplo. **Step 3:** Colocar las imágenes recibidas, generar variantes y `alt`. **Step 4:** Revisión visual y rendimiento (Lighthouse móvil ≥ 90). **Step 5:** Commit.
 
 ### Task 32: [D7] Publicación en Cloudflare y verificación
 
