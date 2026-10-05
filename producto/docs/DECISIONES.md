@@ -106,6 +106,19 @@ Respuestas a las decisiones D1–D6 del plan (`docs/superpowers/plans/2026-10-05
 
 **Qué pasa ahora.** Importar ventas y borrar un albarán (o descartar un documento) se esperan entre sí, por local (`bloquearCostesDeVentas`, un bloqueo de transacción de Postgres que se suelta solo al confirmar o deshacer): o el borrado ve la importación y pide elegir qué hacer con ella, o la importación lee ya los precios de después del borrado. La vista previa del borrado no espera. Lo que ve la persona que borra: si una importación termina justo antes, «Este albarán afecta al coste de ventas que ya importaste. Revisa el resumen y elige qué hacer con ellas»; vuelve a abrir el borrado y elige. Además evita que las dos operaciones se crucen en los bloqueos de fila de artículos y platos.
 
+## 11. Rendimiento con 50 negocios: índices y consultas (5 de octubre de 2026)
+
+**Qué se midió.** Hoy, Compras y Escandallos con 50 negocios sintéticos en la misma base (1,3 millones de filas), de uno en uno y hasta 10 y 50 a la vez, con `EXPLAIN (ANALYZE, BUFFERS)` de las consultas más pesadas (`docs/RENDIMIENTO.md`, que explica cómo repetirlo). Con un negocio normal el servidor tarda unos 45 ms en Hoy, 19 ms en Compras y 23 ms en Escandallos, **sin contar la red** (la base de la medida está en la misma máquina).
+
+**Qué se ha cambiado sin esperar decisión** (nada se nota en la pantalla, salvo que va más deprisa):
+- **Once índices** (migración `0010`, aditiva e idempotente). Siete son claves foráneas de tablas que crecen y se borran en cascada: sin índice, borrar un albarán, una importación de ventas, un artículo, un proveedor o un negocio entero recorría ENTERA la tabla de los hijos —la de todos los negocios— una vez por cada fila borrada. Borrar un negocio de tamaño medio tardaba 10,6 s (casi todo en esas comprobaciones, que no pasan por RLS; con 200 negocios, 45 s, porque cuesta lo que pese la tabla de todos) y ahora 0,25 s (0,6 s con 200); borrar una importación de ventas, de 57 a 0,7 ms. Los otros cuatro empiezan por `tenant_id`: dos (`receta_lineas` y `articulo_proveedor`) porque con un negocio diez veces mayor de lo normal el planificador recorría la tabla entera (35.000 y 120.000 filas, las de todos los negocios) para quedarse con unas pocas, y dos (`ventas_importes` y `pedidos`) preventivos: Hoy, Inventario y Pedidos las leen enteras y hoy cuesta décimas de milisegundo.
+- **Dos consultas de ventas** (`histVentas()` y su copia en `hoyData()`) comparan `fecha` con un `date` en vez de con un `timestamptz`: con RLS, Postgres no deja entrar en el índice una comparación `date` frente a `timestamptz` (su operador no es «leakproof»), y la consulta leía todas las ventas del local para tirar las viejas. Mismos resultados (50 negocios, y diez años de fechas de hoy en tres zonas horarias), Hoy −19 % y Escandallos −14 %.
+
+**Qué no se ha tocado y queda por decidir.**
+- **Los viajes a la base de datos.** Cada petición manda de 24 a 35 sentencias y más de la mitad son el marco de la transacción (`begin`, `set local role`, `set_config`, `commit`). Aquí no se nota; en Neon cada una es un viaje de red (apartado 5 de `docs/RENDIMIENTO.md`: con 3 ms por viaje, Hoy pasa de 45 a unos 150 ms). Reducirlos exige tocar `withTenant()`, el núcleo del aislamiento, y no se ha hecho sin visto bueno.
+- **El cálculo de avisos de precio** (`efectoCambio()`, en Hoy) recalcula todas las recetas dos veces por cada aviso abierto: con un negocio diez veces mayor que el normal Hoy tarda 275 ms, de los que unos 190 son procesador de Node, no base de datos. Para el negocio normal no importa (unos 7 ms).
+- **Medir en Neon**, con la cuenta del propietario (apartado 8 de `docs/RENDIMIENTO.md`).
+
 ## Fuera de alcance en esta versión
 
 - Integración directa con TPV (se importan ventas en CSV, que exportan casi todos).

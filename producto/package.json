@@ -17,7 +17,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "eval:lectura": "vitest run --config vitest.eval.config.mts",
-    "e2e": "node tests/e2e/run.mjs"
+    "e2e": "node tests/e2e/run.mjs",
+    "carga:sembrar": "node scripts/seed-carga.mjs",
+    "carga:medir": "node --no-warnings tests/carga/hoy.mjs",
+    "carga:indices": "node --no-warnings tests/carga/indices.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",

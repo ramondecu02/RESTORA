@@ -36,7 +36,7 @@ export async function hoyData(ctx: AppCtx) {
     // Ventas y rentabilidad solo para los roles que ven Ventas (cocina no)
     const ventas = hasPerm(ctx, "ventas");
     const hist = !ventas ? [] : await all<{ mes: string; neto: number; coste: number; uds: number }>(c, `select to_char(date_trunc('month', fecha), 'YYYY-MM') as mes, sum(neto)::float as neto, sum(coste_total)::float as coste, sum(unidades)::float as uds
-      from ventas_lineas where local_id = $1 and fecha >= date_trunc('month', current_date) - interval '5 months' and fecha < date_trunc('month', current_date) group by 1 order by 1`, [ctx.local.id]);
+      from ventas_lineas where local_id = $1 and fecha >= (date_trunc('month', current_date) - interval '5 months')::date and fecha < date_trunc('month', current_date)::date group by 1 order by 1`, [ctx.local.id]); // ::date: ver histVentas()
     const com = !ventas ? [] : await all<{ mes: string; comensales: number; dias: number }>(c, `select to_char(date_trunc('month', desde), 'YYYY-MM') as mes, sum(comensales)::float as comensales,
       sum(greatest(1, hasta - desde + 1))::float as dias from ventas_importes where local_id = $1 and comensales is not null and desde >= date_trunc('month', current_date) - interval '5 months' group by 1`, [ctx.local.id]);
     const tpl = n.albs > 0 && n.recs === 0 ? (await plantillasConCoste(c, ctx.local.id)).filter((t) => t.coste != null) : [];

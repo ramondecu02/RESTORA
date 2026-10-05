@@ -86,3 +86,4 @@ subir albarán, stock, pedido) se puede hacer como una vista más de la app.
 - Aviso por correo unos días antes de que termine la prueba (ahora solo se avisa dentro de la app).
 - Retirar el proyecto antiguo de Cloudflare Pages (`restoraapp.pages.dev`) cuando ya no haga falta.
 - Copias de seguridad: revisar el historial que guarda el plan de Neon (sección 10 de `DESPLIEGUE.md`) y **ensayar la restauración** con tu cuenta de Neon (`docs/COPIAS-Y-RESTAURACION.md`, `scripts/restore-drill.md`): redactada, sin ensayar.
+- Rendimiento: medido en local con 50 negocios sintéticos (`docs/RENDIMIENTO.md`). Falta **medirlo en Neon** (la red añade un viaje por sentencia: Hoy manda 35) y decidir si se reducen los viajes del marco de cada transacción.

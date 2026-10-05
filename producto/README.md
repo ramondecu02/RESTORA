@@ -40,7 +40,8 @@ src/server            base de datos, sesión, permisos, correo, archivos, OCR, d
 src/lib               cálculo puro (costes, PMP, unidades, coincidencias, CSV, formato) — probado con Vitest
 tests/unit            pruebas unitarias
 tests/e2e             pruebas de extremo a extremo con Playwright + comprobaciones en la base de datos
-docs/                 despliegue, decisiones pendientes y fricciones
+tests/carga           rendimiento con 50 negocios sintéticos (se siembran con scripts/seed-carga.mjs)
+docs/                 despliegue, decisiones pendientes, fricciones, copias de seguridad y rendimiento
 ```
 
 ## En local
@@ -82,4 +83,4 @@ Necesitan Chromium (Playwright) y acceso a la base de datos (`DATABASE_URL`) par
 
 ## Despliegue
 
-Ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md). Decisiones de negocio pendientes en [docs/DECISIONES.md](docs/DECISIONES.md) y fricciones detectadas en [docs/FRICCIONES.md](docs/FRICCIONES.md).
+Ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md). Decisiones de negocio pendientes en [docs/DECISIONES.md](docs/DECISIONES.md) y fricciones detectadas en [docs/FRICCIONES.md](docs/FRICCIONES.md). Copias de seguridad y restauración: [docs/COPIAS-Y-RESTAURACION.md](docs/COPIAS-Y-RESTAURACION.md). Rendimiento con 50 negocios (cifras, índices y cómo repetirlo): [docs/RENDIMIENTO.md](docs/RENDIMIENTO.md).
