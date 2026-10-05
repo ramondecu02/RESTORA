@@ -131,9 +131,10 @@ Después cambio los botones «Entrar» y «Probar gratis» de la web para que ll
 
 ---
 
-## Fase 4 · Cobrar (cuando tengas los primeros clientes)
-Stripe: sección 8 de `DESPLIEGUE.md`. Para el piloto no hace falta. Ojo: Vercel pide su plan **Pro**
-en cuanto el uso es comercial (cobrar a clientes).
+## Fase 4 · Cobrar la suscripción mensual
+Stripe: sección 8 de `DESPLIEGUE.md` y `HOJA-DE-RUTA.md`. **Tiene que estar listo antes de que terminen
+las primeras pruebas (14 días)**: al terminar, la app se bloquea hasta que el negocio se suscribe. Ojo: Vercel
+pide su plan **Pro** en cuanto el uso es comercial (cobrar a clientes).
 
 ---
 

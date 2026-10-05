@@ -10,8 +10,8 @@ Todo esto está implementado con un valor por defecto razonable. Cada punto dice
 
 ## 2. Precio, prueba y qué pasa al terminarla
 
-- **Ahora**: 14 días de prueba con todo incluido (`TRIAL_DAYS`). El precio lo defines en Stripe (la web pública anuncia «desde 89 €/mes» y una oferta de fundador). Al terminar la prueba, o si falla un cobro, aparece una barra de aviso con «Ver planes», **sin bloquear** nada.
-- **A decidir**: ¿bloqueo suave (por ejemplo, no subir albaranes nuevos pero sí consultar) a partir de X días? ¿Precio con o sin IVA en la pasarela (Stripe Tax)? ¿La oferta de fundador como cupón de Stripe?
+- **Ahora** (decidido en octubre de 2026): 14 días de prueba con todo incluido (`TRIAL_DAYS`), sin tarjeta. Al terminar la prueba sin suscripción, o con la suscripción cancelada, **la app se bloquea**: cualquier pantalla lleva a «/bloqueado» (suscribirse o, sin Stripe configurado, contacto para activarla) y solo quedan la cuenta (exportar datos, borrar el negocio, salir) y la facturación. Los tres últimos días de prueba hay aviso arriba. Un cobro fallido no bloquea: Stripe reintenta y se avisa. El precio lo defines en Stripe (la web anuncia «desde 89 €/mes» y una oferta de fundador).
+- **A decidir**: ¿Precio con o sin IVA en la pasarela (Stripe Tax)? ¿La oferta de fundador como cupón de Stripe? ¿Aviso por correo antes de que termine la prueba?
 
 ## 3. Capa anónima de precios de referencia
 

@@ -87,7 +87,7 @@ La lista completa, comentada, está en `producto/.env.example`.
 
 ## 8. Cobros con Stripe (cuando quieras cobrar)
 
-Mientras no configures Stripe, la app no muestra avisos de pago ni bloquea nada: la sección Facturación dice que aún no se puede pagar desde ahí.
+**Hazlo antes de que terminen las primeras pruebas (14 días).** Al terminar la prueba sin suscripción la app se bloquea; mientras no haya Stripe, la pantalla de bloqueo y Facturación dan el WhatsApp y el email para activar la suscripción a mano (ver `docs/HOJA-DE-RUTA.md`).
 
 1. dashboard.stripe.com → **Products → Add product** «RESTORA» con un precio recurrente mensual. Copia el `price_…`.
 2. **Developers → API keys**: la clave secreta (`sk_live_…`; empieza con la de pruebas `sk_test_…`).
@@ -96,7 +96,7 @@ Mientras no configures Stripe, la app no muestra avisos de pago ni bloquea nada:
 5. Variables: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`. Redespliega.
 6. Prueba en modo test con la tarjeta `4242 4242 4242 4242`: Cuenta → Facturación → Suscribirme; al volver, el plan debe verse «Suscripción activa».
 
-El webhook es idempotente (cada evento se aplica una sola vez) y atómico (si algo falla, Stripe lo reintenta). Cuando termina la prueba o falla un cobro, la app muestra una barra de aviso **sin bloquear** el uso; ver `docs/DECISIONES.md`.
+El webhook es idempotente (cada evento se aplica una sola vez) y atómico (si algo falla, Stripe lo reintenta). Cuando termina la prueba sin suscripción la app se bloquea; si falla un cobro, solo avisa mientras Stripe reintenta. Ver `docs/DECISIONES.md`.
 
 ## 9. Comprobación después del primer despliegue
 
