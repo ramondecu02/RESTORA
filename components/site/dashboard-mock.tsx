@@ -1,38 +1,29 @@
-import {
-  Boxes,
-  FileText,
-  LayoutDashboard,
-  Settings,
-  ShoppingCart,
-  Truck,
-  UtensilsCrossed,
-  Wallet,
-} from "lucide-react";
+import { Bell, Boxes, LayoutDashboard, ShoppingCart, Truck, UtensilsCrossed, Wallet } from "lucide-react";
 import { CountUp } from "./count-up";
 
+// The real app menu (Hoy, Avisos, Compras…): the panel never shows a module the product does not have.
 const SIDEBAR = [
-  { icon: LayoutDashboard, label: "Dashboard", active: true },
+  { icon: LayoutDashboard, label: "Hoy", active: true },
+  { icon: Bell, label: "Avisos" },
   { icon: ShoppingCart, label: "Compras" },
   { icon: Truck, label: "Proveedores" },
   { icon: UtensilsCrossed, label: "Escandallos" },
   { icon: Boxes, label: "Inventario" },
-  { icon: Wallet, label: "Costes" },
-  { icon: FileText, label: "Informes" },
-  { icon: Settings, label: "Configuración" },
+  { icon: Wallet, label: "Ventas" },
 ];
 
 const STATS = [
-  { label: "Coste de compras", end: 24680, decimals: 0, suffix: " €", delta: "4,8%", down: true, good: true },
-  { label: "Food Cost", end: 29.4, decimals: 1, suffix: "%", delta: "1,7%", down: true, good: true },
+  { label: "Compras · 30 días", end: 24680, decimals: 0, suffix: " €", delta: "4,8%", down: true, good: true },
+  { label: "Food cost", end: 29.4, decimals: 1, suffix: "%", delta: "1,7%", down: true, good: true },
   { label: "Proveedores", end: 12, decimals: 0, suffix: "", delta: "0%", flat: true },
-  { label: "Alertas", end: 7, decimals: 0, suffix: "", delta: "2", up: true, good: false },
+  { label: "Avisos", end: 7, decimals: 0, suffix: "", delta: "2", up: true, good: false },
 ];
 
 const DONUT = [
-  { label: "Carnes", pct: 28, color: "#1E3D2F" },
-  { label: "Pescados", pct: 22, color: "#3E8E6A" },
-  { label: "Verduras", pct: 18, color: "#7CB79A" },
-  { label: "Bebidas", pct: 12, color: "#B7C6BB" },
+  { label: "Cárnicas García", pct: 28, color: "#1E3D2F" },
+  { label: "Mariscos Atlántico", pct: 22, color: "#3E8E6A" },
+  { label: "Frutas del Sur", pct: 18, color: "#7CB79A" },
+  { label: "Mediterránea", pct: 12, color: "#B7C6BB" },
   { label: "Otros", pct: 20, color: "#DCE3DB" },
 ];
 
@@ -95,7 +86,7 @@ const panel: React.CSSProperties = {
   padding: 14,
 };
 
-export function DashboardMock() {
+export function DashboardMock({ demoLabel }: { demoLabel: string }) {
   return (
     <div
       className="mono dm-root"
@@ -142,7 +133,10 @@ export function DashboardMock() {
       {/* Main */}
       <div style={{ padding: 16, background: "var(--bg)", display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>Resumen</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontWeight: 700, fontSize: 16 }}>Resumen</span>
+            <span style={{ fontSize: 11, color: "var(--muted)" }}>{demoLabel}</span>
+          </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--muted)", border: "1px solid var(--hair)", borderRadius: 8, padding: "5px 10px", background: "var(--surface)" }}>
             Últimos 30 días
           </div>
@@ -177,7 +171,7 @@ export function DashboardMock() {
             <LineChart />
           </div>
           <div style={panel}>
-            <div style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 8 }}>Distribución de costes</div>
+            <div style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 8 }}>Gasto por proveedor</div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{ width: 62, height: 62, borderRadius: "50%", background: conic(), flexShrink: 0, position: "relative" }}>
                 <div style={{ position: "absolute", inset: 12, borderRadius: "50%", background: "var(--surface)" }} />

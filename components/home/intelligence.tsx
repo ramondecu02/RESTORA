@@ -72,7 +72,7 @@ export function HomeIntelligence({ copy, locale }: { copy: SiteCopy; locale: Loc
               boxShadow: "0 64px 120px -54px rgba(0,0,0,0.85)",
             }}
           >
-            <DashboardMock />
+            <DashboardMock demoLabel={copy.demo.label} />
           </div>
 
           <div

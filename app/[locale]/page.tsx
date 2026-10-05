@@ -65,7 +65,7 @@ export default async function HomePage(props: {
           alt={copy.images.compras}
           focal="focal-producto"
           overlay={
-            <OverlayCard position="bottom-left">
+            <OverlayCard position="bottom-left" demoLabel={copy.demo.label}>
               <div style={label}>Última compra</div>
               <div style={{ fontWeight: 700, fontSize: 15, marginTop: 7 }}>Distribuidora Mediterránea</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 9, marginTop: 5 }}>
@@ -88,7 +88,7 @@ export default async function HomePage(props: {
           src="/images/recepcion.webp"
           alt={copy.images.recepcion}
           overlay={
-            <OverlayCard position="bottom-right">
+            <OverlayCard position="bottom-right" demoLabel={copy.demo.label}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: "linear-gradient(135deg, #E4736A, #C94a41)" }} />
                 <div style={{ minWidth: 0 }}>
@@ -113,17 +113,17 @@ export default async function HomePage(props: {
           alt={copy.images.escandallos}
           focal="focal-chef"
           overlay={
-            <OverlayCard position="bottom-right">
+            <OverlayCard position="bottom-right" demoLabel={copy.demo.label}>
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                 <Image src="/images/plato.webp" alt="" width={44} height={44} style={{ borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14 }}>Lubina a la brasa</div>
-                  <div style={{ fontSize: 12.5, color: "var(--muted)", fontVariantNumeric: "tabular-nums" }}>Coste 8,20 € · Margen 19,80 €</div>
+                  <div style={{ fontSize: 12.5, color: "var(--muted)", fontVariantNumeric: "tabular-nums" }}>Coste 5,75 € · Margen 18,25 €</div>
                 </div>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 11, paddingTop: 10, borderTop: "1px solid var(--hair)", fontSize: 12.5 }}>
                 <span style={{ color: "var(--muted)" }}>Food cost</span>
-                <span style={{ fontWeight: 700, color: "var(--brand)", fontVariantNumeric: "tabular-nums" }}>29,3%</span>
+                <span style={{ fontWeight: 700, color: "var(--brand)", fontVariantNumeric: "tabular-nums" }}>24,0%</span>
               </div>
             </OverlayCard>
           }

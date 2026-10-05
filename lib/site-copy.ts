@@ -72,7 +72,7 @@ const es = {
       { title: "Compras", desc: "Controla pedidos y proveedores" },
       { title: "Escandallos", desc: "Calcula costes y optimiza recetas" },
       { title: "Rentabilidad", desc: "Decide con datos reales" },
-      { title: "Inventario", desc: "Evita roturas y desperdicio" },
+      { title: "Inventario", desc: "Controla stock, consumo y mermas" },
       { title: "Inteligencia", desc: "Alertas antes de perder margen" },
     ],
     rentabilidad: {
@@ -101,7 +101,6 @@ const es = {
     sub: "RESTORA conecta compras, proveedores, escandallos, costes e inventario para darte una visión clara de cómo funciona realmente tu restaurante.",
     ctaPrimary: "Probar gratis 14 días",
     ctaSecondary: "Descubrir cómo funciona",
-    chips: ["Compras", "Proveedores", "Costes", "Rentabilidad", "Automatización"],
   },
   problem: {
     eyebrow: "El problema",
@@ -119,18 +118,7 @@ const es = {
     ],
   },
   features: {
-    eyebrow: "Funcionalidades",
-    title: "Todo lo que necesitas, en un solo lugar.",
-    sub: "Una plataforma completa para gestionar compras, proveedores, costes, escandallos, inventario y mucho más. Todo integrado, todo conectado, todo bajo control.",
     cta: "Descubrir todas las funcionalidades",
-    cards: [
-      { icon: "cart", title: "Compras", items: ["Histórico de precios", "Comparación de proveedores", "Evolución de costes", "Control de compras", "Recomendaciones"] },
-      { icon: "truck", title: "Proveedores", items: ["Fichas de proveedor", "Productos", "Precios históricos", "Comparativas", "Pedidos"] },
-      { icon: "dish", title: "Escandallos", items: ["Coste real por plato", "Materias primas", "Márgenes", "Actualización de costes"] },
-      { icon: "box", title: "Inventario", items: ["Stock", "Consumo", "Variaciones", "Control de producto"] },
-      { icon: "spark", title: "Inteligencia", items: ["Alertas", "Detección de anomalías", "Previsión", "Recomendaciones"] },
-      { icon: "bolt", title: "Automatización", items: ["Pedidos", "Flujos de trabajo", "Notificaciones", "Automatizaciones"] },
-    ],
   },
   proveedores: {
     eyebrow: "Proveedores",
@@ -149,16 +137,8 @@ const es = {
     title: "La información que necesitas, cuando la necesitas.",
     sub: "RESTORA convierte tus datos operativos en insights reales para que tomes mejores decisiones y aumentes la rentabilidad de tu restaurante.",
     steps: ["Datos", "Análisis", "Insight", "Acción"],
-    insight: "El precio del tomate ha aumentado un 12% en las últimas 6 semanas.",
+    insight: "El precio del tomate ha subido un 12% frente a tu compra anterior.",
     insightAction: "Revisa proveedores alternativos",
-  },
-  conexion: {
-    eyebrow: "TPV + Escandallos",
-    title: "Conecta lo que vendes con lo que compras.",
-    sub: "Cuando tu TPV está conectado con los escandallos, RESTORA relaciona ventas, recetas, materias primas y compras para calcular el consumo real y anticipar tus necesidades de compra.",
-    soon: "Próximamente",
-    inputs: ["TPV", "Ventas", "Recetas", "Materias primas", "Compras"],
-    outputs: ["Consumo estimado", "Necesidades de compra"],
   },
   pricing: {
     trialLabel: "Prueba gratuita",
@@ -166,7 +146,7 @@ const es = {
     trialNote: "con todo RESTORA, sin tarjeta",
     includes: ["Compras y proveedores", "Escandallos y food cost", "Inteligencia y alertas", "Inventario"],
     previewNote:
-      "14 días gratis, sin tarjeta. Al terminar la prueba, te suscribes por meses para seguir usándolo. Sin permanencia.",
+      "14 días gratis, sin tarjeta. Al terminar la prueba, si quieres seguir, activamos tu suscripción mensual. Sin permanencia.",
     plansBadge: "Planes y precios",
     plansTitle: "El precio se publicará aquí.",
     plansBody: "Cuando los planes estén cerrados los verás en esta página, sin letra pequeña. Mientras tanto, la prueba de 14 días incluye todo RESTORA.",
@@ -178,18 +158,6 @@ const es = {
     plansCta: "Escribirnos",
     seeLabel: "Ver precios",
     cta: "Probar gratis 14 días",
-  },
-  faq: {
-    eyebrow: "Preguntas",
-    title: "Preguntas frecuentes",
-    sub: "Lo que más nos preguntan los restaurantes.",
-    items: [
-      { q: "¿Ya puedo usar RESTORA?", a: "Sí. Crea tu cuenta y pruébalo gratis 14 días, sin tarjeta. Al terminar, te suscribes por meses para seguir usándolo, sin permanencia." },
-      { q: "¿Tengo que cambiar mi TPV?", a: "No. RESTORA es la capa de inteligencia por encima de lo que ya usas. Empiezas con una foto del albarán, sin cambiar tu operativa." },
-      { q: "¿Mis datos son privados?", a: "Sí. Tus datos son tuyos. El benchmark sectorial es siempre anónimo y agregado: nadie ve los números de tu restaurante." },
-      { q: "¿Cuánto cuesta?", a: "Pruébalo gratis 14 días, sin tarjeta. Al terminar, te suscribes por meses para seguir usándolo, sin permanencia. Publicaremos el precio de la suscripción en la página de Precios; si necesitas saberlo antes de empezar, escríbenos." },
-      { q: "¿Desde cuándo puedo usarlo?", a: "Desde hoy: crea tu cuenta y empieza con una foto de un albarán." },
-    ],
   },
   lead: {
     eyebrow: "Demo",
@@ -218,7 +186,7 @@ const es = {
   },
   trust: {
     secure: "Conexión segura · HTTPS",
-    secureNote: "Tus datos viajan cifrados y no se comparten con terceros.",
+    secureNote: "Tus datos viajan cifrados y no se venden ni se ceden a otros restaurantes ni a proveedores.",
     rgpd: "Cumplimiento RGPD",
     madeIn: "Hecho en Cataluña",
     eu: "Datos alojados en la UE",
@@ -271,6 +239,9 @@ const es = {
     text: "RESTORA · control de food cost y rentabilidad para restaurantes",
     bandTitle: "¿Conoces a alguien que lleve un restaurante?",
     bandSub: "Pásale RESTORA. Un mensaje y ya está.",
+  },
+  demo: {
+    label: "Datos de ejemplo",
   },
   floating: {
     whatsapp: "Escribirnos por WhatsApp",
@@ -396,7 +367,7 @@ const ca: SiteCopy = {
       { title: "Compres", desc: "Controla comandes i proveïdors" },
       { title: "Escandalls", desc: "Calcula costos i optimitza receptes" },
       { title: "Rendibilitat", desc: "Decideix amb dades reals" },
-      { title: "Inventari", desc: "Evita ruptures i malbaratament" },
+      { title: "Inventari", desc: "Controla estoc, consum i minves" },
       { title: "Intel·ligència", desc: "Alertes abans de perdre marge" },
     ],
     rentabilidad: {
@@ -425,7 +396,6 @@ const ca: SiteCopy = {
     sub: "RESTORA connecta compres, proveïdors, escandalls, costos i inventari per donar-te una visió clara de com funciona realment el teu restaurant.",
     ctaPrimary: "Prova-ho gratis 14 dies",
     ctaSecondary: "Descobrir com funciona",
-    chips: ["Compres", "Proveïdors", "Costos", "Rendibilitat", "Automatització"],
   },
   problem: {
     eyebrow: "El problema",
@@ -443,18 +413,7 @@ const ca: SiteCopy = {
     ],
   },
   features: {
-    eyebrow: "Funcionalitats",
-    title: "Tot el que necessites, en un sol lloc.",
-    sub: "Una plataforma completa per gestionar compres, proveïdors, costos, escandalls, inventari i molt més. Tot integrat, tot connectat, tot sota control.",
     cta: "Descobrir totes les funcionalitats",
-    cards: [
-      { icon: "cart", title: "Compres", items: ["Històric de preus", "Comparació de proveïdors", "Evolució de costos", "Control de compres", "Recomanacions"] },
-      { icon: "truck", title: "Proveïdors", items: ["Fitxes de proveïdor", "Productes", "Preus històrics", "Comparatives", "Comandes"] },
-      { icon: "dish", title: "Escandalls", items: ["Cost real per plat", "Matèries primeres", "Marges", "Actualització de costos"] },
-      { icon: "box", title: "Inventari", items: ["Estoc", "Consum", "Variacions", "Control de producte"] },
-      { icon: "spark", title: "Intel·ligència", items: ["Alertes", "Detecció d'anomalies", "Previsió", "Recomanacions"] },
-      { icon: "bolt", title: "Automatització", items: ["Comandes", "Fluxos de treball", "Notificacions", "Automatitzacions"] },
-    ],
   },
   proveedores: {
     eyebrow: "Proveïdors",
@@ -473,16 +432,8 @@ const ca: SiteCopy = {
     title: "La informació que necessites, quan la necessites.",
     sub: "RESTORA converteix les teves dades operatives en insights reals perquè prenguis millors decisions i augmentis la rendibilitat del teu restaurant.",
     steps: ["Dades", "Anàlisi", "Insight", "Acció"],
-    insight: "El preu del tomàquet ha augmentat un 12% en les últimes 6 setmanes.",
+    insight: "El preu del tomàquet ha pujat un 12% respecte a la teva compra anterior.",
     insightAction: "Revisa proveïdors alternatius",
-  },
-  conexion: {
-    eyebrow: "TPV + Escandalls",
-    title: "Connecta el que vens amb el que compres.",
-    sub: "Quan el teu TPV està connectat amb els escandalls, RESTORA relaciona vendes, receptes, matèries primeres i compres per calcular el consum real i anticipar les teves necessitats de compra.",
-    soon: "Properament",
-    inputs: ["TPV", "Vendes", "Receptes", "Matèries primeres", "Compres"],
-    outputs: ["Consum estimat", "Necessitats de compra"],
   },
   pricing: {
     trialLabel: "Prova gratuïta",
@@ -490,7 +441,7 @@ const ca: SiteCopy = {
     trialNote: "amb tot RESTORA, sense targeta",
     includes: ["Compres i proveïdors", "Escandalls i food cost", "Intel·ligència i alertes", "Inventari"],
     previewNote:
-      "14 dies gratis, sense targeta. En acabar la prova, et subscrius per mesos per continuar fent-lo servir. Sense permanència.",
+      "14 dies gratis, sense targeta. En acabar la prova, si vols continuar, activem la teva subscripció mensual. Sense permanència.",
     plansBadge: "Plans i preus",
     plansTitle: "El preu es publicarà aquí.",
     plansBody: "Quan els plans estiguin tancats els veuràs en aquesta pàgina, sense lletra petita. Mentrestant, la prova de 14 dies inclou tot RESTORA.",
@@ -502,18 +453,6 @@ const ca: SiteCopy = {
     plansCta: "Escriu-nos",
     seeLabel: "Veure preus",
     cta: "Prova-ho gratis 14 dies",
-  },
-  faq: {
-    eyebrow: "Preguntes",
-    title: "Preguntes freqüents",
-    sub: "El que més ens pregunten els restaurants.",
-    items: [
-      { q: "Ja puc fer servir RESTORA?", a: "Sí. Crea el teu compte i prova-ho gratis 14 dies, sense targeta. En acabar, et subscrius per mesos per continuar fent-lo servir, sense permanència." },
-      { q: "He de canviar el meu TPV?", a: "No. RESTORA és la capa d'intel·ligència per sobre del que ja fas servir. Comences amb una foto de l'albarà, sense canviar la teva operativa." },
-      { q: "Les meves dades són privades?", a: "Sí. Les teves dades són teves. El benchmark sectorial és sempre anònim i agregat: ningú veu els números del teu restaurant." },
-      { q: "Quant costa?", a: "Prova-ho gratis 14 dies, sense targeta. En acabar, et subscrius per mesos per continuar fent-lo servir, sense permanència. Publicarem el preu de la subscripció a la pàgina de Preus; si necessites saber-lo abans de començar, escriu-nos." },
-      { q: "Des de quan el puc fer servir?", a: "Des d'avui: crea el teu compte i comença amb una foto d'un albarà." },
-    ],
   },
   lead: {
     eyebrow: "Demo",
@@ -542,7 +481,7 @@ const ca: SiteCopy = {
   },
   trust: {
     secure: "Connexió segura · HTTPS",
-    secureNote: "Les teves dades viatgen xifrades i no es comparteixen amb tercers.",
+    secureNote: "Les teves dades viatgen xifrades i no es venen ni es cedeixen a altres restaurants ni a proveïdors.",
     rgpd: "Compliment RGPD",
     madeIn: "Fet a Catalunya",
     eu: "Dades allotjades a la UE",
@@ -595,6 +534,9 @@ const ca: SiteCopy = {
     text: "RESTORA · control de food cost i rendibilitat per a restaurants",
     bandTitle: "Coneixes algú que porti un restaurant?",
     bandSub: "Passa-li RESTORA. Un missatge i ja està.",
+  },
+  demo: {
+    label: "Dades d'exemple",
   },
   floating: {
     whatsapp: "Escriure'ns per WhatsApp",

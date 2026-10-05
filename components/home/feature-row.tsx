@@ -87,9 +87,12 @@ export function FeatureRow({
 export function OverlayCard({
   children,
   position = "bottom-left",
+  demoLabel,
 }: {
   children: ReactNode;
   position?: "bottom-left" | "bottom-right" | "top-right";
+  /** "Datos de ejemplo": the figures on these cards are illustrative, and the card says so. */
+  demoLabel?: string;
 }) {
   const pos: Record<string, React.CSSProperties> = {
     "bottom-left": { left: "clamp(12px, 3%, 22px)", bottom: "clamp(12px, 3%, 22px)" },
@@ -115,6 +118,7 @@ export function OverlayCard({
       }}
     >
       {children}
+      {demoLabel && <div style={{ marginTop: 10, fontSize: 10.5, color: "var(--muted)", letterSpacing: "0.02em" }}>{demoLabel}</div>}
     </div>
   );
 }

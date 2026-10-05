@@ -30,11 +30,11 @@ const es = {
   thesis: {
     eyebrow: "La tesis",
     quote: "Cada venta debe generar inteligencia de negocio.",
-    body: "Cada plato que sale al pase está unido a una receta, a unos ingredientes y a un precio de compra que cambia. Si esa cadena está conectada, cada ticket te dice algo útil: qué margen deja, qué proveedor se está encareciendo y qué plato conviene revisar antes de que te lo diga la cuenta de resultados.",
+    body: "Cada plato que sale al pase está unido a una receta, a unos ingredientes y a un precio de compra que cambia. Si esa cadena está conectada, cada plato vendido te dice algo útil: qué margen deja, qué proveedor se está encareciendo y qué plato conviene revisar antes de que te lo diga la cuenta de resultados.",
     principles: [
       { title: "Sin humo", body: "Solo tus datos y lo que se puede calcular con ellos. Ningún indicador inventado, ninguna promesa de resultados que no dependa de tu cocina." },
       { title: "Sin comercial de por medio", body: "Te escribes con quien construye el producto. Las demos se hacen con un plato tuyo, no con un catálogo." },
-      { title: "Tus datos son tuyos", body: "No se comparten con otros restaurantes ni con proveedores. Cualquier referencia sectorial es anónima y agregada; puedes exportar y borrar todo cuando quieras." },
+      { title: "Tus datos son tuyos", body: "No se comparten con otros restaurantes ni con proveedores. Los precios de tus albaranes alimentan, sin tu nombre, una referencia agregada de mercado; puedes descargar tus datos y borrar el negocio cuando quieras." },
     ],
   },
   where: {
@@ -76,11 +76,11 @@ const ca: SobreCopy = {
   thesis: {
     eyebrow: "La tesi",
     quote: "Cada venda ha de generar intel·ligència de negoci.",
-    body: "Cada plat que surt al pas està lligat a una recepta, a uns ingredients i a un preu de compra que canvia. Si aquesta cadena està connectada, cada tiquet et diu alguna cosa útil: quin marge deixa, quin proveïdor s'està encarint i quin plat convé revisar abans que t'ho digui el compte de resultats.",
+    body: "Cada plat que surt al pas està lligat a una recepta, a uns ingredients i a un preu de compra que canvia. Si aquesta cadena està connectada, cada plat venut et diu alguna cosa útil: quin marge deixa, quin proveïdor s'està encarint i quin plat convé revisar abans que t'ho digui el compte de resultats.",
     principles: [
       { title: "Sense fum", body: "Només les teves dades i el que es pot calcular amb elles. Cap indicador inventat, cap promesa de resultats que no depengui de la teva cuina." },
       { title: "Sense comercial pel mig", body: "T'escrius amb qui construeix el producte. Les demos es fan amb un plat teu, no amb un catàleg." },
-      { title: "Les teves dades són teves", body: "No es comparteixen amb altres restaurants ni amb proveïdors. Qualsevol referència sectorial és anònima i agregada; pots exportar i esborrar-ho tot quan vulguis." },
+      { title: "Les teves dades són teves", body: "No es comparteixen amb altres restaurants ni amb proveïdors. Els preus dels teus albarans alimenten, sense el teu nom, una referència agregada de mercat; pots descarregar les teves dades i esborrar el negoci quan vulguis." },
     ],
   },
   where: {

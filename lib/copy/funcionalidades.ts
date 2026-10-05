@@ -6,7 +6,7 @@ const es = {
   hero: {
     eyebrow: "Funcionalidades",
     title: "Así se ve tu restaurante por dentro.",
-    sub: "Seis módulos, un mismo dato. Esto es lo que tendrías en pantalla cada mañana —con un ejemplo real de cada uno.",
+    sub: "Seis módulos, un mismo dato. Esto es lo que tendrías en pantalla cada mañana —con un ejemplo ilustrativo de cada uno.",
     note: "Ejemplos ilustrativos del producto",
   },
   chrome: {
@@ -72,7 +72,7 @@ const es = {
         total: "1.240,00 €",
         trendLabel: "Precio de la lubina · 6 meses",
         trend: [15.6, 15.9, 16.4, 16.2, 17.1, 18.6],
-        note: "Tres subidas seguidas en aceite. Afecta a 14 platos de tu carta.",
+        note: "El aceite sube un 14 % frente a tu compra anterior. Afecta a 14 platos de tu carta.",
       },
     },
     {
@@ -101,11 +101,11 @@ const es = {
       key: "inventario",
       eyebrow: "Inventario",
       title: "Lo que queda, lo que se va y lo que falta.",
-      body: "Stock y consumo en la misma pantalla, para que veas la rotura antes de que ocurra —no cuando el cocinero te avisa.",
+      body: "Stock y consumo en la misma pantalla, para que veas qué se acaba antes de que el cocinero te lo diga.",
       points: [
         "Stock actual y consumo semanal",
         "Días de cobertura estimados",
-        "Alerta antes de la rotura",
+        "Aviso cuando un producto baja de su mínimo",
       ],
       demo: {
         kind: "inventario" as const,
@@ -114,7 +114,7 @@ const es = {
           { name: "Aceite AOVE", stock: "24 L", use: "9 L/sem", days: "18 días", status: "ok" as const },
           { name: "Patata agria", stock: "40 kg", use: "22 kg/sem", days: "12 días", status: "ok" as const },
         ],
-        alert: "Lubina por debajo del mínimo: cubre 3,5 días y el fin de semana pesa el 40 % de las ventas.",
+        alert: "Lubina por debajo del mínimo: con tu consumo semanal, cubre 3,5 días.",
         action: "Añadir al pedido",
       },
     },
@@ -122,10 +122,10 @@ const es = {
       key: "rentabilidad",
       eyebrow: "Rentabilidad",
       title: "Qué plato te sostiene y cuál te está costando dinero.",
-      body: "Ordena la carta por margen real. Verás rápido cuál mantener, cuál rediseñar y cuál subir de precio.",
+      body: "Ordena la carta por margen real. Verás rápido cuál mantener, cuál rehacer y a cuál revisarle el coste o el precio.",
       points: [
         "Margen real por plato, no estimado",
-        "Cruce de ventas y coste",
+        "Cruce de ventas (CSV del TPV) y coste",
         "Señal clara de qué revisar",
       ],
       demo: {
@@ -145,18 +145,18 @@ const es = {
       points: [
         "Alertas de subida de precio",
         "Impacto calculado en tu carta",
-        "Sugerencia de acción concreta",
+        "Enlace directo al plato y a proveedores alternativos",
       ],
       demo: {
         kind: "insight" as const,
         tag: "Insight · hoy",
-        headline: "El aceite AOVE ha subido un 14 % en 6 semanas.",
+        headline: "El aceite AOVE ha subido un 14 % frente a tu compra anterior.",
         detail: "Afecta a 14 platos. Tu food cost medio pasa del 29,4 % al 30,8 % si no tocas nada.",
         stats: [
           { label: "Platos afectados", value: "14" },
           { label: "Impacto mensual", value: "−318 €" },
         ],
-        actions: ["Comparar proveedores de aceite", "Revisar los 14 escandallos"],
+        actions: ["Ver alternativas de aceite", "Valorar el plato más afectado"],
       },
     },
   ],
@@ -174,7 +174,7 @@ const ca: FuncionalidadesCopy = {
   hero: {
     eyebrow: "Funcionalitats",
     title: "Així es veu el teu restaurant per dins.",
-    sub: "Sis mòduls, una mateixa dada. Això és el que tindries a la pantalla cada matí —amb un exemple real de cadascun.",
+    sub: "Sis mòduls, una mateixa dada. Això és el que tindries a la pantalla cada matí —amb un exemple il·lustratiu de cadascun.",
     note: "Exemples il·lustratius del producte",
   },
   chrome: {
@@ -240,7 +240,7 @@ const ca: FuncionalidadesCopy = {
         total: "1.240,00 €",
         trendLabel: "Preu del llobarro · 6 mesos",
         trend: [15.6, 15.9, 16.4, 16.2, 17.1, 18.6],
-        note: "Tres pujades seguides en oli. Afecta 14 plats de la teva carta.",
+        note: "L'oli puja un 14 % respecte a la teva compra anterior. Afecta 14 plats de la teva carta.",
       },
     },
     {
@@ -269,11 +269,11 @@ const ca: FuncionalidadesCopy = {
       key: "inventario",
       eyebrow: "Inventari",
       title: "El que queda, el que marxa i el que falta.",
-      body: "Estoc i consum a la mateixa pantalla, perquè vegis la ruptura abans que passi —no quan t'avisa el cuiner.",
+      body: "Estoc i consum a la mateixa pantalla, perquè vegis què s'acaba abans que el cuiner t'ho digui.",
       points: [
         "Estoc actual i consum setmanal",
         "Dies de cobertura estimats",
-        "Alerta abans de la ruptura",
+        "Avís quan un producte baixa del seu mínim",
       ],
       demo: {
         kind: "inventario" as const,
@@ -282,7 +282,7 @@ const ca: FuncionalidadesCopy = {
           { name: "Oli AOVE", stock: "24 L", use: "9 L/set", days: "18 dies", status: "ok" as const },
           { name: "Patata agra", stock: "40 kg", use: "22 kg/set", days: "12 dies", status: "ok" as const },
         ],
-        alert: "Llobarro per sota del mínim: cobreix 3,5 dies i el cap de setmana pesa el 40 % de les vendes.",
+        alert: "Llobarro per sota del mínim: amb el teu consum setmanal, cobreix 3,5 dies.",
         action: "Afegir a la comanda",
       },
     },
@@ -290,10 +290,10 @@ const ca: FuncionalidadesCopy = {
       key: "rentabilidad",
       eyebrow: "Rendibilitat",
       title: "Quin plat et sosté i quin et costa diners.",
-      body: "Ordena la carta per marge real. Veuràs ràpid quin mantenir, quin redissenyar i quin apujar de preu.",
+      body: "Ordena la carta per marge real. Veuràs ràpid quin mantenir, quin refer i a quin revisar-li el cost o el preu.",
       points: [
         "Marge real per plat, no estimat",
-        "Encreuament de vendes i cost",
+        "Encreuament de vendes (CSV del TPV) i cost",
         "Senyal clar de què revisar",
       ],
       demo: {
@@ -313,18 +313,18 @@ const ca: FuncionalidadesCopy = {
       points: [
         "Alertes de pujada de preu",
         "Impacte calculat a la teva carta",
-        "Suggeriment d'acció concreta",
+        "Enllaç directe al plat i a proveïdors alternatius",
       ],
       demo: {
         kind: "insight" as const,
         tag: "Insight · avui",
-        headline: "L'oli AOVE ha pujat un 14 % en 6 setmanes.",
+        headline: "L'oli AOVE ha pujat un 14 % respecte a la teva compra anterior.",
         detail: "Afecta 14 plats. El teu food cost mitjà passa del 29,4 % al 30,8 % si no toques res.",
         stats: [
           { label: "Plats afectats", value: "14" },
           { label: "Impacte mensual", value: "−318 €" },
         ],
-        actions: ["Comparar proveïdors d'oli", "Revisar els 14 escandalls"],
+        actions: ["Veure alternatives d'oli", "Valorar el plat més afectat"],
       },
     },
   ],

@@ -100,7 +100,7 @@ const es = {
       },
       {
         title: "Qué datos recogemos",
-        body: "Solo los que nos facilitas en el formulario de contacto: nombre del restaurante, ciudad, tu rol, el TPV que usas actualmente y el mensaje que quieras dejarnos. Guardamos también el idioma de la web y la dirección IP desde la que se envía el formulario, únicamente para evitar envíos automatizados y abuso.",
+        body: "Los que nos facilitas en los formularios: en la solicitud de demo, el nombre del restaurante, la ciudad, tu rol, el TPV que usas actualmente y el mensaje; en el contacto rápido, tu nombre, tu email y el mensaje; y en la checklist, tu email y tu consentimiento. Guardamos también el idioma de la web y la dirección IP desde la que se envía el formulario, únicamente para evitar envíos automatizados y abuso.",
       },
       {
         title: "Para qué los usamos",
@@ -139,7 +139,7 @@ const es = {
     sections: [
       {
         title: "Nuestro papel",
-        body: "Respecto a los datos que nos dejas en la web, actuamos como responsables del tratamiento. Cuando RESTORA esté operativo y trates datos dentro del producto, actuaremos como encargados del tratamiento de los datos que tú gestiones, en los términos que se recojan en el contrato de servicio.",
+        body: "Respecto a los datos que nos dejas en la web, actuamos como responsables del tratamiento. Respecto a los datos que gestionas dentro de RESTORA (albaranes, proveedores, escandallos), actuamos como encargados del tratamiento, en los términos que se recojan en el contrato de servicio.",
       },
       {
         title: "Principios que aplicamos",
@@ -147,7 +147,7 @@ const es = {
       },
       {
         title: "Encargados del tratamiento",
-        body: "Utilizamos Cloudflare para alojar la web y la base de datos de solicitudes, y un proveedor de correo electrónico para recibir los avisos de contacto. Con cada uno existe o se firmará el correspondiente acuerdo de encargo de tratamiento.",
+        body: "Para la web utilizamos Cloudflare (alojamiento y base de datos de solicitudes) y un proveedor de correo electrónico para recibir los avisos de contacto. Para el producto (app.restoraapp.app) utilizamos Vercel y Neon (alojamiento y base de datos), Vercel Blob (archivos), Anthropic (lectura de albaranes con IA), Resend (correo de la aplicación) y Stripe (cobros, cuando se active). Además, los precios de los albaranes alimentan, sin el nombre del negocio, una referencia agregada de mercado. Con cada uno existe o se firmará el correspondiente acuerdo de encargo de tratamiento.",
       },
       {
         title: "Transferencias internacionales",
@@ -269,7 +269,7 @@ const ca: LegalCopy = {
       },
       {
         title: "Quines dades recollim",
-        body: "Només les que ens facilites al formulari de contacte: nom del restaurant, ciutat, el teu rol, el TPV que fas servir actualment i el missatge que ens vulguis deixar. També desem l'idioma del web i l'adreça IP des de la qual s'envia el formulari, únicament per evitar enviaments automatitzats i abús.",
+        body: "Les que ens facilites als formularis: a la sol·licitud de demo, el nom del restaurant, la ciutat, el teu rol, el TPV que fas servir actualment i el missatge; al contacte ràpid, el teu nom, el teu correu i el missatge; i a la checklist, el teu correu i el teu consentiment. També desem l'idioma del web i l'adreça IP des de la qual s'envia el formulari, únicament per evitar enviaments automatitzats i abús.",
       },
       {
         title: "Per a què les fem servir",
@@ -308,7 +308,7 @@ const ca: LegalCopy = {
     sections: [
       {
         title: "El nostre paper",
-        body: "Respecte a les dades que ens deixes al web, actuem com a responsables del tractament. Quan RESTORA estigui operatiu i tractis dades dins del producte, actuarem com a encarregats del tractament de les dades que tu gestionis, en els termes que reculli el contracte de servei.",
+        body: "Respecte a les dades que ens deixes al web, actuem com a responsables del tractament. Respecte a les dades que gestiones dins de RESTORA (albarans, proveïdors, escandalls), actuem com a encarregats del tractament, en els termes que reculli el contracte de servei.",
       },
       {
         title: "Principis que apliquem",
@@ -316,7 +316,7 @@ const ca: LegalCopy = {
       },
       {
         title: "Encarregats del tractament",
-        body: "Fem servir Cloudflare per allotjar el web i la base de dades de sol·licituds, i un proveïdor de correu electrònic per rebre els avisos de contacte. Amb cadascun existeix o se signarà el corresponent acord d'encàrrec de tractament.",
+        body: "Per al web fem servir Cloudflare (allotjament i base de dades de sol·licituds) i un proveïdor de correu electrònic per rebre els avisos de contacte. Per al producte (app.restoraapp.app) fem servir Vercel i Neon (allotjament i base de dades), Vercel Blob (fitxers), Anthropic (lectura d'albarans amb IA), Resend (correu de l'aplicació) i Stripe (cobraments, quan s'activi). A més, els preus dels albarans alimenten, sense el nom del negoci, una referència agregada de mercat. Amb cadascun existeix o se signarà el corresponent acord d'encàrrec de tractament.",
       },
       {
         title: "Transferències internacionals",

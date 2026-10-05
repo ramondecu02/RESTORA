@@ -124,6 +124,7 @@ export function HomeHero({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
               <span style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 600 }}>
                 RESTORA · hoy
               </span>
+              <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{copy.demo.label}</span>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>

@@ -28,11 +28,6 @@ const es = {
         desc: "Mucha rotación y compras semanales grandes.",
         signals: ["Compras a 5 proveedores o más", "El food cost se te mueve cada mes", "Necesitas ver el margen por plato, no global"],
       },
-      {
-        name: "Pequeño grupo",
-        desc: "Dos o tres locales con carta compartida.",
-        signals: ["Quieres comparar entre locales", "Negocias precio por volumen", "Buscas un criterio común de costes"],
-      },
     ],
     note: "¿No te reconoces en ninguno? Escríbenos igualmente y te decimos con franqueza si te encaja.",
   },
@@ -76,11 +71,6 @@ const ca: PreciosCopy = {
         name: "Cuina amb volum",
         desc: "Molta rotació i compres setmanals grans.",
         signals: ["Compres a 5 proveïdors o més", "El food cost se't mou cada mes", "Necessites veure el marge per plat, no global"],
-      },
-      {
-        name: "Petit grup",
-        desc: "Dos o tres locals amb carta compartida.",
-        signals: ["Vols comparar entre locals", "Negocies preu per volum", "Busques un criteri comú de costos"],
       },
     ],
     note: "No et reconeixes en cap? Escriu-nos igualment i et diem amb franquesa si t'encaixa.",

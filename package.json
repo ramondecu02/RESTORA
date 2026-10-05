@@ -14,7 +14,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "test:web": "tsx --test \"tests/**/*.test.ts\""
+    "test:web": "tsx --test \"tests/**/*.test.ts\"",
+    "checklist": "node scripts/checklist.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

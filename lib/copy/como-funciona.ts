@@ -8,13 +8,13 @@ const es = {
     title: "Un martes cualquiera, contado entero.",
     sub: "De un albarán que entra por la puerta a una decisión que protege tu margen. Estos son los cuatro pasos, con el mismo caso de principio a fin.",
   },
-  caseTag: "Caso real · el aceite de oliva",
+  caseTag: "Caso de ejemplo · el aceite de oliva",
   stages: [
     {
       num: "01",
       step: "Datos",
-      title: "Entra un albarán. Nada más.",
-      body: "No cambias tu operativa: registras la compra como te llegue. RESTORA la ordena y la guarda con fecha, proveedor y precio por unidad.",
+      title: "Entra un albarán. Tú solo confirmas.",
+      body: "No cambias tu operativa: haces una foto al albarán o subes el PDF. RESTORA lo lee, lo ordena y, cuando lo confirmas, lo guarda con fecha, proveedor y precio por unidad.",
       moment: "Martes, 8:40",
       example: "Llega el pedido semanal. El aceite AOVE viene a 8,40 €/L.",
       tag: "Albarán 4587 · Distribuidora Mediterránea",
@@ -22,10 +22,10 @@ const es = {
     {
       num: "02",
       step: "Análisis",
-      title: "Se compara con todo tu histórico.",
-      body: "RESTORA mira ese precio frente a las últimas compras, detecta la tendencia y localiza cada receta donde usas ese ingrediente.",
+      title: "Se compara con tu compra anterior.",
+      body: "RESTORA mira ese precio frente a la compra anterior, calcula la subida y localiza cada receta donde usas ese ingrediente.",
       moment: "Al instante",
-      example: "8,40 € no es un precio suelto: es la tercera subida seguida. +14 % en seis semanas.",
+      example: "8,40 € no es un precio suelto: sube un 14 % frente a tu compra anterior.",
       tag: "14 escandallos usan aceite AOVE",
     },
     {
@@ -40,13 +40,13 @@ const es = {
     {
       num: "04",
       step: "Decisión",
-      title: "Tres salidas, y tú eliges.",
-      body: "RESTORA propone caminos concretos con su efecto calculado. Eliges uno y los escandallos se recalculan solos.",
+      title: "Tres herramientas, y tú eliges.",
+      body: "RESTORA te lleva al plato y a los proveedores alternativos, con el efecto calculado antes de aceptar. Eliges y los escandallos se recalculan.",
       moment: "En dos minutos",
       example: "Cambiar de proveedor, ajustar la ración o subir 0,40 € tres platos.",
       tag: "Decides tú · el cálculo lo pone RESTORA",
       options: [
-        { label: "Cambiar de proveedor", effect: "−1,70 €/kg", note: "Recupera 82 € al mes" },
+        { label: "Cambiar de proveedor", effect: "−1,70 €/kg", note: "Ahorro estimado al año" },
         { label: "Ajustar ración", effect: "−2 ml/plato", note: "Sin tocar la carta" },
         { label: "Subir PVP", effect: "+0,40 € en 3 platos", note: "Food cost al 29,1 %" },
       ],
@@ -57,9 +57,9 @@ const es = {
     title: "Tu primera semana, sin dramas.",
     sub: "No hay migración, ni proyecto de tres meses, ni cambiar de TPV.",
     steps: [
-      { day: "Día 1", title: "Subes tu carta", body: "Cargamos contigo tus recetas y tus proveedores habituales. Es la única vez que tecleas de verdad." },
+      { day: "Día 1", title: "Subes tu carta", body: "Subes tu carta y montas tus primeros escandallos con plantillas y sugerencias. Te acompañamos en el arranque." },
       { day: "Días 2-6", title: "Entran tus compras", body: "Cada albarán que registras alimenta el histórico. Cuantos más, más fino es el análisis." },
-      { day: "Día 7", title: "Primera foto real", body: "Ves tu food cost por plato y el primer aviso de precio. A partir de aquí, se mantiene solo." },
+      { day: "Día 7", title: "Primera foto real", body: "Ves tu food cost por plato y el primer aviso de precio. A partir de aquí, se actualiza con cada albarán que confirmas." },
     ],
   },
   reassure: {
@@ -67,7 +67,7 @@ const es = {
     title: "RESTORA se adapta a tu cocina, no al revés.",
     items: [
       { title: "No cambias de TPV", body: "RESTORA se coloca por encima de lo que ya usas." },
-      { title: "No rehaces tus Excel", body: "Empiezas con lo que tienes; lo demás se construye solo." },
+      { title: "No rehaces tus Excel", body: "Nos pasas lo que tienes y lo cargamos contigo; lo demás se actualiza con tus albaranes." },
       { title: "No necesitas un informático", body: "Si sabes leer un albarán, sabes usarlo." },
     ],
   },
@@ -81,13 +81,13 @@ const ca: ComoFuncionaCopy = {
     title: "Un dimarts qualsevol, explicat sencer.",
     sub: "D'un albarà que entra per la porta a una decisió que protegeix el teu marge. Aquests són els quatre passos, amb el mateix cas de principi a fi.",
   },
-  caseTag: "Cas real · l'oli d'oliva",
+  caseTag: "Cas d'exemple · l'oli d'oliva",
   stages: [
     {
       num: "01",
       step: "Dades",
-      title: "Entra un albarà. Res més.",
-      body: "No canvies la teva operativa: registres la compra tal com t'arribi. RESTORA l'ordena i la desa amb data, proveïdor i preu per unitat.",
+      title: "Entra un albarà. Tu només confirmes.",
+      body: "No canvies la teva operativa: fas una foto a l'albarà o puges el PDF. RESTORA el llegeix, l'ordena i, quan el confirmes, el desa amb data, proveïdor i preu per unitat.",
       moment: "Dimarts, 8:40",
       example: "Arriba la comanda setmanal. L'oli AOVE ve a 8,40 €/L.",
       tag: "Albarà 4587 · Distribuïdora Mediterrània",
@@ -95,10 +95,10 @@ const ca: ComoFuncionaCopy = {
     {
       num: "02",
       step: "Anàlisi",
-      title: "Es compara amb tot el teu històric.",
-      body: "RESTORA mira aquest preu davant les últimes compres, detecta la tendència i localitza cada recepta on fas servir aquest ingredient.",
+      title: "Es compara amb la teva compra anterior.",
+      body: "RESTORA mira aquest preu davant la compra anterior, calcula la pujada i localitza cada recepta on fas servir aquest ingredient.",
       moment: "A l'instant",
-      example: "8,40 € no és un preu solt: és la tercera pujada seguida. +14 % en sis setmanes.",
+      example: "8,40 € no és un preu solt: puja un 14 % respecte a la teva compra anterior.",
       tag: "14 escandalls fan servir oli AOVE",
     },
     {
@@ -113,13 +113,13 @@ const ca: ComoFuncionaCopy = {
     {
       num: "04",
       step: "Decisió",
-      title: "Tres sortides, i tries tu.",
-      body: "RESTORA proposa camins concrets amb el seu efecte calculat. En tries un i els escandalls es recalculen sols.",
+      title: "Tres eines, i tries tu.",
+      body: "RESTORA et porta al plat i als proveïdors alternatius, amb l'efecte calculat abans d'acceptar. Tries i els escandalls es recalculen.",
       moment: "En dos minuts",
       example: "Canviar de proveïdor, ajustar la ració o pujar 0,40 € tres plats.",
       tag: "Decideixes tu · el càlcul el posa RESTORA",
       options: [
-        { label: "Canviar de proveïdor", effect: "−1,70 €/kg", note: "Recupera 82 € al mes" },
+        { label: "Canviar de proveïdor", effect: "−1,70 €/kg", note: "Estalvi estimat a l'any" },
         { label: "Ajustar ració", effect: "−2 ml/plat", note: "Sense tocar la carta" },
         { label: "Pujar PVP", effect: "+0,40 € en 3 plats", note: "Food cost al 29,1 %" },
       ],
@@ -130,9 +130,9 @@ const ca: ComoFuncionaCopy = {
     title: "La teva primera setmana, sense drames.",
     sub: "No hi ha migració, ni projecte de tres mesos, ni canviar de TPV.",
     steps: [
-      { day: "Dia 1", title: "Puges la teva carta", body: "Carreguem amb tu les teves receptes i els teus proveïdors habituals. És l'única vegada que teclejes de debò." },
+      { day: "Dia 1", title: "Puges la teva carta", body: "Puges la teva carta i muntes els teus primers escandalls amb plantilles i suggeriments. T'acompanyem en l'arrencada." },
       { day: "Dies 2-6", title: "Entren les teves compres", body: "Cada albarà que registres alimenta l'històric. Com més n'hi hagi, més fina és l'anàlisi." },
-      { day: "Dia 7", title: "Primera foto real", body: "Veus el teu food cost per plat i el primer avís de preu. A partir d'aquí, es manté sol." },
+      { day: "Dia 7", title: "Primera foto real", body: "Veus el teu food cost per plat i el primer avís de preu. A partir d'aquí, s'actualitza amb cada albarà que confirmes." },
     ],
   },
   reassure: {
@@ -140,7 +140,7 @@ const ca: ComoFuncionaCopy = {
     title: "RESTORA s'adapta a la teva cuina, no al revés.",
     items: [
       { title: "No canvies de TPV", body: "RESTORA es col·loca per sobre del que ja fas servir." },
-      { title: "No refàs els teus Excel", body: "Comences amb el que tens; la resta es construeix sol." },
+      { title: "No refàs els teus Excel", body: "Ens passes el que tens i ho carreguem amb tu; la resta s'actualitza amb els teus albarans." },
       { title: "No necessites un informàtic", body: "Si saps llegir un albarà, saps fer-lo servir." },
     ],
   },
