@@ -1124,13 +1124,13 @@ a.barh-row:hover .barh-l, button.barh-row:hover .barh-l { color: var(--brand); t
 .menu-h h1 { font-size: 34px; font-weight: 700; letter-spacing: .02em; }
 .menu-h p { font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: #6E6B5F; }
 .menu-fam { margin-bottom: 26px; break-inside: avoid; }
-.menu-fam h2 { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: #3E8E6A; margin-bottom: 12px; text-align: center; }
+.menu-fam h2 { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: #2B7352; margin-bottom: 12px; text-align: center; }
 .menu-it { display: flex; align-items: baseline; gap: 10px; padding: 6px 0; }
 .menu-it b { font-size: 16px; font-weight: 600; }
 .menu-it i { flex: 1; border-bottom: 1px dotted #BDB5A1; transform: translateY(-4px); }
 .menu-it span { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .menu-d { font-size: 13px; color: #6E6B5F; margin-top: -2px; padding-bottom: 4px; }
-.menu-f { margin-top: 36px; text-align: center; font-size: 11px; color: #9A9486; letter-spacing: .08em; }
+.menu-f { margin-top: 36px; text-align: center; font-size: 11px; color: #6E6B5F; letter-spacing: .08em; }
 @media (max-width: 600px) { .menu-sheet { padding: 32px 22px; } .menu-h h1 { font-size: 26px; } }
 @media print {
   @page { margin: 14mm; }
@@ -1144,9 +1144,11 @@ a.barh-row:hover .barh-l, button.barh-row:hover .barh-l { color: var(--brand); t
 .main > .fab { display: none; }
 .main:has([data-fab]) > .fab { display: grid; }
 .main:has([data-fab]) .wrap { padding-bottom: 96px; }
+.main:has([data-fab]) .content { scroll-padding-bottom: 88px; } /* al tabular, el control con foco no queda debajo del botón flotante */
 @container app (min-width: 900px) {
   .main > .fab, .main:has([data-fab]) > .fab { display: none !important; }
   .main:has([data-fab]) .wrap { padding-bottom: 40px; }
+  .main:has([data-fab]) .content { scroll-padding-bottom: 0; }
 }
 @container pg (min-width: 940px) { .wrap-wide { max-width: 1320px; } }
 .subnav { display: flex; }

@@ -137,7 +137,7 @@ export function InvTable({ rows: initial, untracked, catalog, cats, local, pedid
                 return [
                   head ? <tr key={"g" + r.categoryId} className="grp"><td colSpan={8}>{r.categoria} · {r.grupo} · {plural(grp.length, "ref.", "ref.")} · {eur0(grp.reduce((s, x) => s + x.valor, 0))}</td></tr> : null,
                   <tr key={r.id}>
-                    <td><Link className="link" href={`/articulos/${r.id}`}><b>{r.name}</b></Link><div className="xs muted">{r.proveedor ?? "Sin proveedor"}</div></td>
+                    <td><Link className="link" href={`/articulos/${r.id}`}><b id={`nm-${r.id}`}>{r.name}</b></Link><div className="xs muted">{r.proveedor ?? "Sin proveedor"}</div></td>
                     <td className="r"><span className="inp-unit" style={{ justifyContent: "flex-end" }}><NumInput className="inp inp-xs inp-num" value={r.stock} onValue={(n) => onStock(r, n)} onBlur={() => commitStock(r)} aria-label={`Stock de ${r.name}`} /><span>{r.unit}</span></span></td>
                     <td className="r"><NumInput className="inp inp-xs inp-num" value={r.consumo} onValue={(n) => upd(r.id, { consumo: n })} onBlur={() => commitParam(r, "consumo_semanal")} aria-label={`Consumo semanal de ${r.name}`} /></td>
                     <td><div className="cov"><div className={`bar ${r.est.estado === "crit" ? "bad" : r.est.estado}`}><i style={{ width: `${barraCobertura(r.dias)}%` }} /></div><span>{r.dias >= 99 ? "—" : `${qty(r.dias, 0)} d`}</span></div></td>
@@ -153,12 +153,13 @@ export function InvTable({ rows: initial, untracked, catalog, cats, local, pedid
           <div className="mcard-list pg-narrow">
             {shown.map((r) => (
               <div className="mcard" key={r.id}>
-                <div className="mcard-h"><div><Link className="link" href={`/articulos/${r.id}`}><b>{r.name}</b></Link><div className="xs muted">{r.categoria} · {r.proveedor ?? "Sin proveedor"}</div></div><span className={`tag ${r.est.estado === "crit" ? "tag-bad" : r.est.estado === "warn" ? "tag-warn" : "tag-ok"}`}>{r.est.label}</span></div>
+                <div className="mcard-h"><div><Link className="link" href={`/articulos/${r.id}`}><b id={`nm-${r.id}`}>{r.name}</b></Link><div className="xs muted">{r.categoria} · {r.proveedor ?? "Sin proveedor"}</div></div><span className={`tag ${r.est.estado === "crit" ? "tag-bad" : r.est.estado === "warn" ? "tag-warn" : "tag-ok"}`}>{r.est.label}</span></div>
                 <div className="cov"><div className={`bar ${r.est.estado === "crit" ? "bad" : r.est.estado}`}><i style={{ width: `${barraCobertura(r.dias)}%` }} /></div><span>{r.dias >= 99 ? "sin consumo" : `${qty(r.dias, 0)} días`}</span></div>
                 <div className="mcard-g">
-                  <div className="fld"><label>Stock ({r.unit})</label><NumInput className="inp inp-xs inp-num" value={r.stock} onValue={(n) => onStock(r, n)} onBlur={() => commitStock(r)} aria-label={`Stock de ${r.name}`} /></div>
-                  <div className="fld"><label>Consumo/sem</label><NumInput className="inp inp-xs inp-num" value={r.consumo} onValue={(n) => upd(r.id, { consumo: n })} onBlur={() => commitParam(r, "consumo_semanal")} /></div>
-                  <div className="fld"><label>Mínimo</label><NumInput className="inp inp-xs inp-num" value={r.minimo} onValue={(n) => upd(r.id, { minimo: n })} onBlur={() => commitParam(r, "stock_min")} /></div>
+                  {/* El nombre accesible une la etiqueta visible y el artículo: «Stock (kg) Setas variadas» */}
+                  <div className="fld"><label id={`lb-st-${r.id}`} htmlFor={`st-${r.id}`}>Stock ({r.unit})</label><NumInput id={`st-${r.id}`} className="inp inp-xs inp-num" value={r.stock} onValue={(n) => onStock(r, n)} onBlur={() => commitStock(r)} aria-labelledby={`lb-st-${r.id} nm-${r.id}`} /></div>
+                  <div className="fld"><label id={`lb-co-${r.id}`} htmlFor={`co-${r.id}`}>Consumo/sem</label><NumInput id={`co-${r.id}`} className="inp inp-xs inp-num" value={r.consumo} onValue={(n) => upd(r.id, { consumo: n })} onBlur={() => commitParam(r, "consumo_semanal")} aria-labelledby={`lb-co-${r.id} nm-${r.id}`} /></div>
+                  <div className="fld"><label id={`lb-mi-${r.id}`} htmlFor={`mi-${r.id}`}>Mínimo</label><NumInput id={`mi-${r.id}`} className="inp inp-xs inp-num" value={r.minimo} onValue={(n) => upd(r.id, { minimo: n })} onBlur={() => commitParam(r, "stock_min")} aria-labelledby={`lb-mi-${r.id} nm-${r.id}`} /></div>
                 </div>
                 {r.pedir ? <p className="xs">A pedir: <b>{qty(r.pedir)} {r.unit}</b> · {eur(r.pedir * (r.precio ?? 0))}</p> : null}
               </div>

@@ -53,7 +53,7 @@ export function LineChart({ values, labels, unit = "", target, color = "var(--ac
   const showLabel = (i: number) => i === n - 1 || (i % step === 0 && n - 1 - i >= step / 2);
   const num = (g: number) => g.toLocaleString("es-ES", { maximumFractionDigits: 1 });
   return (
-    <div className={fill ? "lc lc-fill" : "lc"} style={{ height: fill ? undefined : h, minHeight: fill ? h : undefined, ["--c" as string]: color }} role="img" aria-label={`Evolución: ${values.map((v, i) => `${labels[i]} ${v == null ? "sin dato" : f(v)}`).join(", ")}`}>
+    <div className={fill ? "lc lc-fill" : "lc"} style={{ height: fill ? undefined : h, minHeight: fill ? h : undefined, ["--c" as string]: color }} role={onSelect ? "group" : "img"} aria-label={onSelect ? "Evolución por mes: pulsa un punto para ver ese mes" : `Evolución: ${values.map((v, i) => `${labels[i]} ${v == null ? "sin dato" : f(v)}`).join(", ")}`}>
       <div className="lc-plot">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {grid.map((g) => <line key={g} className="grid" x1="0" x2="100" y1={Y(g)} y2={Y(g)} vectorEffect="non-scaling-stroke" />)}
@@ -135,7 +135,7 @@ export function Scatter({ items, mV, mM, fmt, h = 320 }: { items: { id: string; 
   const mx = X(mV), my = Y(mM);
   const q = (l: number, t: number, w: number, hh: number, c: string) => <span className="sc-q" style={{ left: `${l}%`, top: `${t}%`, width: `${w}%`, height: `${hh}%`, background: c }} />;
   return (
-    <div className="sc" style={{ height: h }} role="img" aria-label="Mapa de rentabilidad de la carta: unidades vendidas frente a margen por unidad">
+    <div className="sc" style={{ height: h }} role="group" aria-label="Mapa de rentabilidad de la carta: unidades vendidas frente a margen por unidad. Cada punto es un plato">
       <div className="sc-plot">
         {q(mx, 0, 100 - mx, my, "var(--q-estrella)")}{q(0, 0, mx, my, "var(--q-enigma)")}{q(mx, my, 100 - mx, 100 - my, "var(--q-caballo)")}{q(0, my, mx, 100 - my, "var(--q-perro)")}
         <span className="sc-mx" style={{ left: `${mx}%` }} /><span className="sc-my" style={{ top: `${my}%` }} />

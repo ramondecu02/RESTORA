@@ -1,6 +1,6 @@
 // Recorre todas las pantallas con los datos de ejemplo cargados, en móvil y escritorio.
 // Comprueba: respuesta HTTP, errores de consola, desbordamiento horizontal. Guarda capturas.
-import { BASE, SHOTS, launch, watch, noOverflow, tallShot, signup, cargarDemo } from "./lib.mjs";
+import { BASE, SHOTS, launch, watch, noOverflow, tallShot, signup, cargarDemo, rutasDeLaApp } from "./lib.mjs";
 import { existsSync, writeFileSync } from "node:fs";
 // REUSE=1 reutiliza la sesión de la última ejecución (sin registrarse ni cargar la demo otra vez).
 // ONLY=hoy,carta limita las pantallas. WIDTHS=390,1280 elige anchos.
@@ -13,12 +13,6 @@ const email = `recorrido+${Date.now()}@example.com`;
 const b = await launch();
 const errors = [];
 const results = [];
-
-async function firstHref(page, path, re) {
-  await page.goto(BASE + path);
-  const hrefs = await page.locator(`a[href^="${path}/"]`).evaluateAll((els) => els.map((e) => e.getAttribute("href")));
-  return hrefs.find((h) => re.test(h)) ?? null;
-}
 
 async function visit(page, W, name, path) {
   const errsBefore = errors.length;
@@ -46,20 +40,9 @@ try {
     writeFileSync(STATE, JSON.stringify(await ctxD.storageState()));
   }
 
-  const ids = {
-    compra: await firstHref(page, "/compras", /^\/compras\/[0-9a-f-]{36}$/),
-    articulo: await firstHref(page, "/articulos", /^\/articulos\/[0-9a-f-]{36}$/),
-    proveedor: await firstHref(page, "/proveedores", /^\/proveedores\/[0-9a-f-]{36}$/),
-    receta: await firstHref(page, "/escandallos", /^\/escandallos\/[0-9a-f-]{36}$/),
-  };
+  const { ids, rutas } = await rutasDeLaApp(page);
   console.log("ids", JSON.stringify(ids));
-  const pages = [
-    ["hoy", "/hoy"], ["avisos", "/hoy/avisos"], ["compras", "/compras"], ["compra", ids.compra], ["subir", "/compras/subir"], ["nueva", "/compras/nueva"],
-    ["articulos", "/articulos"], ["articulo", ids.articulo], ["articulo-nuevo", "/articulos/nuevo"], ["proveedores", "/proveedores"], ["proveedor", ids.proveedor],
-    ["inventario", "/inventario"], ["pedidos", "/inventario/pedidos"], ["escandallos", "/escandallos"], ["elaboraciones", "/escandallos/elaboraciones"],
-    ["escandallo", ids.receta], ["escandallo-nuevo", "/escandallos/nuevo"], ["carta", "/carta"], ["carta-subir", "/carta/subir"], ["carta-imprimir", "/carta/imprimir"],
-    ["ventas", "/ventas"], ["ventas-importar", "/ventas/importar"], ["cuenta", "/cuenta"], ["usuarios", "/cuenta/usuarios"], ["facturacion", "/cuenta/facturacion"], ["mas", "/mas"],
-  ].filter(([n, p]) => p && (!ONLY || ONLY.includes(n)));
+  const pages = rutas.filter(([n]) => !ONLY || ONLY.includes(n));
   const state = await ctxD.storageState();
   for (const W of WIDTHS) {
     const mobile = W < 700;
