@@ -9,6 +9,7 @@ import type { Locale } from "@/lib/types";
 import { Logo } from "@/components/logo";
 import { LangSwitcher } from "@/components/lang-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { APP_LOGIN_URL, APP_SIGNUP_URL } from "@/lib/site";
 
 function subscribeScroll(cb: () => void) {
   window.addEventListener("scroll", cb, { passive: true });
@@ -38,8 +39,9 @@ export function SiteNav({
     { href: `/${locale}/como-funciona`, label: copy.nav.how },
     { href: `/${locale}/precios`, label: copy.nav.pricing },
     { href: `/${locale}/preguntas`, label: copy.nav.faq },
-    { href: `/${locale}/sobre-nosotros`, label: copy.nav.about },
-    { href: `/${locale}/contacto`, label: copy.nav.contact },
+    // En pantallas medianas no caben todos con «Entrar» y «Probar gratis»: estos dos se ven desde xl (y siempre en el menú y el pie)
+    { href: `/${locale}/sobre-nosotros`, label: copy.nav.about, wide: true },
+    { href: `/${locale}/contacto`, label: copy.nav.contact, wide: true },
   ];
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
@@ -78,7 +80,7 @@ export function SiteNav({
                 key={link.href}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className="transition-colors"
+                className={"wide" in link ? "hidden transition-colors xl:inline" : "transition-colors"}
                 style={{ color: active ? "var(--brand)" : "var(--muted)", fontWeight: active ? 600 : 500 }}
               >
                 {link.label}
@@ -91,13 +93,20 @@ export function SiteNav({
         <span className="hidden min-[480px]:inline-flex">
           <ThemeToggle />
         </span>
-        <Link
-          href={`/${locale}/contacto`}
+        <a
+          href={APP_LOGIN_URL}
+          className="hidden lg:inline-flex"
+          style={{ color: "var(--ink)", fontSize: 15, fontWeight: 600, whiteSpace: "nowrap" }}
+        >
+          {copy.nav.login}
+        </a>
+        <a
+          href={APP_SIGNUP_URL}
           className="btn btn-brand hidden lg:inline-flex"
           style={{ padding: "11px 20px", fontSize: 14.5, whiteSpace: "nowrap" }}
         >
-          {copy.nav.cta} →
-        </Link>
+          {copy.nav.trial} →
+        </a>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -126,14 +135,12 @@ export function SiteNav({
                 {link.label}
               </Link>
             ))}
-            <Link
-              href={`/${locale}/contacto`}
-              onClick={() => setOpen(false)}
-              className="btn btn-brand"
-              style={{ marginTop: 10, padding: "13px 20px", fontSize: 15 }}
-            >
-              {copy.nav.cta} →
-            </Link>
+            <a href={APP_LOGIN_URL} style={{ padding: "13px 8px", fontSize: 16, fontWeight: 600, color: "var(--ink)" }}>
+              {copy.nav.login}
+            </a>
+            <a href={APP_SIGNUP_URL} className="btn btn-brand" style={{ marginTop: 10, padding: "13px 20px", fontSize: 15 }}>
+              {copy.nav.trial} →
+            </a>
             <div className="min-[480px]:hidden" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 8px 4px", fontSize: 14, color: "var(--muted)" }}>
               <span>{copy.nav.theme}</span>
               <ThemeToggle />

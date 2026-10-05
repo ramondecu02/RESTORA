@@ -10,6 +10,11 @@ export const SITE_NAME = "RESTORA";
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://restoraapp.app").replace(/\/+$/, "");
 
 export const CONTACT_EMAIL = "hola@restoraapp.com";
+
+// La app (Vercel): registro con la prueba gratuita y acceso de los clientes.
+export const APP_URL = "https://app.restoraapp.app";
+export const APP_SIGNUP_URL = `${APP_URL}/registro`;
+export const APP_LOGIN_URL = `${APP_URL}/entrar`;
 // Shown in the footer and contact page; E.164 form feeds the tel: link.
 export const CONTACT_PHONE_DISPLAY = "+34 640 648 985";
 export const CONTACT_PHONE_E164 = "+34640648985";

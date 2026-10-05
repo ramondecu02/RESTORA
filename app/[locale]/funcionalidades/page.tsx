@@ -125,7 +125,7 @@ export default async function FuncionalidadesPage(props: {
         </section>
 
         <ShareBand copy={copy} />
-        <CtaBand copy={copy} locale={locale} />
+        <CtaBand copy={copy} />
       </main>
       <SiteFooter copy={copy} locale={locale} />
     </>

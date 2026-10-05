@@ -1,9 +1,8 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { SiteCopy } from "@/lib/site-copy";
-import type { Locale } from "@/lib/types";
+import { APP_SIGNUP_URL } from "@/lib/site";
 
-export function CtaBand({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
+export function CtaBand({ copy }: { copy: SiteCopy }) {
   return (
     <section className="reveal" style={{ padding: "0 28px 84px" }}>
       <div
@@ -39,13 +38,13 @@ export function CtaBand({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
           {copy.ctaBand.title}
         </h2>
         <p style={{ position: "relative", fontSize: 17, color: "rgba(255,255,255,0.9)", margin: "14px 0 0", maxWidth: "44ch" }}>{copy.ctaBand.sub}</p>
-        <Link
-          href={`/${locale}/contacto`}
+        <a
+          href={APP_SIGNUP_URL}
           className="btn"
           style={{ position: "relative", marginTop: 26, padding: "14px 26px", fontSize: 15.5, background: "#fff", color: "var(--brand)", border: "1px solid #fff" }}
         >
-          {copy.nav.cta} →
-        </Link>
+          {copy.hero.ctaPrimary} →
+        </a>
       </div>
     </section>
   );

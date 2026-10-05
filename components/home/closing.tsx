@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import type { SiteCopy } from "@/lib/site-copy";
 import type { Locale } from "@/lib/types";
 import { Frame } from "./frame";
+import { APP_SIGNUP_URL } from "@/lib/site";
 
 // Closing chapter: the room you are doing all of this for.
 export function HomeClosing({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
@@ -41,10 +42,10 @@ export function HomeClosing({ copy, locale }: { copy: SiteCopy; locale: Locale }
         </h2>
         <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 17.5, margin: "20px auto 0", maxWidth: "46ch", lineHeight: 1.65 }}>{copy.ctaBand.sub}</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginTop: 34 }}>
-          <Link href={`/${locale}/contacto`} className="btn" style={{ background: "#fff", color: "#12211a", border: "1px solid #fff", padding: "15px 28px", fontSize: 15.5 }}>
-            {copy.nav.cta}
+          <a href={APP_SIGNUP_URL} className="btn" style={{ background: "#fff", color: "#12211a", border: "1px solid #fff", padding: "15px 28px", fontSize: 15.5 }}>
+            {copy.hero.ctaPrimary}
             <ArrowRight size={17} strokeWidth={2} />
-          </Link>
+          </a>
           <Link
             href={`/${locale}/precios`}
             className="btn"

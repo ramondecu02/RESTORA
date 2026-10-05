@@ -150,7 +150,7 @@ export default async function ComoFuncionaPage(props: {
           </Frame>
         </section>
 
-        <CtaBand copy={copy} locale={locale} />
+        <CtaBand copy={copy} />
       </main>
       <SiteFooter copy={copy} locale={locale} />
     </>

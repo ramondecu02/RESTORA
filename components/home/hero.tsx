@@ -4,6 +4,7 @@ import type { SiteCopy } from "@/lib/site-copy";
 import type { Locale } from "@/lib/types";
 import { CountUp } from "@/components/site/count-up";
 import { Frame } from "./frame";
+import { APP_SIGNUP_URL } from "@/lib/site";
 
 const SPARK = [38, 41, 39, 44, 42, 48, 46, 52, 50, 57, 55, 61];
 
@@ -94,14 +95,14 @@ export function HomeHero({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
             {h.sub}
           </p>
           <div className="rise-in" style={{ animationDelay: "0.24s", display: "flex", flexWrap: "wrap", gap: 12, marginTop: 36 }}>
-            <Link
-              href={`/${locale}/contacto`}
+            <a
+              href={APP_SIGNUP_URL}
               className="btn"
               style={{ background: "#fff", color: "#12211a", border: "1px solid #fff", padding: "15px 26px", fontSize: 15.5 }}
             >
               {h.ctaPrimary}
               <ArrowRight size={17} strokeWidth={2} />
-            </Link>
+            </a>
             <Link
               href={`/${locale}/como-funciona`}
               className="btn"

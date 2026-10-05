@@ -19,6 +19,8 @@ const es = {
     about: "Nosotros",
     theme: "Tema claro / oscuro",
     cta: "Solicitar una demo",
+    login: "Entrar",
+    trial: "Probar gratis",
   },
   pages: {
     funcionalidades: {
@@ -34,7 +36,7 @@ const es = {
     precios: {
       eyebrow: "Precios",
       title: "Precios claros, sin sorpresas.",
-      sub: "Elige el plan que encaja con tu restaurante. Aún en vista previa: hoy reservas plaza de socio fundador, sin coste.",
+      sub: "Pruébalo gratis 14 días, sin tarjeta. Después, una suscripción mensual sin permanencia.",
     },
     preguntas: {
       eyebrow: "Preguntas",
@@ -91,13 +93,13 @@ const es = {
   },
   ctaBand: {
     title: "¿Listo para tomar el control de tu restaurante?",
-    sub: "Reserva tu plaza de socio fundador. Sin coste ni compromiso.",
+    sub: "Pruébalo gratis 14 días. Sin tarjeta ni compromiso.",
   },
   hero: {
     eyebrow: "Gestión inteligente para restaurantes",
     title: "El control inteligente de tu restaurante.",
     sub: "RESTORA conecta compras, proveedores, escandallos, costes e inventario para darte una visión clara de cómo funciona realmente tu restaurante.",
-    ctaPrimary: "Solicitar una demo",
+    ctaPrimary: "Probar gratis 14 días",
     ctaSecondary: "Descubrir cómo funciona",
     chips: ["Compras", "Proveedores", "Costes", "Rentabilidad", "Automatización"],
     badge: "Vista previa · el pago se abre pronto",
@@ -168,7 +170,7 @@ const es = {
     period: "/mes",
     includes: ["Compras y proveedores", "Escandallos y food cost", "Inteligencia y alertas", "Inventario"],
     previewNote:
-      "Vista previa: el pago aún no está activo. Hoy reservas tu plaza de socio fundador, sin coste ni compromiso.",
+      "14 días gratis, sin tarjeta. Al terminar la prueba, te suscribes por meses para seguir usándolo. Sin permanencia.",
     founderBadge: "Oferta exclusiva · plazas limitadas",
     founderTitle: "Programa Socios Fundadores",
     founderBody:
@@ -178,18 +180,18 @@ const es = {
       "Acceso prioritario y onboarding dedicado",
       "Influencia directa en el producto",
     ],
-    cta: "Reservar mi plaza",
+    cta: "Probar gratis 14 días",
   },
   faq: {
     eyebrow: "Preguntas",
     title: "Preguntas frecuentes",
     sub: "Lo que más nos preguntan los restaurantes.",
     items: [
-      { q: "¿Ya puedo contratar RESTORA?", a: "Todavía no. Esto es una vista previa de lo que estamos construyendo: puedes reservar plaza como socio fundador y te avisamos en cuanto abramos acceso." },
+      { q: "¿Ya puedo usar RESTORA?", a: "Sí. Crea tu cuenta y pruébalo gratis 14 días, sin tarjeta. Al terminar, te suscribes por meses para seguir usándolo, sin permanencia." },
       { q: "¿Tengo que cambiar mi TPV?", a: "No. RESTORA es la capa de inteligencia por encima de lo que ya usas. Empiezas con una foto del albarán, sin cambiar tu operativa." },
       { q: "¿Mis datos son privados?", a: "Sí. Tus datos son tuyos. El benchmark sectorial es siempre anónimo y agregado: nadie ve los números de tu restaurante." },
-      { q: "¿Cuánto costará?", a: "Desde 89 €/mes, todo incluido y sin permanencia. Los socios fundadores se quedan el plan Pro al precio del Base, 89 €/mes, fijo de por vida." },
-      { q: "¿Cuándo estará disponible?", a: "Estamos arrancando con los primeros restaurantes de Cataluña. Déjanos tus datos y serás de los primeros en entrar." },
+      { q: "¿Cuánto cuesta?", a: "Desde 89 €/mes al terminar los 14 días de prueba, todo incluido y sin permanencia. Los socios fundadores se quedan el plan Pro al precio del Base, 89 €/mes, fijo de por vida." },
+      { q: "¿Desde cuándo puedo usarlo?", a: "Desde hoy: crea tu cuenta y empieza con una foto de un albarán. Estamos arrancando con los primeros restaurantes de Cataluña." },
     ],
   },
   lead: {
@@ -327,6 +329,8 @@ const ca: SiteCopy = {
     about: "Nosaltres",
     theme: "Tema clar / fosc",
     cta: "Sol·licitar una demo",
+    login: "Entra",
+    trial: "Prova-ho gratis",
   },
   pages: {
     funcionalidades: {
@@ -342,7 +346,7 @@ const ca: SiteCopy = {
     precios: {
       eyebrow: "Preus",
       title: "Preus clars, sense sorpreses.",
-      sub: "Tria el pla que encaixa amb el teu restaurant. Encara en vista prèvia: avui reserves plaça de soci fundador, sense cost.",
+      sub: "Prova-ho gratis 14 dies, sense targeta. Després, una subscripció mensual sense permanència.",
     },
     preguntas: {
       eyebrow: "Preguntes",
@@ -399,13 +403,13 @@ const ca: SiteCopy = {
   },
   ctaBand: {
     title: "A punt per prendre el control del teu restaurant?",
-    sub: "Reserva la teva plaça de soci fundador. Sense cost ni compromís.",
+    sub: "Prova-ho gratis 14 dies. Sense targeta ni compromís.",
   },
   hero: {
     eyebrow: "Gestió intel·ligent per a restaurants",
     title: "El control intel·ligent del teu restaurant.",
     sub: "RESTORA connecta compres, proveïdors, escandalls, costos i inventari per donar-te una visió clara de com funciona realment el teu restaurant.",
-    ctaPrimary: "Sol·licitar una demo",
+    ctaPrimary: "Prova-ho gratis 14 dies",
     ctaSecondary: "Descobrir com funciona",
     chips: ["Compres", "Proveïdors", "Costos", "Rendibilitat", "Automatització"],
     badge: "Vista prèvia · el pagament s'obre aviat",
@@ -476,7 +480,7 @@ const ca: SiteCopy = {
     period: "/mes",
     includes: ["Compres i proveïdors", "Escandalls i food cost", "Intel·ligència i alertes", "Inventari"],
     previewNote:
-      "Vista prèvia: el pagament encara no està actiu. Avui reserves la teva plaça de soci fundador, sense cost ni compromís.",
+      "14 dies gratis, sense targeta. En acabar la prova, et subscrius per mesos per continuar fent-lo servir. Sense permanència.",
     founderBadge: "Oferta exclusiva · places limitades",
     founderTitle: "Programa Socis Fundadors",
     founderBody:
@@ -486,18 +490,18 @@ const ca: SiteCopy = {
       "Accés prioritari i onboarding dedicat",
       "Influència directa en el producte",
     ],
-    cta: "Reservar la meva plaça",
+    cta: "Prova-ho gratis 14 dies",
   },
   faq: {
     eyebrow: "Preguntes",
     title: "Preguntes freqüents",
     sub: "El que més ens pregunten els restaurants.",
     items: [
-      { q: "Ja puc contractar RESTORA?", a: "Encara no. Això és una vista prèvia del que estem construint: pots reservar plaça com a soci fundador i t'avisem quan obrim l'accés." },
+      { q: "Ja puc fer servir RESTORA?", a: "Sí. Crea el teu compte i prova-ho gratis 14 dies, sense targeta. En acabar, et subscrius per mesos per continuar fent-lo servir, sense permanència." },
       { q: "He de canviar el meu TPV?", a: "No. RESTORA és la capa d'intel·ligència per sobre del que ja fas servir. Comences amb una foto de l'albarà, sense canviar la teva operativa." },
       { q: "Les meves dades són privades?", a: "Sí. Les teves dades són teves. El benchmark sectorial és sempre anònim i agregat: ningú veu els números del teu restaurant." },
-      { q: "Quant costarà?", a: "Des de 89 €/mes, tot inclòs i sense permanència. Els socis fundadors es queden el pla Pro al preu del Base, 89 €/mes, fix de per vida." },
-      { q: "Quan estarà disponible?", a: "Estem arrancant amb els primers restaurants de Catalunya. Deixa'ns les teves dades i seràs dels primers a entrar." },
+      { q: "Quant costa?", a: "Des de 89 €/mes en acabar els 14 dies de prova, tot inclòs i sense permanència. Els socis fundadors es queden el pla Pro al preu del Base, 89 €/mes, fix de per vida." },
+      { q: "Des de quan el puc fer servir?", a: "Des d'avui: crea el teu compte i comença amb una foto d'un albarà. Estem arrencant amb els primers restaurants de Catalunya." },
     ],
   },
   lead: {

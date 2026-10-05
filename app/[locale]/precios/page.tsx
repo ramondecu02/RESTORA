@@ -10,6 +10,7 @@ import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { PageHead } from "@/components/pages/page-head";
 import { SecureLine, TrustBadges } from "@/components/site/trust-badges";
+import { APP_SIGNUP_URL } from "@/lib/site";
 
 export async function generateMetadata(props: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await props.params;
@@ -53,9 +54,9 @@ export default async function PreciosPage(props: {
                   </div>
                 ))}
               </div>
-              <Link href={`/${locale}/contacto`} className="btn btn-outline" style={{ marginTop: 28, padding: 14, fontSize: 15.5, justifyContent: "center" }}>
+              <a href={APP_SIGNUP_URL} className="btn btn-outline" style={{ marginTop: 28, padding: 14, fontSize: 15.5, justifyContent: "center" }}>
                 {p.cta}
-              </Link>
+              </a>
             </div>
 
             <div
@@ -77,9 +78,9 @@ export default async function PreciosPage(props: {
                   </div>
                 ))}
               </div>
-              <Link href={`/${locale}/contacto`} className="btn" style={{ position: "relative", marginTop: 28, padding: 14, fontSize: 15.5, justifyContent: "center", background: "#fff", color: "var(--brand)", border: "1px solid #fff" }}>
+              <a href={APP_SIGNUP_URL} className="btn" style={{ position: "relative", marginTop: 28, padding: 14, fontSize: 15.5, justifyContent: "center", background: "#fff", color: "var(--brand)", border: "1px solid #fff" }}>
                 {p.cta} →
-              </Link>
+              </a>
             </div>
           </div>
         </section>

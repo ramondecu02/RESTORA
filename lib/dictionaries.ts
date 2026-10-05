@@ -136,7 +136,7 @@ const es = {
     recommended: "Recomendado",
     cta: "Reservar plaza",
     previewNote:
-      "Vista previa. El pago aún no está activo: ahora reservas tu plaza de socio fundador, sin coste ni compromiso.",
+      "14 días gratis, sin tarjeta. Al terminar la prueba, te suscribes por meses para seguir usándolo. Sin permanencia.",
     implantation: "Implantación 0–500 € · gratis para socios fundadores.",
     founderTitle: "Socio Fundador",
     founderProgram: "Programa",
@@ -242,8 +242,8 @@ const es = {
     sub: "Lo que más nos preguntan los restaurantes.",
     items: [
       {
-        q: "¿Ya puedo contratar RESTORA?",
-        a: "Todavía no. Esto es una vista previa de lo que estamos construyendo: puedes reservar plaza como socio fundador y te avisamos en cuanto abramos acceso.",
+        q: "¿Ya puedo usar RESTORA?",
+        a: "Sí. Crea tu cuenta y pruébalo gratis 14 días, sin tarjeta. Al terminar, te suscribes por meses para seguir usándolo, sin permanencia.",
       },
       {
         q: "¿Tengo que cambiar mi TPV?",
@@ -413,7 +413,7 @@ const ca: Dictionary = {
     recommended: "Recomanat",
     cta: "Reservar plaça",
     previewNote:
-      "Vista prèvia. El pagament encara no està actiu: ara reserves la teva plaça de soci fundador, sense cost ni compromís.",
+      "14 dies gratis, sense targeta. En acabar la prova, et subscrius per mesos per continuar fent-lo servir. Sense permanència.",
     implantation: "Implantació 0–500 € · gratis per a socis fundadors.",
     founderTitle: "Soci Fundador",
     founderProgram: "Programa",
@@ -519,8 +519,8 @@ const ca: Dictionary = {
     sub: "El que més ens pregunten els restaurants.",
     items: [
       {
-        q: "Ja puc contractar RESTORA?",
-        a: "Encara no. Això és una vista prèvia del que estem construint: pots reservar plaça com a soci fundador i t'avisem quan obrim l'accés.",
+        q: "Ja puc fer servir RESTORA?",
+        a: "Sí. Crea el teu compte i prova-ho gratis 14 dies, sense targeta. En acabar, et subscrius per mesos per continuar fent-lo servir, sense permanència.",
       },
       {
         q: "He de canviar el meu TPV?",

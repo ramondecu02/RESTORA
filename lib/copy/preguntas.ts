@@ -30,11 +30,11 @@ const es = {
     {
       title: "Precio y acceso",
       items: [
-        { q: "¿Ya puedo contratar RESTORA?", a: "Todavía no. Esto es una vista previa de lo que estamos construyendo: puedes reservar plaza como socio fundador y te avisamos en cuanto abramos acceso." },
-        { q: "¿Cuánto cuesta?", a: "Desde 89 €/mes, con todo incluido y sin permanencia. Los socios fundadores tienen una condición concreta: el plan Pro al precio del plan Base, 89 €/mes, fijo de por vida mientras sigan con nosotros." },
+        { q: "¿Ya puedo usar RESTORA?", a: "Sí. Crea tu cuenta y pruébalo gratis 14 días, sin tarjeta. Al terminar, te suscribes por meses para seguir usándolo, sin permanencia." },
+        { q: "¿Cuánto cuesta?", a: "Desde 89 €/mes al terminar los 14 días de prueba, con todo incluido y sin permanencia. Los socios fundadores tienen una condición concreta: el plan Pro al precio del plan Base, 89 €/mes, fijo de por vida mientras sigan con nosotros." },
         { q: "¿Qué es exactamente el precio de socio fundador?", a: "Los primeros restaurantes de Cataluña que entren con nosotros se quedan el plan Pro —todas las funcionalidades— pagando lo que cuesta el plan Base: 89 €/mes. Ese precio no sube nunca para ellos, aunque la tarifa general cambie. A cambio nos ayudan a construir el producto sobre su cocina real." },
         { q: "¿Y si cambio de opinión?", a: "No hay permanencia ni penalización. Puedes darte de baja cuando quieras, te llevas tus datos exportados y no se cobra nada más. Reservar plaza de socio fundador tampoco compromete a nada: hoy no se paga, solo te apuntas." },
-        { q: "¿Cuándo estará disponible?", a: "Estamos arrancando con los primeros restaurantes de Cataluña. Déjanos tus datos y serás de los primeros en entrar." },
+        { q: "¿Desde cuándo puedo usarlo?", a: "Desde hoy: crea tu cuenta y empieza con una foto de un albarán. Estamos arrancando con los primeros restaurantes de Cataluña." },
       ],
     },
     {
@@ -85,11 +85,11 @@ const ca: PreguntasCopy = {
     {
       title: "Preu i accés",
       items: [
-        { q: "Ja puc contractar RESTORA?", a: "Encara no. Això és una vista prèvia del que estem construint: pots reservar plaça com a soci fundador i t'avisem quan obrim l'accés." },
-        { q: "Quant costa?", a: "Des de 89 €/mes, amb tot inclòs i sense permanència. Els socis fundadors tenen una condició concreta: el pla Pro al preu del pla Base, 89 €/mes, fix de per vida mentre segueixin amb nosaltres." },
+        { q: "Ja puc fer servir RESTORA?", a: "Sí. Crea el teu compte i prova-ho gratis 14 dies, sense targeta. En acabar, et subscrius per mesos per continuar fent-lo servir, sense permanència." },
+        { q: "Quant costa?", a: "Des de 89 €/mes en acabar els 14 dies de prova, amb tot inclòs i sense permanència. Els socis fundadors tenen una condició concreta: el pla Pro al preu del pla Base, 89 €/mes, fix de per vida mentre segueixin amb nosaltres." },
         { q: "Què és exactament el preu de soci fundador?", a: "Els primers restaurants de Catalunya que entrin amb nosaltres es queden el pla Pro —totes les funcionalitats— pagant el que costa el pla Base: 89 €/mes. Aquest preu no puja mai per a ells, encara que la tarifa general canviï. A canvi ens ajuden a construir el producte sobre la seva cuina real." },
         { q: "I si canvio d'opinió?", a: "No hi ha permanència ni penalització. Pots donar-te de baixa quan vulguis, t'emportes les teves dades exportades i no es cobra res més. Reservar plaça de soci fundador tampoc compromet a res: avui no es paga, només t'apuntes." },
-        { q: "Quan estarà disponible?", a: "Estem arrencant amb els primers restaurants de Catalunya. Deixa'ns les teves dades i seràs dels primers a entrar." },
+        { q: "Des de quan el puc fer servir?", a: "Des d'avui: crea el teu compte i comença amb una foto d'un albarà. Estem arrencant amb els primers restaurants de Catalunya." },
       ],
     },
     {
