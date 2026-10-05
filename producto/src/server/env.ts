@@ -25,9 +25,10 @@ export const env = {
     if (this.anthropicKey) return "anthropic";
     return p === "anthropic" || this.isProd ? "off" : "mock";
   },
-  get ocrModel() { return v("OCR_MODEL") || "claude-sonnet-5"; },
-  get ocrEscalateModel() { return v("OCR_ESCALATE_MODEL") || "claude-opus-5"; },
-  get ocrEffort(): "low" | "medium" | "high" { const e = v("OCR_EFFORT"); return e === "medium" || e === "high" ? e : "low"; },
+  get ocrModel() { return v("OCR_MODEL") || "claude-sonnet-5-5"; },
+  get ocrEscalateModel() { return v("OCR_ESCALATE_MODEL") || "claude-opus-5-5"; },
+  /** Esfuerzo de la primera lectura: en un albarán un dígito mal leído sale caro, así que «medium» por defecto. */
+  get ocrEffort(): "low" | "medium" | "high" { const e = v("OCR_EFFORT"); return e === "low" || e === "high" ? e : "medium"; },
   get blobToken() { return v("BLOB_READ_WRITE_TOKEN"); },
   /** Lo pone Vercel al conectar un Blob store nuevo: el SDK se autentica con OIDC, sin token fijo. */
   get blobStoreId() { return v("BLOB_STORE_ID"); },

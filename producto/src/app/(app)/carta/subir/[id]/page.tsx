@@ -6,6 +6,9 @@ import { Leyendo } from "../../../compras/[id]/leyendo";
 import { ErrorDoc } from "../../../compras/[id]/error-doc";
 import { CartaReview } from "./review";
 
+// «Volver a leer» se ejecuta con el límite de esta página: la lectura con IA puede tardar varios minutos
+export const maxDuration = 300;
+
 export const metadata = { title: "Revisa la carta" };
 
 export default async function CartaDoc({ params }: { params: Promise<{ id: string }> }) {

@@ -1,6 +1,7 @@
 // Compras: lectura del documento en segundo plano, confirmación del albarán y borrado con vuelta atrás.
 import { all, one, withTenant, type Db } from "../db";
 import { readAlbaran, readCarta, type OcrFile } from "../ocr";
+import { detalleDeError, mensajeDeError, OcrError } from "../ocr/errors";
 import { readFileBytes, deleteFile } from "../storage";
 import { hmac } from "../crypto";
 import { audit } from "../audit";
@@ -54,7 +55,9 @@ export async function processDocumento(tenantId: string, docId: string): Promise
       const got = await readFileBytes(f.storage_key);
       if (got) loaded.push({ data: got.data, mime: f.mime, name: f.name });
     }
-    if (!loaded.length) throw new Error("No encontramos el archivo subido.");
+    // Con páginas a medias la compra saldría incompleta: mejor un error claro que una lectura parcial
+    if (!loaded.length) throw new OcrError("No encontramos el archivo subido. Descártalo y súbelo otra vez.");
+    if (loaded.length < files.length) throw new OcrError("Falta alguna página del documento. Descártalo y súbelo otra vez.", `${loaded.length} de ${files.length} archivos leídos del almacén`);
     if (doc.kind === "carta") {
       const { carta, usage } = await readCarta(loaded);
       await withTenant(tenantId, (c) => c.query(`update documentos set status = 'revisar', ocr = $2, ocr_model = $3, ocr_input_tokens = $4,
@@ -83,11 +86,8 @@ export async function processDocumento(tenantId: string, docId: string): Promise
           usage.costUsd, usage.ms, prov?.id ?? null, ocr.numero, fecha ?? isoDate(), ocr.total]);
     });
   } catch (e) {
-    const msg = (e as Error).message || "Error desconocido";
-    console.error("[ocr] lectura fallida", docId, msg);
-    const friendly = /overloaded|529|rate|429/i.test(msg) ? "El servicio de lectura está saturado. Vuelve a intentarlo en un minuto."
-      : /api key|401|authentication/i.test(msg) ? "La lectura automática no está configurada (falta la clave de la API)."
-      : msg.length < 160 ? msg : "No hemos podido leer el documento.";
+    console.error("[ocr] lectura fallida", docId, detalleDeError(e));
+    const friendly = mensajeDeError(e);
     // Solo si sigue leyéndose esta misma lectura: si mientras tanto se pasó a mano, se volvió a leer o se guardó, no se toca
     await withTenant(tenantId, (c) => c.query("update documentos set status = 'error', ocr_error = $2 where id = $1 and status = 'leyendo' and created_at = $3::timestamptz",
       [docId, friendly, doc.intento]));

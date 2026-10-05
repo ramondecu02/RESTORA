@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { assessGray, flagged, qualityTag, SAMPLE_SIDE, toGray, type ImgQuality } from "@/lib/imgcheck";
+import { MAX_SUBIDA_BYTES, MENSAJE_PESADO } from "@/lib/limits";
 import { Icon } from "./icons";
 import { toastError } from "./ui/toast";
 
@@ -72,6 +73,8 @@ export function Uploader({ kind, cta, sample }: { kind: "albaran" | "carta"; cta
   const remove = (p: Page) => { revoke(p); commit(live.current.filter((x) => x.id !== p.id)); };
   const send = async (files: File[]) => {
     if (!files.length) return;
+    // Mejor avisar aquí que dejar que la subida falle por tamaño sin explicación
+    if (files.reduce((s, f) => s + f.size, 0) > MAX_SUBIDA_BYTES) { toastError(MENSAJE_PESADO); return; }
     setBusy(true);
     const fd = new FormData();
     fd.append("kind", kind);
@@ -79,7 +82,7 @@ export function Uploader({ kind, cta, sample }: { kind: "albaran" | "carta"; cta
     try {
       const r = await fetch("/api/documentos", { method: "POST", body: fd });
       const j = await r.json().catch(() => ({}));
-      if (!r.ok || !j.id) { toastError(j.error || "No se ha podido subir. Prueba otra vez."); setBusy(false); return; }
+      if (!r.ok || !j.id) { toastError(j.error || (r.status === 413 ? MENSAJE_PESADO : "No se ha podido subir. Prueba otra vez.")); setBusy(false); return; }
       router.push(kind === "carta" ? `/carta/subir/${j.id}` : `/compras/${j.id}`);
     } catch {
       toastError("Sin conexión. Comprueba la red y vuelve a intentarlo.");

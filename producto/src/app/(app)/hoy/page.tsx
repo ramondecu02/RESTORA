@@ -91,7 +91,7 @@ export default async function Hoy({ searchParams }: { searchParams: Promise<{ to
             <b>{doc.status === "revisar" ? "Albarán listo para revisar" : doc.status === "error" ? "No hemos podido leer un documento" : "Leyendo tu albarán…"}</b>
             <small>{doc.status === "revisar" ? `${doc.proveedor ?? "Proveedor por confirmar"} · ${plural(doc.lineas, "línea", "líneas")}` : doc.status === "error" ? "Vuelve a intentarlo o mételo a mano." : "Te avisamos cuando esté listo para revisar."}</small>
           </div>
-          {doc.status !== "leyendo" && doc.status !== "subido" ? <Link className="btn btn-sm" href={`/compras/${doc.id}`}>{doc.status === "revisar" ? "Revisar" : "Ver"}</Link> : null}
+          <Link className="btn btn-sm" href={`/compras/${doc.id}`}>{doc.status === "revisar" ? "Revisar" : "Ver"}</Link>
         </div>
       ))}
 

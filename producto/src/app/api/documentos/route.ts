@@ -7,17 +7,18 @@ import { can } from "@/server/rbac";
 import { rateLimit } from "@/server/ratelimit";
 import { deleteFile, extFor, putFile, sniffMime } from "@/server/storage";
 import { processDocumento } from "@/server/domain/compras";
+import { MAX_SUBIDA_BYTES, MENSAJE_PESADO } from "@/lib/limits";
 import { bloqueado } from "@/server/plan";
 
 export const maxDuration = 300;
-const MAX_TOTAL = 4.4 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   const ctx = await getAppCtx();
   if (!ctx) return NextResponse.json({ error: "Tu sesión ha caducado. Vuelve a entrar." }, { status: 401 });
   if (!can(ctx.role, "compras")) return NextResponse.json({ error: "Tu rol no permite subir documentos." }, { status: 403 });
   if (bloqueado(ctx.org)) return NextResponse.json({ error: "Tu prueba gratuita ha terminado. Suscríbete para seguir subiendo documentos." }, { status: 402 });
-  if (!(await rateLimit(`upload:${ctx.tenantId}`, 80, 3600))) return NextResponse.json({ error: "Has subido muchos documentos en poco tiempo. Espera unos minutos." }, { status: 429 });
+  // Cada lectura con IA cuesta dinero: tope por hora y por día para cada negocio (la clave de la API tiene además su límite mensual)
+  if (!(await rateLimit(`upload:${ctx.tenantId}`, 40, 3600)) || !(await rateLimit(`upload-dia:${ctx.tenantId}`, 150, 86400))) return NextResponse.json({ error: "Has subido muchos documentos en poco tiempo. Espera un rato y vuelve a intentarlo." }, { status: 429 });
   let form: FormData;
   try { form = await req.formData(); } catch { return NextResponse.json({ error: "No hemos recibido el archivo. Prueba otra vez." }, { status: 400 }); }
   const kind = String(form.get("kind") ?? "albaran");
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
   const files = form.getAll("files").filter((f): f is File => f instanceof File && f.size > 0).slice(0, 10);
   if (!files.length) return NextResponse.json({ error: "Añade al menos una foto o un PDF." }, { status: 400 });
   const total = files.reduce((s, f) => s + f.size, 0);
-  if (total > MAX_TOTAL) return NextResponse.json({ error: "Los archivos pesan demasiado (máximo 4 MB en total). Sube menos páginas o un PDF más ligero." }, { status: 413 });
+  if (total > MAX_SUBIDA_BYTES) return NextResponse.json({ error: MENSAJE_PESADO }, { status: 413 });
   const bufs: { data: Buffer; mime: string; name: string }[] = [];
   for (const f of files) {
     const data = Buffer.from(await f.arrayBuffer());

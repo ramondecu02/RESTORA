@@ -8,7 +8,7 @@ import { aMano, descartar, reintentar } from "../actions";
 export function ErrorDoc({ id, error, canRetry, carta }: { id: string; error: string | null; canRetry: boolean; carta?: boolean }) {
   const [pending, start] = useTransition();
   // Fallos del servicio (no configurado, saturado): la foto no tiene la culpa
-  const servicio = !!error && /no está disponible|no está configurada|saturado/i.test(error);
+  const servicio = !!error && /no está disponible|no está configurada|saturado|ha tardado demasiado|no hemos podido conectar/i.test(error);
   const go = (f: () => Promise<{ ok: boolean; error?: string } | undefined | void>) => start(async () => { const r = await f(); if (r && !r.ok && r.error) toastError(r.error); });
   return (
     <TaskScreen title="No hemos podido leerlo" back={carta ? "/carta" : "/compras"}>

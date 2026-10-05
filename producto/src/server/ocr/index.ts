@@ -1,15 +1,19 @@
 // Lectura de documentos con la API de Claude (salida estructurada) o con datos de ejemplo.
 // Por defecto lee con Sonnet; si la lectura sale dudosa (muchas líneas poco seguras o totales
 // que no cuadran) repasa con Opus y se queda con esa lectura. Registra tokens, coste y tiempo.
+//
+// Tiempos: la función de Vercel dura como mucho 300 s. Toda la lectura (primera pasada + repaso) cabe en PRESUPUESTO_MS y
+// cada llamada lleva su propio límite, para que un repaso que no llega a tiempo nunca tire la primera lectura ya pagada.
 import { createHash } from "node:crypto";
 import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { OcrAlbaran, OcrCarta } from "@/lib/ocr-types";
+import { albaranDeWire, ESQUEMA_ALBARAN, ESQUEMA_CARTA, esquemaApi, suavizarEnums, WireAlbaran } from "@/lib/ocr-wire";
 import { needsEscalation } from "@/lib/draft";
 import { PLANTILLAS } from "@/lib/plantillas";
 import { compatible, type BaseUnit, type LineUnit } from "@/lib/units";
 import { env } from "../env";
+import { detalleDeError, mensajeDeError, OcrError, OcrRefusal } from "./errors";
 import { MOCK_ALBARAN, MOCK_ALBARAN_GIL, MOCK_CARTA, SAMPLE_HASHES } from "./mock-data";
 
 export type OcrFile = { data: Buffer; mime: string; name: string };
@@ -18,9 +22,10 @@ export type OcrUsage = { model: string; inputTokens: number; outputTokens: numbe
 /** Precio de referencia en USD por millón de tokens (entrada / salida), para registrar el coste de cada lectura.
  *  Si cambian los precios o usas otro modelo, ajusta la tabla o define OCR_PRICE_IN y OCR_PRICE_OUT. */
 const PRICES: Record<string, [number, number]> = {
+  "claude-sonnet-5-5": [2, 10],
   "claude-sonnet-5": [2, 10],
-  "claude-opus-5": [5, 25],
   "claude-opus-5-5": [4, 20],
+  "claude-opus-5": [5, 25],
   "claude-haiku-4-5": [1, 5],
 };
 export function costOf(model: string, input: number, output: number): number {
@@ -28,19 +33,26 @@ export function costOf(model: string, input: number, output: number): number {
   return (input * i + output * o) / 1_000_000;
 }
 
+const PRESUPUESTO_MS = 260_000; // toda la lectura de un documento
+const PRIMERA_MAX_MS = 150_000; // límite de la primera llamada
+const REPASO_MIN_MS = 90_000; // con menos tiempo que esto no se intenta el repaso
+const MAX_TOKENS = 32_000; // incluye el razonamiento del modelo; con streaming no hay problema de tiempo de espera
+
 const SYSTEM_ALBARAN = `Eres el lector de albaranes y facturas de proveedores de RESTORA, una herramienta de control de costes para restaurantes en España.
-Tu trabajo es transcribir el documento con exactitud a la estructura pedida. Nunca inventes datos: si algo no se lee, déjalo en null y dilo en "duda".
+Tu trabajo es transcribir el documento con exactitud a la estructura pedida. Nunca inventes datos: si algo no se lee, déjalo en null (o 0 / cadena vacía donde el campo lo pide) y dilo en "duda".
 
 Reglas:
-- Todas las imágenes o páginas forman un único documento. No repitas líneas que aparezcan en dos fotos solapadas.
+- Todas las imágenes o páginas forman un único documento. No repitas líneas que aparezcan en dos fotos solapadas. Si las páginas parecen ser de documentos distintos (otro proveedor u otro número), lee solo el primero y dilo en "observaciones".
+- Si la imagen no es un documento de compra (albarán, factura o ticket), pon tipo_documento "otro", deja las líneas vacías y explícalo en "observaciones".
 - El proveedor es quien EMITE el documento (logotipo, CIF del emisor), no el cliente al que va dirigido.
 - Una línea por producto o cargo con importe. Incluye portes, envases o recargos si tienen importe, para que los totales cuadren.
 - Números con punto decimal (1.234,56 € en el papel → 1234.56). Fechas en formato AAAA-MM-DD (los documentos españoles usan día/mes/año).
 - "unidad": la unidad de venta impresa (kg, ud, caja, garrafa 5 L, estuche 30...). La cantidad es en esa unidad.
 - "precio_unitario" e "importe" SIN IVA. Si el documento solo muestra precios con IVA incluido, indícalo en "observaciones".
-- "descuento_pct" si la línea tiene descuento; "bonificadas" si hay unidades regaladas (por ejemplo 6+1 → 1).
+- "descuento_pct" (0 si no hay descuento) y "bonificadas" (unidades regaladas, por ejemplo 6+1 → 1; 0 si no hay).
 - "iva_pct": el tipo de la línea si aparece (a veces como código A/B/C con leyenda en el pie: tradúcelo al porcentaje). Si no aparece, null.
 - "desglose_iva": las bases y cuotas por tipo del pie del documento. "total": el total a pagar.
+- "duda", "observaciones" y "numero_alternativo": cadena vacía si no hay nada que decir.
 - Confianza: "alta" si lo lees sin dudar; "media" si hay algún carácter dudoso pero el resto del documento lo confirma (por ejemplo, cantidad × precio = importe); "baja" si no se lee o no cuadra.
 - Si un número admite dos lecturas (0/8, 1/7, 3/8, 5/6), pon la más probable y la otra en "numero_alternativo" o en "duda".
 - Comprueba que cantidad × precio × (1 − descuento) ≈ importe en cada línea; si no cuadra, baja la confianza y explica la duda.`;
@@ -57,26 +69,46 @@ function toBlocks(files: OcrFile[]): Anthropic.ContentBlockParam[] {
 }
 
 let client: Anthropic | null = null;
-const api = () => (client ??= new Anthropic({ apiKey: env.anthropicKey, maxRetries: 2, timeout: 180_000 }));
+// Los reintentos del SDK solo cubren fallos al conectar (429, 5xx, red); el tiempo total lo manda cada llamada con su límite
+const api = () => (client ??= new Anthropic({ apiKey: env.anthropicKey, maxRetries: 2, timeout: 150_000 }));
 
-async function callAlbaran(files: OcrFile[], model: string, effort: "low" | "medium" | "high", clienteNombre: string) {
+type Llamada<T> = { result: T; model: string; inputTokens: number; outputTokens: number; ms: number };
+
+/** Una llamada con salida estructurada. Comprueba el motivo de parada ANTES de leer el texto (con un corte por longitud o una
+ *  negativa el JSON llega a medias) y valida la respuesta con Zod, corrigiendo antes las mayúsculas y tildes de los enums. */
+async function llamar<T>(p: {
+  que: string; model: string; effort: "low" | "medium" | "high"; maxTokens: number; system: string;
+  esquema: Record<string, unknown>; schema: z.ZodType<T>; content: Anthropic.ContentBlockParam[]; limiteMs: number;
+  preparar?: (raw: unknown) => unknown; largo?: string;
+}): Promise<Llamada<T>> {
   const t0 = Date.now();
-  const msg = await api().messages.parse({
-    model,
-    max_tokens: 16000,
-    system: SYSTEM_ALBARAN,
-    output_config: { format: zodOutputFormat(OcrAlbaran), effort },
-    messages: [{
-      role: "user",
-      content: [
-        ...toBlocks(files),
-        { type: "text", text: `Lee este documento de compra. El cliente (el restaurante que lo sube) se llama «${clienteNombre}»: no lo confundas con el proveedor.` },
-      ],
-    }],
-  });
-  if (msg.stop_reason === "refusal") throw new Error("El modelo no ha podido leer el documento.");
-  if (!msg.parsed_output) throw new Error(msg.stop_reason === "max_tokens" ? "El documento es demasiado largo para leerlo de una vez." : "La lectura ha salido incompleta.");
-  return { result: msg.parsed_output, model, inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens, ms: Date.now() - t0 };
+  let msg: Anthropic.Message;
+  try {
+    msg = await api().messages.stream({
+      model: p.model,
+      max_tokens: p.maxTokens,
+      system: p.system,
+      output_config: { format: { type: "json_schema", schema: p.esquema }, effort: p.effort },
+      messages: [{ role: "user", content: p.content }],
+    }, { signal: AbortSignal.timeout(Math.max(1_000, p.limiteMs)) }).finalMessage();
+  } catch (e) {
+    console.error(`[ocr] ${p.que} ${p.model}: ${detalleDeError(e)}`);
+    throw e;
+  }
+  const ms = Date.now() - t0;
+  console.log(`[ocr] ${p.que} ${p.model} entrada=${msg.usage.input_tokens} salida=${msg.usage.output_tokens} ${ms} ms parada=${msg.stop_reason}`);
+  if (msg.stop_reason === "refusal") throw new OcrRefusal(`rechazo (${msg.stop_details?.category ?? "sin categoría"})`);
+  if (msg.stop_reason === "max_tokens") throw new OcrError(p.largo ?? "El documento es demasiado largo para leerlo de una vez. Súbelo en varias partes (de 3 en 3 páginas, por ejemplo).", "max_tokens");
+  const texto = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
+  let raw: unknown;
+  try { raw = JSON.parse(texto); } catch { throw new OcrError("La lectura ha salido incompleta. Vuelve a intentarlo.", `JSON no válido: ${texto.slice(0, 200)}`); }
+  const ok = p.schema.safeParse(p.preparar ? p.preparar(raw) : suavizarEnums(raw));
+  if (!ok.success) {
+    const motivo = ok.error.issues.slice(0, 5).map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
+    console.error(`[ocr] ${p.que} ${p.model}: respuesta fuera del esquema · ${motivo}`);
+    throw new OcrError("La lectura ha salido incompleta. Vuelve a intentarlo.", `fuera del esquema: ${motivo}`);
+  }
+  return { result: ok.data, model: p.model, inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens, ms };
 }
 
 /** ¿Es uno de los documentos de ejemplo? (una sola página con la misma huella). */
@@ -86,6 +118,7 @@ function sampleOf(files: OcrFile[]) {
 const NO_USAGE = (model: string): OcrUsage => ({ model, inputTokens: 0, outputTokens: 0, costUsd: 0, ms: 0, escalated: false });
 const OFF = "La lectura automática no está disponible todavía. Puedes apuntar el documento a mano.";
 const pause = () => new Promise((r) => setTimeout(r, Number(process.env.OCR_MOCK_DELAY_MS ?? 1200)));
+const usageOf = (c: Llamada<unknown>, escalated: boolean): OcrUsage => ({ model: c.model, inputTokens: c.inputTokens, outputTokens: c.outputTokens, costUsd: costOf(c.model, c.inputTokens, c.outputTokens), ms: c.ms, escalated });
 
 export async function readAlbaran(files: OcrFile[], clienteNombre: string): Promise<{ ocr: OcrAlbaran; usage: OcrUsage }> {
   const sample = sampleOf(files);
@@ -95,21 +128,42 @@ export async function readAlbaran(files: OcrFile[], clienteNombre: string): Prom
     const ocr = OcrAlbaran.parse(JSON.parse(JSON.stringify(gil ? MOCK_ALBARAN_GIL : MOCK_ALBARAN)));
     return { ocr, usage: NO_USAGE(sample ? "ejemplo" : "mock") };
   }
-  if (env.ocrProvider === "off") throw new Error(OFF);
-  const first = await callAlbaran(files, env.ocrModel, env.ocrEffort, clienteNombre);
-  let usage: OcrUsage = { model: first.model, inputTokens: first.inputTokens, outputTokens: first.outputTokens, costUsd: costOf(first.model, first.inputTokens, first.outputTokens), ms: first.ms, escalated: false };
-  let ocr = first.result;
-  if (needsEscalation(ocr) && env.ocrEscalateModel && env.ocrEscalateModel !== env.ocrModel) {
+  if (env.ocrProvider === "off") throw new OcrError(OFF);
+
+  const t0 = Date.now();
+  const quedan = () => PRESUPUESTO_MS - (Date.now() - t0);
+  const content: Anthropic.ContentBlockParam[] = [
+    ...toBlocks(files),
+    { type: "text", text: `Lee este documento de compra. El cliente (el restaurante que lo sube) se llama «${clienteNombre}»: no lo confundas con el proveedor.` },
+  ];
+  const leer = async (model: string, effort: "low" | "medium" | "high", limiteMs: number) => {
+    const c = await llamar({ que: "albarán", model, effort, maxTokens: MAX_TOKENS, system: SYSTEM_ALBARAN, esquema: ESQUEMA_ALBARAN, schema: WireAlbaran, content, limiteMs });
+    return { ...c, result: albaranDeWire(c.result) };
+  };
+  const puedeRepasar = () => !!env.ocrEscalateModel && env.ocrEscalateModel !== env.ocrModel && quedan() > REPASO_MIN_MS;
+
+  let primera: Awaited<ReturnType<typeof leer>>;
+  try {
+    primera = await leer(env.ocrModel, env.ocrEffort, Math.min(PRIMERA_MAX_MS, quedan()));
+  } catch (e) {
+    // Si el primer modelo se niega a leerlo, se prueba con el otro: el resultado se da por «repasado»
+    if (!(e instanceof OcrRefusal) || !puedeRepasar()) throw e;
+    const segunda = await leer(env.ocrEscalateModel, "high", quedan() - 15_000);
+    return { ocr: segunda.result, usage: usageOf(segunda, true) };
+  }
+  // Una foto que no es un documento no se repasa (sería pagar dos veces por nada): se avisa de una vez
+  if (!primera.result.lineas.length && primera.result.tipo_documento === "otro") {
+    throw new OcrError("No parece un albarán ni una factura. Prueba con otra foto del documento.", `tipo otro sin líneas: ${primera.result.observaciones ?? ""}`);
+  }
+  let ocr = primera.result, usage = usageOf(primera, false);
+  if (needsEscalation(ocr) && puedeRepasar()) {
     try {
-      const second = await callAlbaran(files, env.ocrEscalateModel, "medium", clienteNombre);
-      ocr = second.result;
-      usage = {
-        model: second.model, escalated: true,
-        inputTokens: usage.inputTokens + second.inputTokens, outputTokens: usage.outputTokens + second.outputTokens,
-        costUsd: usage.costUsd + costOf(second.model, second.inputTokens, second.outputTokens), ms: usage.ms + second.ms,
-      };
+      const segunda = await leer(env.ocrEscalateModel, "high", quedan() - 15_000);
+      const u2 = usageOf(segunda, true);
+      ocr = segunda.result;
+      usage = { ...u2, inputTokens: usage.inputTokens + u2.inputTokens, outputTokens: usage.outputTokens + u2.outputTokens, costUsd: usage.costUsd + u2.costUsd, ms: usage.ms + u2.ms };
     } catch (e) {
-      console.error("[ocr] el repaso con el modelo superior ha fallado; se usa la primera lectura", (e as Error).message);
+      console.error(`[ocr] el repaso con ${env.ocrEscalateModel} ha fallado; se usa la primera lectura · ${detalleDeError(e)}`);
     }
   }
   return { ocr, usage };
@@ -121,21 +175,13 @@ export async function readCarta(files: OcrFile[]): Promise<{ carta: OcrCarta; us
     await pause();
     return { carta: OcrCarta.parse(JSON.parse(JSON.stringify(MOCK_CARTA))), usage: NO_USAGE(sample ? "ejemplo" : "mock") };
   }
-  if (env.ocrProvider === "off") throw new Error(OFF);
-  const t0 = Date.now();
-  const model = env.ocrModel;
-  const msg = await api().messages.parse({
-    model,
-    max_tokens: 16000,
-    system: SYSTEM_CARTA,
-    output_config: { format: zodOutputFormat(OcrCarta), effort: "low" },
-    messages: [{ role: "user", content: [...toBlocks(files), { type: "text", text: "Transcribe esta carta." }] }],
+  if (env.ocrProvider === "off") throw new OcrError(OFF);
+  const c = await llamar({
+    que: "carta", model: env.ocrModel, effort: "low", maxTokens: MAX_TOKENS, system: SYSTEM_CARTA, esquema: ESQUEMA_CARTA, schema: OcrCarta,
+    content: [...toBlocks(files), { type: "text", text: "Transcribe esta carta." }], limiteMs: PRIMERA_MAX_MS,
+    largo: "La carta es demasiado larga para leerla de una vez. Súbela en varias partes (por secciones, por ejemplo).",
   });
-  if (msg.stop_reason === "refusal" || !msg.parsed_output) throw new Error("No se ha podido leer la carta.");
-  return {
-    carta: msg.parsed_output,
-    usage: { model, inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens, costUsd: costOf(model, msg.usage.input_tokens, msg.usage.output_tokens), ms: Date.now() - t0, escalated: false },
-  };
+  return { carta: c.result, usage: usageOf(c, false) };
 }
 
 // ---- Sugerencia de ingredientes de un plato (a partir del nombre) con Claude ----
@@ -157,6 +203,14 @@ const IaReceta = z.object({
     unidad: z.enum(["g", "kg", "ml", "L", "ud"]),
   })).describe("Entre 3 y 12 ingredientes"),
 });
+const ESQUEMA_RECETA = esquemaApi(IaReceta);
+/** La unidad llega como «l», «gr», «unidad»...: se lleva a una de las cinco permitidas antes de validar. */
+const unidadReceta = (raw: unknown): unknown => {
+  const r = raw as { ingredientes?: { unidad?: unknown }[] };
+  const mapa: Record<string, string> = { g: "g", gr: "g", gramo: "g", gramos: "g", kg: "kg", kilo: "kg", kilos: "kg", ml: "ml", l: "L", lt: "L", litro: "L", litros: "L", ud: "ud", u: "ud", uds: "ud", unidad: "ud", unidades: "ud" };
+  if (Array.isArray(r?.ingredientes)) for (const i of r.ingredientes) if (typeof i?.unidad === "string") i.unidad = mapa[i.unidad.trim().toLowerCase()] ?? i.unidad;
+  return raw;
+};
 
 export type CatalogoItem = { id: string; name: string; unit: BaseUnit };
 export type RecetaSugerida = { raciones: number; pvp: number | null; lineas: { cat: string; q: number; u: LineUnit; name: string }[]; modelo: string };
@@ -190,19 +244,20 @@ function sugeridaMock(name: string, cat: Map<string, CatalogoItem>): RecetaSuger
 }
 
 export async function sugerirReceta(name: string, familia: string, descripcion: string, catalogo: CatalogoItem[]): Promise<RecetaSugerida> {
-  if (env.ocrProvider === "off") throw new Error("La sugerencia con IA no está disponible: falta configurar la clave de Claude.");
+  if (env.ocrProvider === "off") throw new OcrError("La sugerencia con IA no está disponible: falta configurar la clave de Claude.");
   const cat = new Map(catalogo.map((c) => [c.id, c]));
   if (env.ocrProvider === "mock") { await pause(); return sugeridaMock(name, cat); }
   const lista = catalogo.map((c) => `${c.id} — ${c.name} (${c.unit})`).join("\n");
   const detalle = descripcion.trim() ? `\nDescripción: ${descripcion.trim()}` : "";
-  const msg = await api().messages.parse({
-    model: env.ocrModel,
-    max_tokens: 2000,
-    system: SYSTEM_RECETA,
-    output_config: { format: zodOutputFormat(IaReceta), effort: "low" },
-    messages: [{ role: "user", content: [{ type: "text", text: `Plato: «${name}»${familia ? ` (grupo de carta: ${familia})` : ""}.${detalle}\n\nCatálogo disponible (usa estos ids):\n${lista}` }] }],
-  });
-  if (msg.stop_reason === "refusal" || !msg.parsed_output) throw new Error("No se ha podido sugerir la receta. Añade los ingredientes a mano.");
-  const out = msg.parsed_output;
-  return clean(out.raciones, out.pvp_sugerido, out.ingredientes, cat);
+  try {
+    const c = await llamar({
+      que: "receta", model: env.ocrModel, effort: "low", maxTokens: 8_000, system: SYSTEM_RECETA, esquema: ESQUEMA_RECETA, schema: IaReceta, preparar: unidadReceta,
+      content: [{ type: "text", text: `Plato: «${name}»${familia ? ` (grupo de carta: ${familia})` : ""}.${detalle}\n\nCatálogo disponible (usa estos ids):\n${lista}` }],
+      limiteMs: 90_000,
+    });
+    return clean(c.result.raciones, c.result.pvp_sugerido, c.result.ingredientes, cat);
+  } catch (e) {
+    console.error(`[ocr] sugerencia de receta: ${detalleDeError(e)}`);
+    throw new OcrError(mensajeDeError(e, "receta"), detalleDeError(e));
+  }
 }

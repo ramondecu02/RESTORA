@@ -15,6 +15,9 @@ import { ErrorDoc } from "./error-doc";
 import { Validacion } from "./validacion";
 import { BorrarAlbaran } from "./borrar";
 
+// «Volver a leer» se ejecuta con el límite de esta página: la lectura con IA puede tardar varios minutos
+export const maxDuration = 300;
+
 export const metadata = { title: "Documento" };
 
 type Doc = {
