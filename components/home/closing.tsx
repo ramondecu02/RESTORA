@@ -51,7 +51,7 @@ export function HomeClosing({ copy, locale }: { copy: SiteCopy; locale: Locale }
             className="btn"
             style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.34)", padding: "15px 28px", fontSize: 15.5, backdropFilter: "blur(6px)" }}
           >
-            {copy.pricing.fromLabel} {copy.pricing.price}{copy.pricing.period}
+            {copy.pricing.seeLabel}
           </Link>
         </div>
       </div>

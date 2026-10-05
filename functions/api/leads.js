@@ -1,6 +1,6 @@
 // Cloudflare Pages Function — POST /api/leads
 // Public endpoint for the static landing. Accepts three kinds of submission:
-//   demo       — the founder / demo request form (restaurant, role, city…)
+//   demo       — the demo request form (restaurant, role, city…)
 //   mensaje    — the light contact form (name + email + message)
 //   newsletter — email + consent, in exchange for the food-cost checklist
 // Validates, stores the row in D1 (binding: DB) and, if configured, notifies

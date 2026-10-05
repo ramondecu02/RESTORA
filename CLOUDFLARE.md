@@ -1,7 +1,7 @@
 # Desplegar la landing en Cloudflare Pages (enlace para el mailing)
 
 Esto publica **solo la landing** (estática, bilingüe, claro/oscuro) con el
-formulario de socio fundador guardando en **Cloudflare D1** y avisando por
+formulario de demo y de contacto guardando en **Cloudflare D1** y avisando por
 **email** (Resend). El panel `/admin` y Postgres son aparte (Vercel).
 
 Cómo funciona: `npm run build:cf` genera un export estático en `out/`

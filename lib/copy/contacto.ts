@@ -20,7 +20,6 @@ const es = {
       { num: "03", title: "Demo de 30 minutos", body: "Te enseñamos el producto con un plato tuyo, no con un ejemplo de catálogo." },
     ],
   },
-  founderNote: "Las plazas de socio fundador están limitadas a los primeros restaurantes de Cataluña.",
 };
 
 export type ContactoCopy = typeof es;
@@ -47,7 +46,6 @@ const ca: ContactoCopy = {
       { num: "03", title: "Demo de 30 minuts", body: "T'ensenyem el producte amb un plat teu, no amb un exemple de catàleg." },
     ],
   },
-  founderNote: "Les places de soci fundador estan limitades als primers restaurants de Catalunya.",
 };
 
 export const contactoCopy = { es, ca };

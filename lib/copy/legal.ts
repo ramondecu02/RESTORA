@@ -14,7 +14,7 @@ const es = {
     "Responsable del tratamiento y datos de contacto",
     "Delegado de Protección de Datos (si se designa)",
     "Plazo de conservación concreto de los datos",
-    "Créditos y licencias de las fotografías",
+    "Créditos y licencias de las demás imágenes",
   ],
   contactLine: "Para cualquier cuestión sobre tus datos puedes escribirnos a hola@restoraapp.com.",
   contactCta: "Escríbenos",
@@ -38,7 +38,7 @@ const es = {
       },
       {
         title: "Propiedad intelectual e industrial",
-        body: "La marca RESTORA, el logotipo, los textos, el diseño, el código y las capturas del producto son titularidad de RESTORA o se usan con licencia. Puedes consultar y compartir la web con fines informativos, pero no reproducir, modificar ni explotar comercialmente sus contenidos sin autorización previa por escrito. Las fotografías se publican con las licencias que se indicarán en el bloque de datos pendientes.",
+        body: "La marca RESTORA, el logotipo, los textos, el diseño, el código y las capturas del producto son titularidad de RESTORA o se usan con licencia. Puedes consultar y compartir la web con fines informativos, pero no reproducir, modificar ni explotar comercialmente sus contenidos sin autorización previa por escrito. Las imágenes de la web son ilustrativas: algunas están generadas con inteligencia artificial y no muestran clientes ni equipos reales. Los créditos y licencias de las demás imágenes figuran en el bloque de datos pendientes.",
       },
       {
         title: "Enlaces a terceros",
@@ -104,7 +104,7 @@ const es = {
       },
       {
         title: "Para qué los usamos",
-        body: "Para ponernos en contacto contigo sobre RESTORA y el programa de socios fundadores. No los usamos para publicidad de terceros, no los vendemos y no los cedemos a otros restaurantes ni a proveedores.",
+        body: "Para ponernos en contacto contigo sobre RESTORA, por ejemplo para organizar tu demo o responder tu consulta. No los usamos para publicidad de terceros, no los vendemos y no los cedemos a otros restaurantes ni a proveedores.",
       },
       {
         title: "Base legal",
@@ -112,7 +112,7 @@ const es = {
       },
       {
         title: "Cuánto tiempo los conservamos",
-        body: "Mientras dure la relación de contacto y el programa de socios fundadores, o hasta que nos pidas que los eliminemos. El plazo máximo concreto se indicará en el bloque de datos pendientes.",
+        body: "Mientras dure la relación de contacto, o hasta que nos pidas que los eliminemos. El plazo máximo concreto se indicará en el bloque de datos pendientes.",
       },
       {
         title: "Con quién los compartimos",
@@ -183,7 +183,7 @@ const ca: LegalCopy = {
     "Responsable del tractament i dades de contacte",
     "Delegat de Protecció de Dades (si se'n designa)",
     "Termini de conservació concret de les dades",
-    "Crèdits i llicències de les fotografies",
+    "Crèdits i llicències de les altres imatges",
   ],
   contactLine: "Per a qualsevol qüestió sobre les teves dades pots escriure'ns a hola@restoraapp.com.",
   contactCta: "Escriu-nos",
@@ -207,7 +207,7 @@ const ca: LegalCopy = {
       },
       {
         title: "Propietat intel·lectual i industrial",
-        body: "La marca RESTORA, el logotip, els textos, el disseny, el codi i les captures del producte són titularitat de RESTORA o es fan servir amb llicència. Pots consultar i compartir el web amb finalitats informatives, però no reproduir, modificar ni explotar comercialment els seus continguts sense autorització prèvia per escrit. Les fotografies es publiquen amb les llicències que s'indicaran al bloc de dades pendents.",
+        body: "La marca RESTORA, el logotip, els textos, el disseny, el codi i les captures del producte són titularitat de RESTORA o es fan servir amb llicència. Pots consultar i compartir el web amb finalitats informatives, però no reproduir, modificar ni explotar comercialment els seus continguts sense autorització prèvia per escrit. Les imatges del web són il·lustratives: algunes estan generades amb intel·ligència artificial i no mostren clients ni equips reals. Els crèdits i les llicències de les altres imatges figuren al bloc de dades pendents.",
       },
       {
         title: "Enllaços a tercers",
@@ -273,7 +273,7 @@ const ca: LegalCopy = {
       },
       {
         title: "Per a què les fem servir",
-        body: "Per posar-nos en contacte amb tu sobre RESTORA i el programa de socis fundadors. No les fem servir per a publicitat de tercers, no les venem i no les cedim a altres restaurants ni a proveïdors.",
+        body: "Per posar-nos en contacte amb tu sobre RESTORA, per exemple per organitzar la teva demo o respondre la teva consulta. No les fem servir per a publicitat de tercers, no les venem i no les cedim a altres restaurants ni a proveïdors.",
       },
       {
         title: "Base legal",
@@ -281,7 +281,7 @@ const ca: LegalCopy = {
       },
       {
         title: "Quant de temps les conservem",
-        body: "Mentre duri la relació de contacte i el programa de socis fundadors, o fins que ens demanis que les eliminem. El termini màxim concret s'indicarà al bloc de dades pendents.",
+        body: "Mentre duri la relació de contacte, o fins que ens demanis que les eliminem. El termini màxim concret s'indicarà al bloc de dades pendents.",
       },
       {
         title: "Amb qui les compartim",

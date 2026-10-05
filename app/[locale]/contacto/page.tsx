@@ -105,9 +105,6 @@ export default async function ContactoPage(props: {
                 className="reveal"
                 style={{ marginTop: "clamp(26px, 3.5vw, 40px)", border: "1px solid var(--hair)" }}
               />
-              <p className="reveal" style={{ fontSize: 13.5, color: "var(--muted)", margin: "14px 0 0", fontStyle: "italic", maxWidth: "50ch" }}>
-                {c.founderNote}
-              </p>
             </div>
 
             {/* Right: the form */}

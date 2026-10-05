@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Tag } from "lucide-react";
 import { getSiteCopy } from "@/lib/site-copy";
 import { getPrecios } from "@/lib/pages-copy";
 import { isLocale } from "@/lib/types";
@@ -33,17 +33,17 @@ export default async function PreciosPage(props: {
       <main>
         <PageHead eyebrow={c.hero.eyebrow} title={c.hero.title} sub={c.hero.sub} note={p.previewNote} />
 
-        {/* Price + founder offer */}
+        {/* Free trial + where the plans will be published (no price until the owner confirms it) */}
         <section style={{ padding: "clamp(44px, 5.5vw, 76px) 28px" }}>
           <div
             className="reveal-group mx-auto grid max-w-[1080px]"
             style={{ gridTemplateColumns: "repeat(auto-fit, minmax(296px, 1fr))", gap: 18, alignItems: "stretch" }}
           >
             <div className="card hover-lift" style={{ padding: "clamp(26px, 3vw, 38px)", display: "flex", flexDirection: "column" }}>
-              <div className="editorial-eyebrow" style={{ color: "var(--muted)" }}>{p.fromLabel}</div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 10 }}>
-                <span className="display-serif" style={{ fontSize: "clamp(52px, 6vw, 72px)", letterSpacing: "-0.02em" }}>{p.price}</span>
-                <span style={{ fontSize: 17, color: "var(--muted)" }}>{p.period}</span>
+              <div className="editorial-eyebrow" style={{ color: "var(--muted)" }}>{p.trialLabel}</div>
+              <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "4px 10px", marginTop: 10 }}>
+                <span className="display-serif" style={{ fontSize: "clamp(52px, 6vw, 72px)", letterSpacing: "-0.02em" }}>{p.trialValue}</span>
+                <span style={{ fontSize: 17, color: "var(--muted)" }}>{p.trialNote}</span>
               </div>
               <div className="hairline" style={{ margin: "24px 0" }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
@@ -65,22 +65,22 @@ export default async function PreciosPage(props: {
             >
               <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 22px)", pointerEvents: "none" }} />
               <div style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 8, alignSelf: "flex-start", background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 999, padding: "6px 13px", fontSize: 12, fontWeight: 600 }}>
-                <Sparkles size={14} strokeWidth={2} />
-                {p.founderBadge}
+                <Tag size={14} strokeWidth={2} />
+                {p.plansBadge}
               </div>
-              <h2 className="display-serif" style={{ position: "relative", fontSize: "clamp(26px, 3vw, 34px)", marginTop: 18, color: "#fff" }}>{p.founderTitle}</h2>
-              <p style={{ position: "relative", fontSize: 15, color: "rgba(255,255,255,0.85)", margin: "12px 0 0", lineHeight: 1.6 }}>{p.founderBody}</p>
+              <h2 className="display-serif" style={{ position: "relative", fontSize: "clamp(26px, 3vw, 34px)", marginTop: 18, color: "#fff" }}>{p.plansTitle}</h2>
+              <p style={{ position: "relative", fontSize: 15, color: "rgba(255,255,255,0.85)", margin: "12px 0 0", lineHeight: 1.6 }}>{p.plansBody}</p>
               <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 12, marginTop: 22, flex: 1 }}>
-                {p.founderPerks.map((perk) => (
+                {p.plansPerks.map((perk) => (
                   <div key={perk} style={{ display: "flex", gap: 11, alignItems: "flex-start", fontSize: 15 }}>
                     <Check size={18} strokeWidth={2.6} color="#fff" style={{ flexShrink: 0, marginTop: 1 }} />
                     <span>{perk}</span>
                   </div>
                 ))}
               </div>
-              <a href={APP_SIGNUP_URL} className="btn" style={{ position: "relative", marginTop: 28, padding: 14, fontSize: 15.5, justifyContent: "center", background: "#fff", color: "var(--brand)", border: "1px solid #fff" }}>
-                {p.cta} →
-              </a>
+              <Link href={`/${locale}/contacto`} className="btn" style={{ position: "relative", marginTop: 28, padding: 14, fontSize: 15.5, justifyContent: "center", background: "#fff", color: "var(--brand)", border: "1px solid #fff" }}>
+                {p.plansCta} →
+              </Link>
             </div>
           </div>
         </section>

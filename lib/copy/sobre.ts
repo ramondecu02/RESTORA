@@ -14,7 +14,7 @@ const es = {
     role: "[PENDIENTE: cargo y trayectoria real de Ramon]",
     bio: [
       "[PENDIENTE: bio real de Ramon — 3 o 4 líneas: de dónde viene, qué relación tiene con la hostelería y qué vio en cocina que le llevó a construir RESTORA.]",
-      "[PENDIENTE: una frase en primera persona sobre cómo quiere trabajar con los primeros restaurantes.]",
+      "[PENDIENTE: una frase en primera persona sobre cómo quiere trabajar con cada restaurante.]",
     ],
     contactLabel: "Hablar directamente",
     contactNote: "Sin comercial de por medio: te responde quien construye el producto.",
@@ -39,9 +39,9 @@ const es = {
   },
   where: {
     eyebrow: "Dónde estamos",
-    title: "Cataluña, empezando por Tarragona y Barcelona.",
-    body: "Arrancamos con un grupo reducido de restaurantes —el programa de socios fundadores— para construir el producto sobre cocinas reales antes de abrirlo a todo el mundo.",
-    cta: "Reservar plaza de socio fundador",
+    title: "Hecho en Cataluña, para la cocina de cada día.",
+    body: "RESTORA se construye en Cataluña, y la web está en castellano y en catalán. Si quieres verlo funcionar con un plato tuyo, escríbenos y lo preparamos juntos.",
+    cta: "Pedir una demo",
     secondary: "Ver cómo funciona",
   },
 };
@@ -60,7 +60,7 @@ const ca: SobreCopy = {
     role: "[PENDENT: càrrec i trajectòria real d'en Ramon]",
     bio: [
       "[PENDENT: bio real d'en Ramon — 3 o 4 línies: d'on ve, quina relació té amb l'hostaleria i què va veure a cuina que el va portar a construir RESTORA.]",
-      "[PENDENT: una frase en primera persona sobre com vol treballar amb els primers restaurants.]",
+      "[PENDENT: una frase en primera persona sobre com vol treballar amb cada restaurant.]",
     ],
     contactLabel: "Parlar directament",
     contactNote: "Sense comercial pel mig: et respon qui construeix el producte.",
@@ -85,9 +85,9 @@ const ca: SobreCopy = {
   },
   where: {
     eyebrow: "On som",
-    title: "Catalunya, començant per Tarragona i Barcelona.",
-    body: "Arrenquem amb un grup reduït de restaurants —el programa de socis fundadors— per construir el producte sobre cuines reals abans d'obrir-lo a tothom.",
-    cta: "Reservar plaça de soci fundador",
+    title: "Fet a Catalunya, per a la cuina de cada dia.",
+    body: "RESTORA es construeix a Catalunya, i el web és en castellà i en català. Si vols veure'l funcionar amb un plat teu, escriu-nos i ho preparem junts.",
+    cta: "Demanar una demo",
     secondary: "Veure com funciona",
   },
 };

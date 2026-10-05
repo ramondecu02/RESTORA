@@ -1,4 +1,4 @@
-# RESTORA — web de presentación + captación de socios fundadores
+# RESTORA — web de presentación y captación de clientes
 
 Landing de una página, bilingüe (**ES / CA**) y con tema **claro/oscuro**, para
 RESTORA: la capa de inteligencia de negocio y *food cost* para restaurantes
@@ -21,11 +21,11 @@ Este repositorio es la implementación de producción del *design handoff*
 
 ## Qué incluye
 
-- **Landing** (secciones 1–10): hero con tarjeta-instrumento, problema, escalera
-  de valor (N1/N2/N3), por qué + franja *benchmark*, manifiesto, ICP, precios
-  (3 planes + programa socio fundador), credibilidad y CTA final.
+- **Web pública** en varias páginas (inicio, funcionalidades, cómo funciona,
+  precios, preguntas, sobre nosotros, contacto y las legales), en ES y CA. Los
+  precios se publicarán cuando el propietario confirme los planes.
 - **i18n por ruta**: `es` (por defecto) y `ca`; `/` redirige según cookie /
-  `Accept-Language`. Todo el copy vive en `lib/dictionaries.ts`.
+  `Accept-Language`. El copy vive en `lib/site-copy.ts` y `lib/copy/*.ts`.
 - **Tema claro/oscuro**: variables CSS + `data-theme`, persistido en
   `localStorage`, respeta `prefers-color-scheme` en la primera visita, sin
   parpadeo (script bloqueante).

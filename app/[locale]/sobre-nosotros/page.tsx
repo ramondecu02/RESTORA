@@ -6,7 +6,7 @@ import { getSiteCopy } from "@/lib/site-copy";
 import { getSobre } from "@/lib/pages-copy";
 import { isLocale } from "@/lib/types";
 import { pageMetadata } from "@/lib/seo";
-import { CONTACT_EMAIL } from "@/lib/site";
+import { ABOUT_BIO_READY, CONTACT_EMAIL } from "@/lib/site";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { PageHead } from "@/components/pages/page-head";
@@ -32,9 +32,9 @@ export default async function SobreNosotrosPage(props: { params: Promise<{ local
       <main>
         <PageHead eyebrow={c.hero.eyebrow} title={c.hero.title} sub={c.hero.sub} />
 
-        {/* Who is behind it — bio still pending, never invented. The photo is a workplace (no faces), not a portrait. */}
+        {/* Who is behind it — the role and bio only show once they are real (ABOUT_BIO_READY), never invented. The photo is a workplace (no faces), not a portrait. */}
         <section style={{ padding: "clamp(44px, 5.5vw, 78px) 28px" }}>
-          <div className="mx-auto grid max-w-[1180px] items-start lg:grid-cols-[minmax(0,0.42fr)_minmax(0,1fr)]" style={{ gap: "clamp(24px, 4vw, 60px)" }}>
+          <div className="mx-auto grid max-w-[1180px] items-center lg:grid-cols-[minmax(0,0.42fr)_minmax(0,1fr)]" style={{ gap: "clamp(24px, 4vw, 60px)" }}>
             <div className="reveal mx-auto w-full max-w-[440px] lg:mx-0" style={{ minWidth: 0 }}>
               {/* TODO(Ramon): cuando exista su foto real, ponerla aquí en lugar de la de ambientación (mismo hueco 4:5). */}
               <Frame
@@ -52,27 +52,17 @@ export default async function SobreNosotrosPage(props: { params: Promise<{ local
             <div className="reveal" style={{ minWidth: 0 }}>
               <div className="editorial-eyebrow" style={{ color: "var(--brand)" }}>{c.who.eyebrow}</div>
               <h2 className="display-serif" style={{ fontSize: "clamp(30px, 4vw, 50px)", margin: "16px 0 0" }}>{c.who.name}</h2>
-              <p className="mono" style={{ fontSize: 13.5, color: "var(--earth)", margin: "10px 0 0", fontWeight: 600 }}>{c.who.role}</p>
-              <div style={{ marginTop: 22, display: "flex", flexDirection: "column", gap: 14 }}>
-                {c.who.bio.map((p) => (
-                  <p
-                    key={p}
-                    style={{
-                      fontSize: 16,
-                      lineHeight: 1.7,
-                      margin: 0,
-                      padding: "14px 16px",
-                      borderRadius: 14,
-                      color: "var(--muted)",
-                      background: "color-mix(in srgb, var(--earth) 10%, var(--surface))",
-                      border: "1px dashed color-mix(in srgb, var(--earth) 55%, var(--hair))",
-                    }}
-                  >
-                    {p}
-                  </p>
-                ))}
-              </div>
-              <div style={{ marginTop: 26, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 18px" }}>
+              {ABOUT_BIO_READY && (
+                <>
+                  <p className="mono" style={{ fontSize: 13.5, color: "var(--earth)", margin: "10px 0 0", fontWeight: 600 }}>{c.who.role}</p>
+                  <div style={{ marginTop: 22, display: "flex", flexDirection: "column", gap: 14 }}>
+                    {c.who.bio.map((p) => (
+                      <p key={p} style={{ fontSize: 16.5, lineHeight: 1.7, margin: 0, color: "var(--muted)", maxWidth: "58ch" }}>{p}</p>
+                    ))}
+                  </div>
+                </>
+              )}
+              <div style={{ marginTop: ABOUT_BIO_READY ? 26 : 22, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 18px" }}>
                 <a href={`mailto:${CONTACT_EMAIL}`} className="btn btn-outline" style={{ padding: "12px 20px", fontSize: 14.5 }}>
                   <Mail size={16} strokeWidth={1.9} />
                   {c.who.contactLabel}

@@ -11,6 +11,11 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://restoraapp
 
 export const CONTACT_EMAIL = "hola@restoraapp.com";
 
+// «Sobre nosotros» → «Quién está detrás»: el cargo y la biografía solo se enseñan cuando son reales. Mientras sea false, la página
+// enseña solo el nombre y el contacto directo (los textos de lib/copy/sobre.ts siguen siendo [PENDIENTE] y no llegan a la web pública).
+// TODO(Ramon): pasar a true cuando el cargo y la biografía de lib/copy/sobre.ts (ES y CA) sean los reales.
+export const ABOUT_BIO_READY = false;
+
 // La app (Vercel): registro con la prueba gratuita y acceso de los clientes.
 export const APP_URL = "https://app.restoraapp.app";
 export const APP_SIGNUP_URL = `${APP_URL}/registro`;

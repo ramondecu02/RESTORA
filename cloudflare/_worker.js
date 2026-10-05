@@ -45,7 +45,7 @@ export default {
 
 /* ----------------------------- Lead capture ----------------------------- */
 // Three kinds of submission come from the static site:
-//   demo       — founder / demo request (restaurant, role, city…)
+//   demo       — demo request (restaurant, role, city…)
 //   mensaje    — light contact form (name + email + message)
 //   newsletter — email + consent (food-cost checklist)
 
