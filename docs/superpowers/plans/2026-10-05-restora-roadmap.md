@@ -89,7 +89,8 @@ Reglas duras:
 > · Task 10 (QA transversal) ✓ salvo Lighthouse sobre el dominio real y una prueba con lector de pantalla: matriz de 156 comprobaciones de anchos, axe (WCAG 2.2 AA) con 0 violaciones, coherencia entre pantallas, corregir y borrar,
 > revisión con la guía de interfaz de Vercel y Lighthouse local (informe en `docs/superpowers/informes/2026-10-05-qa-transversal.md`) · Task 11 redactada, **pendiente de tu firma** (`docs/superpowers/mvp-terminado.md`)
 > · La ficha del proveedor ya lleva cifras (gasto, peso en tus compras, subidas, albaranes) y el gasto por mes en un solo color; la del artículo ya cumplía el sistema.
-> · **Quedan** Task 9 (Cuenta, Mi local, Facturación y Más: lo de Facturación espera a D1), y la ficha de la compra (la pantalla de validación).
+> · La ficha de la compra guardada ya lleva cifras y la tabla a todo el ancho; la pantalla de revisión ya cumplía el sistema.
+> · **Queda** Task 9 (Cuenta, Mi local y Más; lo de Facturación espera a D1).
 > Los pasos de abajo se conservan como referencia de lo que se hizo y de lo que falta.
 
 ### Task 1: [A1] Sistema de diseño compartido: KPI, movimiento, esqueletos y estados vacíos
