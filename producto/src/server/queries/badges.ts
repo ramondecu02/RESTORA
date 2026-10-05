@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { one, withTenant } from "../db";
 import type { AppCtx } from "../ctx";
 import type { Badges } from "@/components/shell/nav";
@@ -6,7 +7,8 @@ import { AVISO_DIAS, AVISO_MIN } from "../domain/avisos";
 /** Objetivo de food cost efectivo: el del plato, o 100 − margen deseado en reventa, o el del local. */
 export const FC_OBJ_SQL = "coalesce(r.fc_objetivo, case when r.reventa and r.margen_objetivo is not null then 100 - r.margen_objetivo end, $3)";
 
-export async function navBadges(ctx: AppCtx): Promise<Badges> {
+/** Contadores del menú. Con cache() la página que los necesita (fichas, atención) no repite la consulta que ya hizo el marco. */
+export const navBadges = cache(async (ctx: AppCtx): Promise<Badges> => {
   // Avisos: mismo criterio que priceAlerts (último cambio de cada artículo, subida mínima y usado, también a través
   // de elaboraciones, por un plato de la carta)
   const r = await withTenant(ctx.tenantId, (c) => one<Badges>(c, `with recursive de_carta(id) as (
@@ -24,4 +26,4 @@ export async function navBadges(ctx: AppCtx): Promise<Badges> {
        where ev.variacion > $5 and exists (select 1 from receta_lineas rl join de_carta e on e.id = rl.receta_id where rl.articulo_id = ev.articulo_id))::int as avisos`,
     [ctx.local.id, ctx.local.iva_venta, ctx.local.fc_objetivo, AVISO_DIAS, AVISO_MIN]));
   return r ?? { revisar: 0, bajo: 0, fuera: 0, avisos: 0 };
-}
+});

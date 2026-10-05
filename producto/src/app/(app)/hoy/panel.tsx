@@ -1,12 +1,12 @@
 "use client";
 // Panel «Cómo va el mes»: el mes que se mira se elige aquí y todo se mueve con él (arco del food cost, cifras con su variación
 // frente al mes anterior y la gráfica de la carta). Las cifras cuentan hasta su valor y el arco se desliza: el cambio de mes se ve.
-import Link from "next/link";
 import { useState } from "react";
 import { Icon } from "@/components/icons";
-import { Delta, LineChart, Sparkline } from "@/components/charts";
+import { LineChart } from "@/components/charts";
 import { Gauge } from "@/components/gauge";
-import { CountUp, type CountFmt } from "@/components/ui/count-up";
+import type { CountFmt } from "@/components/ui/count-up";
+import { Kpi } from "@/components/ui/kpi";
 
 type Serie = (number | null)[];
 export type PanelProps = {
@@ -20,16 +20,11 @@ const pp = (n: number) => n.toLocaleString("es-ES", { minimumFractionDigits: 1, 
 const pct1 = (n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 }) + " %";
 const pasa = (a: number | null, b: number | null) => (a != null && b != null && b !== 0 ? ((a - b) / Math.abs(b)) * 100 : null);
 
-function Tile({ label, serie, sel, fmt, prevLabel, href, hint }: { label: string; serie: Serie; sel: number; fmt: CountFmt; prevLabel: string | null; href: string | null; hint: string }) {
+/** Una ficha del panel: la cifra del mes elegido, su variación frente al mes anterior y la evolución de los seis meses. */
+function Ficha({ label, serie, sel, fmt, prevLabel, href, hint }: { label: string; serie: Serie; sel: number; fmt: CountFmt; prevLabel: string | null; href: string | null; hint: string }) {
   const cur = serie[sel] ?? null;
   const d = pasa(cur, sel > 0 ? serie[sel - 1] ?? null : null);
-  const inner = <>
-    <span className="tile-lab">{label}</span>
-    <div className="tile-mid"><span className="tile-val"><CountUp value={cur} fmt={fmt} /></span><Delta value={d} /></div>
-    <Sparkline values={serie} marca={sel} label={`${label}: evolución`} />
-    <span className="tile-vs">{cur == null ? hint : d != null && prevLabel ? `vs ${prevLabel}` : " "}</span>
-  </>;
-  return href ? <Link className="tile tile-link" href={href}>{inner}</Link> : <div className="tile">{inner}</div>;
+  return <Kpi label={label} value={cur} fmt={fmt} delta={d} spark={serie} marca={sel} vs={prevLabel ? `vs ${prevLabel}` : null} hint={hint} href={href} />;
 }
 
 export function PanelMes({ cortas, largas, fc, margen, ventas, ticket, comensales, fcObjetivo, porComensal, verVentas, hayHistorico }: PanelProps) {
@@ -63,10 +58,10 @@ export function PanelMes({ cortas, largas, fc, margen, ventas, ticket, comensale
         </div>
         {verVentas ? (
           <div className="tiles">
-            <Tile label="Margen" serie={margen} sel={sel} fmt="eur0" prevLabel={prevLabel} href="/ventas" hint="Importa las ventas de ese mes" />
-            <Tile label="Ventas netas" serie={ventas} sel={sel} fmt="eur0" prevLabel={prevLabel} href="/ventas" hint="Importa las ventas de ese mes" />
-            <Tile label={porComensal ? "Ticket por comensal" : "Ticket medio"} serie={ticket} sel={sel} fmt="eur" prevLabel={prevLabel} href="/ventas" hint="Importa las ventas de ese mes" />
-            <Tile label="Comensales al día" serie={comensales} sel={sel} fmt="int" prevLabel={prevLabel} href="/ventas/importar" hint="Indica los comensales al importar" />
+            <Ficha label="Margen" serie={margen} sel={sel} fmt="eur0" prevLabel={prevLabel} href="/ventas" hint="Importa las ventas de ese mes" />
+            <Ficha label="Ventas netas" serie={ventas} sel={sel} fmt="eur0" prevLabel={prevLabel} href="/ventas" hint="Importa las ventas de ese mes" />
+            <Ficha label={porComensal ? "Ticket por comensal" : "Ticket medio"} serie={ticket} sel={sel} fmt="eur" prevLabel={prevLabel} href="/ventas" hint="Importa las ventas de ese mes" />
+            <Ficha label="Comensales al día" serie={comensales} sel={sel} fmt="int" prevLabel={prevLabel} href="/ventas/importar" hint="Indica los comensales al importar" />
           </div>
         ) : null}
       </div>

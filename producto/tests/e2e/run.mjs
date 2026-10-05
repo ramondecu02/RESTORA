@@ -13,6 +13,7 @@ const suites = [
   ["Calidad de la lectura (descuento, portes, dudas)", "calidad.mjs"],
   ["Borrar albaranes (impacto, ventas con coste congelado)", "borrado.mjs"],
   ["Panel Hoy (atención, mes elegido, cifras que cuentan)", "hoy.mjs"],
+  ["Pantallas renovadas (fichas, filtros, orden, esqueleto)", "pantallas.mjs"],
 ];
 let failed = 0;
 for (const [name, file] of suites) {

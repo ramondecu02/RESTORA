@@ -1,16 +1,29 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { Icon } from "@/components/icons";
 import { Screen } from "@/components/shell/screen";
+import { Esqueleto } from "@/components/ui/esqueleto";
+import { Kpi, Kpis } from "@/components/ui/kpi";
 import { all, withTenant } from "@/server/db";
-import { requireApp } from "@/server/ctx";
+import { requireApp, type AppCtx } from "@/server/ctx";
 import { priceAlerts } from "@/server/domain/avisos";
 import { estadoFC, foodCost } from "@/lib/costing";
-import { eur, eur0, fecha, pct, plural, lista, fcPar } from "@/lib/format";
+import { eur, fecha, pct } from "@/lib/format";
+import { ListaAvisos } from "./lista";
 
 export const metadata = { title: "Avisos" };
 
 export default async function Avisos() {
+  // Primero la sesión y el plan (si toca, redirige antes de enviar nada); después el contenido, que llega con su esqueleto
   const ctx = await requireApp();
+  return (
+    <Screen title="Avisos" sub="Calculados a partir de tus compras y tu carta" back="/hoy">
+      <Suspense fallback={<Esqueleto kpis={4} filas={6} texto="Calculando tus avisos…" />}><AvisosContenido ctx={ctx} /></Suspense>
+    </Screen>
+  );
+}
+
+async function AvisosContenido({ ctx }: { ctx: AppCtx }) {
   const data = await withTenant(ctx.tenantId, async (c) => {
     const pa = await priceAlerts(c, ctx.local);
     const sinPrecio = await all<{ id: string; name: string }>(c, `select distinct a.id, a.name from articulos a join receta_lineas rl on rl.articulo_id = a.id join recetas r on r.id = rl.receta_id
@@ -20,37 +33,20 @@ export default async function Avisos() {
   const total = data.alerts.reduce((s, a) => s + a.impactoMes, 0);
   const fuera = data.stats.filter((s) => s.en_carta).map((s) => ({ s, fc: foodCost(s.coste, s.pvp, ctx.local.iva_venta) }))
     .filter(({ s, fc }) => { const e = estadoFC(fc, s.fcObjetivo).estado; return e === "warn" || e === "crit"; });
+  const accion = data.alerts.filter((a) => a.salen.length).length;
   return (
-    <Screen title="Avisos" sub="Calculados a partir de tus compras y tu carta" back="/hoy">
-      <section className="card" aria-labelledby="h-sum">
-        <div className="card-h"><h2 className="h3" id="h-sum">Lo que suman estos avisos</h2><span className="muted small">Si no haces nada</span></div>
-        <div className="stats">
-          <div className="stat bad"><span className="stat-k">Coste extra al mes</span><span className="stat-v">{eur0(total)}</span></div>
-          <div className="stat"><span className="stat-k">Al año</span><span className="stat-v">{eur0(total * 12)}</span></div>
-          <div className="stat"><span className="stat-k">Avisos abiertos</span><span className="stat-v">{data.alerts.length}</span></div>
-          <div className="stat"><span className="stat-k">Platos fuera de objetivo</span><span className="stat-v">{fuera.length}</span></div>
-        </div>
-      </section>
+    <>
+      <Kpis label="Lo que suman estos avisos">
+        <Kpi i={0} label="Coste extra al mes" value={total} fmt="eur0" tone={total > 0 ? "bad" : "ok"} sub="si no haces nada" />
+        <Kpi i={1} label="Al año" value={total * 12} fmt="eur0" sub="a este ritmo" />
+        <Kpi i={2} label="Avisos abiertos" value={data.alerts.length} fmt="int" tone={accion ? "bad" : data.alerts.length ? "warn" : "ok"} sub={accion ? `${accion} piden acción` : data.alerts.length ? "para vigilar" : "todo en orden"} />
+        <Kpi i={3} label="Platos fuera de objetivo" value={fuera.length} fmt="int" tone={fuera.length ? "bad" : "ok"} sub="food cost por encima de su objetivo" href={fuera.length ? "/escandallos?f=fuera" : null} />
+      </Kpis>
       {data.alerts.length ? (
-        <div className="ins-list">{data.alerts.map((a) => (
-          <article key={a.articuloId} className={`ins ${a.salen.length ? "bad" : ""}`}>
-            <span className={`ins-ic ${a.salen.length ? "bad" : "warn"}`}><Icon name="trendUp" /></span>
-            <div className="ins-b">
-              <span className={`tag ${a.salen.length ? "tag-bad" : "tag-warn"}`} style={{ alignSelf: "flex-start" }}>{a.salen.length ? "Acción recomendada" : "Para vigilar"}</span>
-              <p className="ins-t">{a.name} ha subido un {pct(a.variacion)}{a.proveedor ? ` (${a.proveedor})` : ""}.</p>
-              <p className="ins-p">De {eur(a.antes)} a {eur(a.ahora)}/{a.unit} el {fecha(a.fecha)}. Afecta a {plural(a.platos.length, "plato", "platos")}: {lista(a.platos.map((p) => p.name), 4)}. {a.salen.length ? `${lista(a.salen.map((p) => p.name), 4)} ${a.salen.length === 1 ? "pasa" : "pasan"} del objetivo.` : "Ninguno se sale del objetivo, pero el margen se estrecha."}</p>
-              <div className="ins-figs">
-                <div className="ins-fig"><small>Coste extra al mes</small><b>{eur(a.impactoMes)}</b></div>
-                <div className="ins-fig"><small>Food cost de la carta</small><b>{fcPar(a.fcAntes, a.fcDespues)}</b></div>
-                <div className="ins-fig"><small>Platos afectados</small><b>{a.platos.length}</b></div>
-              </div>
-              {a.alternativa ? <p className="ins-p ins-alt"><Icon name="swap" size={16} /><span>{a.alternativa.proveedor} lo tiene a {eur(a.alternativa.precio)}/{a.unit}.</span></p> : null}
-              <div className="ins-acts">
-                <Link className="btn btn-2 btn-xs" href={`/escandallos/${(a.salen[0] ?? a.platos[0]).id}`}>Valorar {(a.salen[0] ?? a.platos[0]).name}</Link>
-                <Link className="btn btn-3 btn-xs" href={`/articulos/${a.articuloId}`}>{a.alternativa ? "Ver alternativas" : "Ver el artículo"}</Link>
-              </div>
-            </div>
-          </article>))}</div>
+        <ListaAvisos avisos={data.alerts.map((a) => ({
+          id: a.articuloId, nombre: a.name, unit: a.unit, proveedor: a.proveedor, fecha: fecha(a.fecha), antes: a.antes, ahora: a.ahora, variacion: a.variacion,
+          platos: a.platos, salen: a.salen, impactoMes: a.impactoMes, fcAntes: a.fcAntes, fcDespues: a.fcDespues, alternativa: a.alternativa,
+        }))} />
       ) : (
         <div className="card"><div className="empty"><span className="li-ic ok"><Icon name="check" /></span><b>No hay subidas de precio abiertas</b><p>Cuando un albarán suba el precio de algo que usas en tus platos, lo verás aquí con su impacto en euros.</p></div></div>
       )}
@@ -68,6 +64,6 @@ export default async function Avisos() {
           <div className="tags">{data.sinPrecio.map((a) => <Link key={a.id} className="chip" href={`/articulos/${a.id}`}>{a.name}</Link>)}</div>
         </section>
       ) : null}
-    </Screen>
+    </>
   );
 }

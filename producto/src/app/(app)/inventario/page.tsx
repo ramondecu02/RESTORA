@@ -1,9 +1,9 @@
-import Link from "next/link";
+import { Suspense } from "react";
 import { Screen } from "@/components/shell/screen";
 import { ComprasNav } from "@/components/subnav";
-import { Icon } from "@/components/icons";
+import { Esqueleto } from "@/components/ui/esqueleto";
 import { all, one, withTenant } from "@/server/db";
-import { requireApp } from "@/server/ctx";
+import { requireApp, type AppCtx } from "@/server/ctx";
 import { getCatalog, KIND_LABEL } from "@/server/queries/catalog";
 import { toArtCost, type ArtRow } from "@/server/domain/costs";
 import { costeBase } from "@/lib/costing";
@@ -13,7 +13,17 @@ import { InvTable } from "./table";
 export const metadata = { title: "Inventario" };
 
 export default async function Inventario() {
+  // Primero la sesión y el plan (si toca, redirige antes de enviar nada); después el contenido, que llega con su esqueleto
   const ctx = await requireApp();
+  return (
+    <Screen title="Inventario" sub="Stock, consumo y días de cobertura" fab>
+      <ComprasNav cur="inventario" />
+      <Suspense fallback={<Esqueleto kpis={4} filas={8} texto="Cargando tu almacén…" />}><InventarioContenido ctx={ctx} /></Suspense>
+    </Screen>
+  );
+}
+
+async function InventarioContenido({ ctx }: { ctx: AppCtx }) {
   const { cats, items } = await getCatalog();
   const data = await withTenant(ctx.tenantId, async (c) => {
     const arts = await all<ArtRow & { proveedor: string | null; proveedor_id: string | null; phone: string; email: string }>(c, `
@@ -39,12 +49,8 @@ export default async function Inventario() {
   const nombres = new Set(data.arts.map((a) => norm(a.name)));
   const catalog = items.filter((i) => !ligados.has(i.id) && !nombres.has(norm(i.name)));
   return (
-    <Screen title="Inventario" sub="Stock, consumo y días de cobertura" fab
-      actions={<Link className="btn btn-2 btn-sm only-wide" href="/inventario/pedidos"><Icon name="cart" size={18} /> Pedidos{data.pedidos ? ` (${data.pedidos})` : ""}</Link>}>
-      <ComprasNav cur="inventario" />
-      <InvTable rows={rows} untracked={untracked} local={ctx.local.name}
-        catalog={catalog.map((i) => ({ id: i.id, name: i.name, unit: i.unit, categoryId: i.category_id, aliases: i.aliases }))}
-        cats={cats.map((c) => ({ id: c.id, name: c.name }))} pedidos={data.pedidos} />
-    </Screen>
+    <InvTable rows={rows} untracked={untracked} local={ctx.local.name}
+      catalog={catalog.map((i) => ({ id: i.id, name: i.name, unit: i.unit, categoryId: i.category_id, aliases: i.aliases }))}
+      cats={cats.map((c) => ({ id: c.id, name: c.name }))} pedidos={data.pedidos} />
   );
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { Icon } from "@/components/icons";
 import { ArticlePicker, type Picked } from "@/components/pickers";
+import { Kpi, Kpis } from "@/components/ui/kpi";
 import { NumInput } from "@/components/ui/num-input";
 import { Confirm, Sheet } from "@/components/ui/sheet";
 import { toast, toastError } from "@/components/ui/toast";
@@ -54,7 +55,9 @@ export function InvTable({ rows: initial, untracked, catalog, cats, local, pedid
   const porCategoria = (a: { orden: number; categoryId: string }, b: { orden: number; categoryId: string }) => a.orden - b.orden || a.categoryId.localeCompare(b.categoryId);
   const catsPresent = [...new Map(calc.map((r) => [r.categoryId, r])).values()].sort(porCategoria);
   // En «Todas», agrupado por categoría (dos categorías pueden compartir orden) y dentro de cada una por días de cobertura
-  const shown = (cat === "todas" ? [...calc] : calc.filter((r) => r.categoryId === cat)).sort((a, b) => (cat === "todas" ? porCategoria(a, b) : 0) || a.dias - b.dias);
+  // «Bajo mínimo» es una vista más del almacén; si se arregla el último, se vuelve a todas en vez de dejar una lista vacía
+  const vista = cat === "bajo" && !bajos.length ? "todas" : cat;
+  const shown = (vista === "todas" ? [...calc] : vista === "bajo" ? [...bajos] : calc.filter((r) => r.categoryId === vista)).sort((a, b) => (vista === "todas" ? porCategoria(a, b) : 0) || a.dias - b.dias);
 
   const upd = (id: string, patch: Partial<Row>) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   const onStock = (r: Row, n: number | null) => { if (n == null || n < 0) return; upd(r.id, { stock: n }); };
@@ -98,12 +101,13 @@ export function InvTable({ rows: initial, untracked, catalog, cats, local, pedid
   const texto = (g: (typeof porProv)[number]) => `Hola, soy de ${local}. Pedido:\n` + g.rows.map((r) => `- ${r.name}: ${qty(ped[r.id])} ${r.unit}`).join("\n") + "\nGracias.";
 
   const statRow = (
-    <div className="stats">
-      <div className={`stat ${bajos.length ? "bad" : "ok"}`}><span className="stat-k">Bajo mínimo</span><span className="stat-v">{bajos.length}</span><span className="stat-s">de {rows.length} en el almacén</span></div>
-      <div className="stat"><span className="stat-k">Pedido sugerido</span><span className="stat-v">{eur0(totalPedido)}</span><span className="stat-s">Para cubrir dos semanas</span></div>
-      <div className="stat"><span className="stat-k">Valor del almacén</span><span className="stat-v">{eur0(valor)}</span><span className="stat-s">A precio de compra</span></div>
-      <div className="stat"><span className="stat-k">Cobertura media</span><span className="stat-v">{cobMedia == null ? "—" : `${qty(cobMedia, 1)} d`}</span><span className="stat-s">{cobMedia == null ? "Indica el consumo semanal" : "Al ritmo actual"}</span></div>
-    </div>
+    <Kpis label="Resumen del almacén">
+      <Kpi i={0} label="Bajo mínimo" value={bajos.length} fmt="int" tone={bajos.length ? "bad" : "ok"} sub={`de ${rows.length} en el almacén`}
+        onClick={bajos.length ? () => setCat(vista === "bajo" ? "todas" : "bajo") : undefined} pressed={bajos.length ? vista === "bajo" : undefined} />
+      <Kpi i={1} label="Pedido sugerido" value={totalPedido} fmt="eur0" sub={sugerido.length ? `${plural(sugerido.length, "referencia", "referencias")} · cubre dos semanas` : "nada que pedir ahora"} onClick={sugerido.length ? openPedido : undefined} />
+      <Kpi i={2} label="Valor del almacén" value={valor} fmt="eur0" sub="a precio de compra" />
+      <Kpi i={3} label="Cobertura media" value={cobMedia} fmt="dias1" sub="al ritmo actual" hint="Indica el consumo semanal" />
+    </Kpis>
   );
 
   return (
@@ -118,8 +122,9 @@ export function InvTable({ rows: initial, untracked, catalog, cats, local, pedid
       <section className="card" aria-labelledby="h-alm" data-tour="inv">
         <div className="card-h"><h2 className="h3" id="h-alm">Almacén por categorías</h2><span className="muted small">Edita stock, consumo y mínimo: todo se recalcula al momento</span></div>
         <div className="chips" role="tablist" aria-label="Filtrar por categoría">
-          <button type="button" role="tab" aria-selected={cat === "todas"} className={`chip ${cat === "todas" ? "is-on" : ""}`} onClick={() => setCat("todas")}>Todas <span className="cnt">{rows.length}</span></button>
-          {catsPresent.map((r) => <button type="button" role="tab" key={r.categoryId} aria-selected={cat === r.categoryId} className={`chip ${cat === r.categoryId ? "is-on" : ""}`} onClick={() => setCat(r.categoryId)}>{r.categoria} <span className="cnt">{counts.get(r.categoryId)}</span></button>)}
+          <button type="button" role="tab" aria-selected={vista === "todas"} className={`chip ${vista === "todas" ? "is-on" : ""}`} onClick={() => setCat("todas")}>Todas <span className="cnt">{rows.length}</span></button>
+          {bajos.length ? <button type="button" role="tab" aria-selected={vista === "bajo"} className={`chip ${vista === "bajo" ? "is-on" : ""}`} onClick={() => setCat("bajo")}>Bajo mínimo <span className="cnt">{bajos.length}</span></button> : null}
+          {catsPresent.map((r) => <button type="button" role="tab" key={r.categoryId} aria-selected={vista === r.categoryId} className={`chip ${vista === r.categoryId ? "is-on" : ""}`} onClick={() => setCat(r.categoryId)}>{r.categoria} <span className="cnt">{counts.get(r.categoryId)}</span></button>)}
         </div>
         {!rows.length ? <div className="empty"><span className="li-ic"><Icon name="cart" /></span><b>Aún no controlas stock</b><p>Añade las referencias que quieras vigilar. Las compras de tus albaranes suman stock solas.</p></div> : null}
         {rows.length ? <>
@@ -127,7 +132,7 @@ export function InvTable({ rows: initial, untracked, catalog, cats, local, pedid
             <thead><tr><th>Producto</th><th className="r">Stock</th><th className="r">Consumo/sem</th><th>Cobertura</th><th className="r">Mínimo</th><th>Estado</th><th className="r">A pedir</th><th /></tr></thead>
             <tbody>
               {shown.map((r, i) => {
-                const head = cat === "todas" && (i === 0 || shown[i - 1].categoryId !== r.categoryId);
+                const head = vista === "todas" && (i === 0 || shown[i - 1].categoryId !== r.categoryId);
                 const grp = head ? calc.filter((x) => x.categoryId === r.categoryId) : [];
                 return [
                   head ? <tr key={"g" + r.categoryId} className="grp"><td colSpan={8}>{r.categoria} · {r.grupo} · {plural(grp.length, "ref.", "ref.")} · {eur0(grp.reduce((s, x) => s + x.valor, 0))}</td></tr> : null,

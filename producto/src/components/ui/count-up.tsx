@@ -12,6 +12,7 @@ const FORMATOS = {
   pct0: (n: number) => qty(n, 0) + " %",
   pct1: (n: number) => n.toLocaleString("es-ES", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %",
   dias: (n: number) => qty(n, 0) + " d",
+  dias1: (n: number) => qty(n, 1) + " d",
 } as const;
 export type CountFmt = keyof typeof FORMATOS;
 

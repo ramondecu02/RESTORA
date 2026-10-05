@@ -1259,3 +1259,77 @@ a.barh-row:hover .barh-l, button.barh-row:hover .barh-l { color: var(--brand); t
   .focus-list > .fc { scroll-snap-align: start; }
 }
 
+
+/* ================= Sistema común: fichas, atención y esqueletos en todas las pantallas ================= */
+.tiles-row > .tile { min-height: 116px; animation: rise .42s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 55ms); }
+.tile-ok .tile-val { color: var(--ok); }
+.tile-warn .tile-val { color: var(--warn); }
+.tile-bad .tile-val { color: var(--bad); }
+.focus-c .fc { padding-block: 12px; gap: 6px; }
+.focus-c .fc-t { font-size: 15px; }
+.sk-tile { display: block; height: 116px; border-radius: 14px; }
+.sk-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.sk-ic { width: 40px; height: 40px; border-radius: 12px; flex: none; }
+.sk-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.sk-dish { display: block; aspect-ratio: 3 / 4; border-radius: 16px; }
+.inp-prov { flex: 0 1 250px; min-width: 0; width: auto; }
+.inp-ord { flex: 0 1 220px; min-width: 0; width: auto; }
+.th-s { display: inline-flex; align-items: center; gap: 4px; color: inherit; text-decoration: none; border-radius: 6px; }
+.th-s:hover, .th-s.on { color: var(--ink); }
+.th-s span { font-size: 9px; }
+.tbl-clk tbody tr { position: relative; transition: background-color .15s; }
+.tbl-clk .tbl-go { text-decoration: none; color: inherit; }
+.tbl-clk .tbl-go::after { content: ""; position: absolute; inset: 0; }
+.fcbar { display: block; width: 64px; height: 4px; margin: 5px 0 0 auto; border-radius: 2px; background: var(--sunk); overflow: hidden; }
+.fcbar > i { display: block; height: 100%; border-radius: 2px; background: var(--ok); transform-origin: left; animation: growX .6s var(--ease-out) both; }
+.fcbar-warn > i { background: var(--warn-dot); }
+.fcbar-crit > i { background: var(--bad); }
+@media (hover: hover) and (pointer: fine) { .tbl-clk tbody tr:hover td { background: var(--sunk); } .tbl-clk tbody tr:hover .tbl-dish b { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; } }
+.dishcard { position: relative; transition: transform .22s var(--ease-out), box-shadow .22s var(--ease-out), border-color .15s; }
+.dishcard-go::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.dishcard-cam { z-index: 2; }
+.dishcard-ph img { transition: transform .5s var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .dishcard:hover { transform: translateY(-2px); box-shadow: var(--sh-2); border-color: var(--line-2); }
+  .dishcard:hover .dishcard-ph img { transform: scale(1.04); }
+}
+.dishcard:active { transform: scale(.985); }
+.vs-bar { display: block; height: 4px; border-radius: 2px; background: var(--sunk); overflow: hidden; }
+.vs-bar > i { display: block; height: 100%; border-radius: 2px; background: var(--line-2); transform-origin: left; animation: growX .6s var(--ease-out) both; }
+.vs.best .vs-bar { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.vs.best .vs-bar > i { background: var(--accent); }
+.prov-gasto { display: flex; flex-direction: column; gap: 6px; }
+.prov-gasto .bar > i { transform-origin: left; animation: growX .6s var(--ease-out) both; }
+.prov-fig { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.prov-fig b { color: var(--ink); font-weight: 700; }
+
+/* ================= Avisos: lista priorizada con detalle que se abre ================= */
+.av-list { display: flex; flex-direction: column; gap: 8px; }
+.av { --c: var(--warn-dot); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; animation: rise .4s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 45ms); transition: border-color .2s; }
+.av-bad { --c: var(--bad); border-color: var(--bad-line); }
+.av-h { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 12px; width: 100%; padding: 12px 14px 15px; text-align: left; color: inherit; }
+.av-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.av-t b { font-size: 15px; line-height: 1.3; font-weight: 600; overflow-wrap: anywhere; }
+.av-t small { font-size: 13px; line-height: 1.35; color: var(--muted); }
+.av-pct { font-variant-numeric: tabular-nums; font-weight: 700; margin-left: 4px; }
+.av-pct.bad { color: var(--bad); }
+.av-pct.warn { color: var(--warn); }
+.av-e { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
+.av-e b { font-size: 17px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.av-e small { font-size: 12px; color: var(--muted); }
+.av-chev { color: var(--faint); transition: transform .28s var(--ease-out); }
+.av.is-open .av-chev { transform: rotate(180deg); }
+.av-bar { position: absolute; left: 14px; right: 14px; bottom: 6px; height: 3px; border-radius: 2px; background: var(--sunk); overflow: hidden; }
+.av-bar > i { display: block; height: 100%; border-radius: 2px; background: var(--c); transform-origin: left; animation: growX .6s var(--ease-out) both; }
+.av-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s var(--ease-out); }
+.av.is-open .av-body { grid-template-rows: 1fr; }
+.av-in { overflow: hidden; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 0 14px; }
+.av.is-open .av-in { padding-bottom: 14px; }
+.av-mas { align-self: center; }
+@media (hover: hover) and (pointer: fine) { .av-h:hover .av-t b { color: var(--brand); } }
+@container pg (max-width: 520px) { .av-h { grid-template-columns: auto minmax(0, 1fr) auto; } .av-chev { display: none; } }
+.av-in { padding-top: 0; }
+.av.is-open .av-in { padding-top: 6px; }
+.li-main small, .av-t small, .tile-vs, .fc-p { text-wrap: pretty; }
+/* El enlace que se estira sobre la tarjeta no se encoge al pulsar: con transform dejaría de ser el bloque de referencia del recuadro y el clic se perdería */
+.btn.dishcard-go:active:not(:disabled) { transform: none; }

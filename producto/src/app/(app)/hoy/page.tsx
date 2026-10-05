@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Suspense, type ReactNode } from "react";
-import { Icon, type IconName } from "@/components/icons";
+import { Suspense } from "react";
+import { Icon } from "@/components/icons";
 import { Screen } from "@/components/shell/screen";
 import { Tour } from "@/components/shell/tour";
 import { BarsH, Donut, PALETTE } from "@/components/charts";
 import { CountUp } from "@/components/ui/count-up";
+import { Atencion, porGravedad, type Foco } from "@/components/ui/atencion";
 import { PanelMes } from "./panel";
 import { HoyEsqueleto } from "./esqueleto";
 import { requireApp, hasPerm } from "@/server/ctx";
@@ -87,7 +88,6 @@ async function HoyContenido({ ctx, tour }: { ctx: Awaited<ReturnType<typeof requ
   const pendientes = checklist.filter((x) => !x.done).length;
 
   // Lo que pide una decisión hoy, de más a menos grave. El resto de la pantalla es información de fondo.
-  type Foco = { tono: "bad" | "warn" | "info"; ic: IconName; k: string; t: string; p: string; fig?: [ReactNode, string]; a: [string, string]; b?: [string, string] };
   const focos: Foco[] = [];
   if (top) focos.push({ tono: top.salen.length ? "bad" : "warn", ic: "trendUp", k: "Subida de precio", t: `${top.name} sube un ${pct(top.variacion)}`,
     p: `De ${eur(top.antes)} a ${eur(top.ahora)}/${top.unit}${top.proveedor ? ` en ${top.proveedor}` : ""}. Afecta a ${plural(top.platos.length, "plato", "platos")}. ${top.salen.length ? `${lista(top.salen.map((x) => x.name))} ${top.salen.length === 1 ? "pasa" : "pasan"} de tu objetivo.` : "Ninguno se sale del objetivo."}`,
@@ -100,8 +100,7 @@ async function HoyContenido({ ctx, tour }: { ctx: Awaited<ReturnType<typeof requ
     fig: [<CountUp key="f" value={d.bajos.length} fmt="int" />, d.bajos.length === 1 ? "producto" : "productos"], a: ["Preparar pedido", "/inventario"] });
   const sinPvp = d.stats.filter((s) => !s.pvp).length;
   if (sinPvp) focos.push({ tono: "info", ic: "tag", k: "Carta", t: `${plural(sinPvp, "plato sin precio", "platos sin precio")} de carta`, p: "Sin PVP no podemos calcular su food cost ni su margen.", a: ["Poner precios", "/escandallos"] });
-  const orden = { bad: 0, warn: 1, info: 2 } as const;
-  focos.sort((x, y) => orden[x.tono] - orden[y.tono]);
+  const ordenados = porGravedad(focos);
   const estadoTxt = salCls === "ok" ? "Todo bajo control" : salCls === "warn" ? "Requiere seguimiento" : "Requiere acción";
 
   return (
@@ -123,25 +122,18 @@ async function HoyContenido({ ctx, tour }: { ctx: Awaited<ReturnType<typeof requ
       <div className="hoy-grid">
         <div className="hoy-col">
           {dashboard ? (
-            <section className="focus" aria-labelledby="h-foco">
-              <div className="focus-h">
-                <h2 className="h2" id="h-foco">{focos.length ? "Requiere tu atención" : "Hoy no hay nada urgente"}{focos.length ? <span className="focus-n">{focos.length}</span> : null}</h2>
-                <span className={`salud ${salCls}`}><Icon name={salCls === "ok" ? "check" : "alert"} size={14} /> {estadoTxt}</span>
-              </div>
-              {focos.length ? (
-                <div className="focus-list">{focos.slice(0, 4).map((f, i) => (
-                  <article className={`fc fc-${f.tono}`} key={f.t} style={{ ["--i" as string]: i }}>
-                    <div className="fc-k"><Icon name={f.ic} size={16} /> {f.k}</div>
-                    <h3 className="fc-t">{f.t}</h3>
-                    {f.fig ? <p className="fc-fig"><b>{f.fig[0]}</b> <small>{f.fig[1]}</small></p> : null}
-                    <p className="fc-p">{f.p}</p>
-                    <div className="fc-a"><Link className="btn btn-2 btn-xs" href={f.a[1]}>{f.a[0]}</Link>{f.b ? <Link className="btn btn-3 btn-xs" href={f.b[1]}>{f.b[0]}</Link> : null}</div>
-                  </article>))}</div>
-              ) : (
+            ordenados.length ? (
+              <Atencion focos={ordenados} id="h-foco" titulo="Requiere tu atención" verTodo={["Ver todos los avisos", "/hoy/avisos"]}
+                chip={<span className={`salud ${salCls}`}><Icon name={salCls === "ok" ? "check" : "alert"} size={14} /> {estadoTxt}</span>} />
+            ) : (
+              <section className="focus" aria-labelledby="h-foco">
+                <div className="focus-h">
+                  <h2 className="h2" id="h-foco">Hoy no hay nada urgente</h2>
+                  <span className={`salud ${salCls}`}><Icon name={salCls === "ok" ? "check" : "alert"} size={14} /> {estadoTxt}</span>
+                </div>
                 <div className="fc fc-ok"><div className="fc-k"><Icon name="check" size={16} /> Todo en orden</div><p className="fc-p">Tu carta está dentro del objetivo y no hay productos bajo mínimo. Cuando algo se mueva, te lo decimos aquí.</p></div>
-              )}
-              {focos.length > 4 ? <Link className="linkbtn" href="/hoy/avisos">Ver todos los avisos <Icon name="arrowR" size={16} /></Link> : null}
-            </section>
+              </section>
+            )
           ) : null}
 
           {!dashboard ? (
@@ -176,18 +168,7 @@ async function HoyContenido({ ctx, tour }: { ctx: Awaited<ReturnType<typeof requ
                 <div className="ghost" key={t}><span className="ghost-ic"><Icon name={ic} /></span><div><b>{t}</b><small>{p}</small></div></div>))}
             </section>
           ) : null}
-          {!dashboard && stage > 0 && focos.length ? (
-            <section className="focus" aria-labelledby="h-foco">
-              <div className="focus-h"><h2 className="h2" id="h-foco">Para hoy<span className="focus-n">{focos.length}</span></h2></div>
-              <div className="focus-list">{focos.slice(0, 4).map((f, i) => (
-                <article className={`fc fc-${f.tono}`} key={f.t} style={{ ["--i" as string]: i }}>
-                  <div className="fc-k"><Icon name={f.ic} size={16} /> {f.k}</div>
-                  <h3 className="fc-t">{f.t}</h3>
-                  <p className="fc-p">{f.p}</p>
-                  <div className="fc-a"><Link className="btn btn-2 btn-xs" href={f.a[1]}>{f.a[0]}</Link></div>
-                </article>))}</div>
-            </section>
-          ) : null}
+          {!dashboard && stage > 0 ? <Atencion focos={ordenados.map((f) => ({ ...f, b: undefined }))} id="h-foco" titulo="Para hoy" compacta /> : null}
 
           {dashboard && verVentas ? (
             <section className="card" aria-labelledby="h-fam">

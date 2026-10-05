@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { QUAD_COLOR, Scatter } from "@/components/charts";
+import { Kpi, Kpis } from "@/components/ui/kpi";
 import { NumInput } from "@/components/ui/num-input";
 import { toastError } from "@/components/ui/toast";
 import { estadoFC, foodCost, neto, revMargen } from "@/lib/costing";
 import { aporta, cuadrantes, margenUnit, QUAD_INFO, resumenCarta, type DishStat, type Quad } from "@/lib/menu";
+import { diferencia, serieMensual, variacionPct, type HistMes } from "@/lib/series";
 import { eur, eur0, pct, qty } from "@/lib/format";
 import { setReventa, setVentasMes } from "../escandallos/actions";
 import { editarReventa, type CambioRev, type FilaRev } from "./reventa";
 
 type Fila = DishStat & FilaRev;
 
-export function VentasBoard({ stats: initial, comensales, canPrecios }: { stats: Fila[]; comensales: number | null; canPrecios: boolean }) {
+export function VentasBoard({ stats: initial, comensales, canPrecios, hist, meses, mesAnt, fcObjetivo }: { stats: Fila[]; comensales: number | null; canPrecios: boolean; hist: HistMes[]; meses: string[]; mesAnt: string; fcObjetivo: number }) {
   const [stats, setStats] = useState(initial);
   const [flash, setFlash] = useState<string | null>(null);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -42,16 +44,24 @@ export function VentasBoard({ stats: initial, comensales, canPrecios }: { stats:
     save("r" + s.id, () => setReventa(s.id, r.envio));
   };
   const ticketCom = comensales && res.ingresos ? res.ingresos / (comensales * 30) : null;
+  // Lo real de los meses cerrados (ventas importadas) y, en el mes en curso, lo calculado con las unidades de la tabla: se mueve al editarlas
+  const margenS = serieMensual(meses, hist, (h) => h.neto - h.coste, res.margen);
+  const udsS = serieMensual(meses, hist, (h) => h.uds, res.unidades);
+  const ticketS = serieMensual(meses, hist, (h) => (h.uds ? h.neto / h.uds : null), res.ticketUnidad);
+  const fcS = serieMensual(meses, hist, (h) => (h.neto ? (h.coste / h.neto) * 100 : null), res.fc != null ? res.fc * 100 : null);
+  const fcTono = res.fc == null ? undefined : ({ ok: "ok", warn: "warn", crit: "bad" } as const)[estadoFC(res.fc, fcObjetivo).estado as "ok" | "warn" | "crit"];
 
   if (!stats.length) return <div className="card"><div className="empty"><b>Sin platos en carta</b><p>Crea tus escandallos y ponles precio para ver su rentabilidad.</p><div className="empty-actions"><Link className="btn" href="/escandallos/nuevo">Nuevo plato</Link></div></div></div>;
   return (
     <>
-      <div className="stats">
-        <div className="stat"><span className="stat-k">Margen del mes</span><span className="stat-v">{eur0(res.margen)}</span><span className="stat-s">venta sin IVA menos coste</span></div>
-        <div className="stat"><span className="stat-k">Unidades servidas</span><span className="stat-v">{qty(res.unidades, 0)}</span><span className="stat-s">al mes</span></div>
-        <div className="stat"><span className="stat-k">{ticketCom ? "Ticket por comensal" : "Ticket medio"}</span><span className="stat-v">{eur(ticketCom ?? res.ticketUnidad)}</span><span className="stat-s">{ticketCom ? `${comensales} comensales/día · sin IVA` : "por unidad vendida · sin IVA"}</span></div>
-        <div className="stat"><span className="stat-k">Food cost ponderado</span><span className="stat-v">{pct(res.fc)}</span><span className="stat-s">según lo que más vendes</span></div>
-      </div>
+      <Kpis label="Resumen del mes">
+        <Kpi i={0} label="Margen del mes" value={res.margen} fmt="eur0" delta={variacionPct(margenS)} spark={margenS} vs={`vs ${mesAnt}`} sub="venta sin IVA menos coste" />
+        <Kpi i={1} label="Unidades servidas" value={res.unidades} fmt="int" delta={variacionPct(udsS)} spark={udsS} vs={`vs ${mesAnt}`} sub="al mes" />
+        <Kpi i={2} label={ticketCom ? "Ticket por comensal" : "Ticket medio"} value={ticketCom ?? res.ticketUnidad} fmt="eur" delta={ticketCom ? null : variacionPct(ticketS)} spark={ticketCom ? undefined : ticketS} vs={`vs ${mesAnt}`}
+          sub={ticketCom ? `${comensales} comensales/día · sin IVA` : "por unidad vendida · sin IVA"} hint="Pon precios y unidades" />
+        <Kpi i={3} label="Food cost ponderado" value={res.fc != null ? res.fc * 100 : null} fmt="pct1" tone={fcTono} delta={diferencia(fcS)} deltaSuffix=" pp" goodWhenUp={false} spark={fcS} vs={`objetivo ${fcObjetivo} % · vs ${mesAnt}`}
+          sub={`objetivo ${fcObjetivo} % · según lo que más vendes`} hint="Pon precios y unidades" />
+      </Kpis>
       <div className="two">
         <section className="card" aria-labelledby="h-map">
           <div className="card-h"><h2 className="h3" id="h-map">Dónde está el dinero de tu carta</h2><span className="muted small">Medias: {qty(q.mV, 0)} uds y {eur(q.mM)} de margen</span></div>
