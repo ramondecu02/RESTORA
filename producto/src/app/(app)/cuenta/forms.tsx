@@ -75,7 +75,7 @@ export function TemaForm({ actual }: { actual: "light" | "dark" | "system" }) {
     <section className="card" aria-labelledby="h-tema">
       <div className="card-h"><h2 className="h3" id="h-tema">Apariencia</h2></div>
       <div className="seg" role="radiogroup" aria-labelledby="h-tema">
-        {([["light", "Claro", "sun"], ["dark", "Oscuro", "moon"], ["system", "Como el sistema", "settings"]] as const).map(([v, l, ic]) => (
+        {([["light", "Claro", "sun"], ["dark", "Oscuro", "moon"], ["system", "Sistema", "settings"]] as const).map(([v, l, ic]) => (
           <button key={v} type="button" role="radio" aria-checked={t === v} className={t === v ? "is-on" : ""} onClick={() => set(v)}><Icon name={ic} size={16} /> {l}</button>))}
       </div>
     </section>

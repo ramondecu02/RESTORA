@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Icon } from "@/components/icons";
 import { NumInput } from "@/components/ui/num-input";
+import { useAutoFocusDesktop } from "@/components/ui/use-autofocus";
 import { toastError } from "@/components/ui/toast";
 import { FAMILIAS } from "@/lib/briefing";
 import { PLANTILLAS } from "@/lib/plantillas";
@@ -26,6 +27,7 @@ export function NuevaReceta({ tipoInicial, plantilla, tpls, iva, canPrecios, iaO
   tipoInicial: Tipo; plantilla: string | null; tpls: { key: string; name: string; coste: number | null; faltan: number; conPrecio: number }[]; iva: number; canPrecios: boolean; iaOn: boolean; nombre: string; familia: string; pvp: number | null;
 }) {
   const router = useRouter();
+  const campoNombre = useAutoFocusDesktop<HTMLInputElement>();
   const tpl = plantilla ? PLANTILLAS.find((p) => p.key === plantilla) : null;
   const [tipo, setTipo] = useState<Tipo>(tipoInicial);
   const [tplq, setTplq] = useState("");
@@ -54,7 +56,7 @@ export function NuevaReceta({ tipoInicial, plantilla, tpls, iva, canPrecios, iaO
         {OPTS.map(([k, t, s]) => <button key={k} type="button" role="radio" aria-checked={tipo === k} className={`opt ${tipo === k ? "is-on" : ""}`} onClick={() => { setTipo(k); if (k === "reventa" && FAMILIAS.indexOf(f.familia) < 7) setF({ ...f, familia: "Vinos" }); }}>
           <span className="opt-r" /><span className="opt-t"><b>{t}</b><small>{s}</small></span></button>)}
       </div>
-      <div className="fld"><label htmlFor="nr-n">Nombre</label><input id="nr-n" className="inp" autoFocus value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder={tipo === "elaboracion" ? "Ej.: Salsa brava de la casa" : tipo === "reventa" ? "Ej.: Copa de vino tinto" : "Ej.: Tortilla de patatas"} /></div>
+      <div className="fld"><label htmlFor="nr-n">Nombre</label><input id="nr-n" ref={campoNombre} className="inp" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder={tipo === "elaboracion" ? "Ej.: Salsa brava de la casa" : tipo === "reventa" ? "Ej.: Copa de vino tinto" : "Ej.: Tortilla de patatas"} /></div>
       {tipo !== "elaboracion" ? <div className="fld"><label htmlFor="nr-f">Grupo de la carta</label><input id="nr-f" className="inp" list="nr-fams" value={f.familia} onChange={(e) => setF({ ...f, familia: e.target.value })} /><datalist id="nr-fams">{FAMILIAS.map((x) => <option key={x} value={x} />)}</datalist></div> : null}
       {tipo === "plato" || tipo === "menu" ? <div className="fld"><label htmlFor="nr-p">Precio en carta, con IVA (opcional)</label><div className="inp-sfx"><NumInput id="nr-p" decimals={2} value={f.pvp} disabled={!canPrecios} onValue={(n) => setF({ ...f, pvp: n })} /><span>€</span></div></div> : null}
       {tipo === "reventa" ? <div className="fgrid fgrid-2">

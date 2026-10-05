@@ -1,9 +1,9 @@
-// Matriz de anchos: todas las pantallas de la app a 390, 768, 1093, 1280 y 1440 px.
-// En cada una comprueba: respuesta 200, errores de consola, desbordamiento horizontal y controles tapados por otro elemento.
+// Matriz de anchos: todas las pantallas de la app a 360, 390, 768, 1093, 1280 y 1440 px.
+// En cada una comprueba: respuesta 200, errores de consola, desbordamiento horizontal, controles tapados por otro elemento y textos cortados en seco.
 // REUSE=1 reutiliza la sesión de la ejecución anterior. WIDTHS=390,1280 limita los anchos. ONLY=hoy,carta limita las pantallas.
-import { BASE, SHOTS, launch, watch, noOverflow, tapados, tallShot, rutasDeLaApp, negocioDeEjemplo } from "./lib.mjs";
+import { BASE, SHOTS, launch, watch, noOverflow, tapados, recortados, tallShot, rutasDeLaApp, negocioDeEjemplo } from "./lib.mjs";
 
-const ANCHOS = (process.env.WIDTHS || "390,768,1093,1280,1440").split(",").map(Number);
+const ANCHOS = (process.env.WIDTHS || "360,390,768,1093,1280,1440").split(",").map(Number);
 const SOLO = process.env.ONLY ? process.env.ONLY.split(",") : null;
 const b = await launch();
 const errores = [];
@@ -29,13 +29,14 @@ try {
       await page.waitForTimeout(250);
       const desborde = await noOverflow(page);
       const pisados = await tapados(page);
+      const cortados = await recortados(page);
       const nuevos = errores.slice(antes);
-      if (r?.status() === 200 && !desborde.length && !pisados.length && !nuevos.length) continue;
+      if (r?.status() === 200 && !desborde.length && !pisados.length && !cortados.length && !nuevos.length) continue;
       malAqui++; mal++;
-      console.log("✗", W, n, r?.status(), desborde.length ? "desborde: " + desborde.join(" | ") : "", pisados.length ? `tapados (${pisados.length}): ` + pisados.slice(0, 4).join(" | ") : "", nuevos.length ? nuevos.join(" ‖ ").slice(0, 300) : "");
+      console.log("✗", W, n, r?.status(), desborde.length ? "desborde: " + desborde.join(" | ") : "", pisados.length ? `tapados (${pisados.length}): ` + pisados.slice(0, 4).join(" | ") : "", cortados.length ? `texto cortado (${cortados.length}): ` + cortados.slice(0, 4).join(" | ") : "", nuevos.length ? nuevos.join(" ‖ ").slice(0, 300) : "");
       await tallShot(page, `${SHOTS}m${W}-${n}.png`);
     }
-    if (!malAqui) console.log(`✓ ${W} px: ${aVisitar.length} pantallas sin desbordes, sin controles tapados y sin errores`);
+    if (!malAqui) console.log(`✓ ${W} px: ${aVisitar.length} pantallas sin desbordes, sin controles tapados, sin textos cortados y sin errores`);
     await cx.close();
   }
   console.log(`\n${total - mal}/${total} comprobaciones sin problemas`);

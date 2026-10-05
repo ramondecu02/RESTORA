@@ -52,6 +52,8 @@ export function Ficha({ id, tipo, reventa, initial, fotoUrl, arts, recetas, cata
   const [picker, setPicker] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [ask, setAsk] = useState<"borrar" | null>(null);
+  /** Destino al que se iba al pulsar un enlace con cambios sin aceptar: se pregunta antes de perder el borrador. */
+  const [salir, setSalir] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const catName = useMemo(() => new Map(cats.map((c) => [c.id, c.name])), [cats]);
   const catById = useMemo(() => new Map(catalog.map((c) => [c.id, c])), [catalog]);
@@ -61,8 +63,20 @@ export function Ficha({ id, tipo, reventa, initial, fotoUrl, arts, recetas, cata
   useEffect(() => {
     if (!dirty) return;
     const f = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    // Los enlaces de la app navegan sin recargar la página (beforeunload no se entera): se interceptan para no perder el borrador sin avisar
+    const click = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!a || (a.target && a.target !== "_self") || a.hasAttribute("download")) return;
+      const url = new URL(a.href, location.href);
+      if (url.origin !== location.origin || (url.pathname === location.pathname && url.search === location.search)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setSalir(url.pathname + url.search + url.hash);
+    };
     window.addEventListener("beforeunload", f);
-    return () => window.removeEventListener("beforeunload", f);
+    document.addEventListener("click", click, true);
+    return () => { window.removeEventListener("beforeunload", f); document.removeEventListener("click", click, true); };
   }, [dirty]);
 
   /** Ingrediente del catálogo aún sin crear: se valora como un artículo sin precio (o con el que le pongas). */
@@ -347,6 +361,9 @@ export function Ficha({ id, tipo, reventa, initial, fotoUrl, arts, recetas, cata
       <Confirm open={ask === "borrar"} onClose={() => setAsk(null)} title={`¿Borrar ${d.name}?`} danger confirm="Borrar" busy={pending}
         text={`Desaparece de escandallos y de la carta. ${tipo === "elaboracion" ? "Si la usa algún plato, antes tendrás que quitarla de él." : ""}`}
         onConfirm={() => start(async () => { const r = await archivarReceta(id); if (r && !r.ok) { toastError(r.error); setAsk(null); } })} />
+      <Confirm open={salir != null} onClose={() => setSalir(null)} title="¿Salir sin aceptar los cambios?" danger confirm="Salir sin guardar"
+        text="Has cambiado este escandallo y todavía no has pulsado «Aceptar cambios». Si sales ahora, se pierden."
+        onConfirm={() => { const destino = salir!; setSalir(null); router.push(destino); }} />
     </TaskScreen>
   );
 }

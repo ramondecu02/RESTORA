@@ -125,6 +125,22 @@ try {
     await page.waitForURL(/#comparar/);
   });
 
+  await step(page, "proveedor: cifras en la cabecera y gasto por mes de un solo color con el mes en curso resaltado", async () => {
+    await ir(page, "/proveedores");
+    const href = await page.locator('a[href^="/proveedores/"]').evaluateAll((els) => els.map((e) => e.getAttribute("href")).find((h) => /^\/proveedores\/[0-9a-f-]{36}$/.test(h)));
+    if (!href) throw new Error("no hay ficha de proveedor a la que ir");
+    await ir(page, href);
+    if ((await fichas(page).count()) !== 4) throw new Error("no hay cuatro fichas en el proveedor: " + (await fichas(page).count()));
+    const primera = await fichas(page).first().innerText();
+    if (!/Gasto · 30 días/.test(primera) || !/vs los 30 días anteriores|sin IVA/.test(primera)) throw new Error("la primera ficha no es el gasto de 30 días: " + primera);
+    const textos = await fichas(page).allInnerTexts();
+    if (!textos.some((t) => /Peso en tus compras/.test(t) && /\d+\s?%/.test(t))) throw new Error("falta el peso en tus compras: " + textos.join(" | "));
+    const colores = await page.locator("#h-gasto").locator("xpath=ancestor::section").locator(".barh-f").evaluateAll((els) => els.map((e) => getComputedStyle(e).backgroundColor));
+    if (colores.length !== 6) throw new Error("el gasto por mes no enseña seis meses: " + colores.length);
+    if (new Set(colores.slice(0, 5)).size !== 1) throw new Error("los meses pasados no comparten color: " + colores.join(" "));
+    if (colores[5] === colores[0]) throw new Error("el mes en curso no se distingue de los anteriores");
+  });
+
   // ───────── Inventario ─────────
   await step(page, "inventario: la ficha «Bajo mínimo» es un filtro y el resto de cifras son las de siempre", async () => {
     await ir(page, "/inventario");

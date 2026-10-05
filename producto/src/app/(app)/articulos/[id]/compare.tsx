@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Icon } from "@/components/icons";
 import { NumInput } from "@/components/ui/num-input";
-import { Sheet } from "@/components/ui/sheet";
+import { Confirm, Sheet } from "@/components/ui/sheet";
 import { toast, toastError } from "@/components/ui/toast";
 import { eur, eur0, fecha, pct, qty } from "@/lib/format";
 import { cambiarProveedor, guardarCotizacion, quitarCotizacion } from "../actions";
@@ -16,6 +16,7 @@ export function ProvCompare({ articuloId, unit, provs, allProvs, actual, consumo
 }) {
   const [cambio, setCambio] = useState<P | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [quitar, setQuitar] = useState<P | null>(null);
   const [cot, setCot] = useState({ proveedorId: "", proveedorNuevo: "", precio: null as number | null, unidad: unit, nota: "" });
   const [pending, start] = useTransition();
   const priced = provs.filter((p) => p.precio != null);
@@ -42,7 +43,7 @@ export function ProvCompare({ articuloId, unit, provs, allProvs, actual, consumo
                   <span>{p.origen === "cotizacion" ? `Cotización${p.nota ? ` · ${p.nota}` : ""}` : `Último albarán ${fecha(p.fecha)}`}{p.entrega ? ` · entrega ${p.entrega}` : ""}</span>
                   <span className="row-wrap">
                     {canEdit && p.id !== actual && cur?.precio != null ? (p.precio! < cur.precio ? <button type="button" className="linkbtn" style={{ minHeight: 32 }} onClick={() => setCambio(p)}>Cambiar a este <Icon name="arrowR" size={16} /></button> : <span>+{eur(p.precio! - cur.precio)} más caro</span>) : null}
-                    {canEdit && p.origen === "cotizacion" ? <button type="button" className="iconbtn iconbtn-sm iconbtn-danger" aria-label={`Quitar precio de ${p.name}`} onClick={() => start(async () => { await quitarCotizacion(articuloId, p.id); })}><Icon name="trash" size={16} /></button> : null}
+                    {canEdit && p.origen === "cotizacion" ? <button type="button" className="iconbtn iconbtn-sm iconbtn-danger" aria-label={`Quitar precio de ${p.name}`} onClick={() => setQuitar(p)}><Icon name="trash" size={16} /></button> : null}
                   </span>
                 </div>
               </div>
@@ -68,6 +69,10 @@ export function ProvCompare({ articuloId, unit, provs, allProvs, actual, consumo
           <p className="hint">Tus escandallos pasan a usar este precio ya. Cuando llegue el primer albarán de {cambio.name}, mandará el precio real. El proveedor anterior queda guardado en la comparativa.</p>
         </div> : null}
       </Sheet>
+
+      <Confirm open={!!quitar} onClose={() => setQuitar(null)} title={`¿Quitar el precio de ${quitar?.name ?? ""}?`} danger confirm="Quitar" busy={pending}
+        text="Se borra esta cotización. Si el precio de tus escandallos salía de ella, vuelve a usar el de tus albaranes."
+        onConfirm={() => start(async () => { const r = await quitarCotizacion(articuloId, quitar!.id); if (r.ok) { toast(r.msg ?? "Precio quitado"); setQuitar(null); } else toastError(r.error); })} />
 
       <Sheet open={addOpen} onClose={() => setAddOpen(false)} title="Añadir precio de otro proveedor" sub="Una cotización o un precio que te han pasado"
         foot={<><button type="button" className="btn btn-3" onClick={() => setAddOpen(false)}>Cancelar</button>

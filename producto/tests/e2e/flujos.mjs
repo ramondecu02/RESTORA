@@ -52,8 +52,30 @@ await step("escandallo: cambiar cantidad y aceptar", async () => {
   await q.fill("60");
   await page.getByRole("heading", { name: "Valoración del cambio" }).waitFor();
   await tallShot(page, `${SHOTS}f-escandallo-borrador.png`);
+  // Con el borrador sin aceptar, salir por un enlace de la app pregunta antes; «Cancelar» se queda y conserva lo escrito
+  await page.getByRole("link", { name: "Volver" }).click();
+  const salir = page.getByRole("dialog", { name: /Salir sin aceptar/ });
+  await salir.waitFor();
+  await salir.getByRole("button", { name: "Cancelar" }).click();
+  await salir.waitFor({ state: "detached" });
+  if (new URL(page.url()).pathname !== "/escandallos/" + rec.id) throw new Error("«Cancelar» no se ha quedado en el escandallo: " + page.url());
+  if ((await q.inputValue()) !== "60") throw new Error("se ha perdido el borrador al cancelar");
   await vis(page.getByRole("button", { name: "Aceptar cambios" })).click();
   await until(`select l.cantidad::float as c from receta_lineas l join articulos a on a.id = l.articulo_id where l.receta_id = $1 and a.name = 'Burrata'`, [rec.id], (r) => r[0]?.c === 60);
+});
+
+await step("escandallo: salir sin aceptar pierde el borrador solo si se confirma", async () => {
+  const [rec] = await sql("select id from recetas where local_id = $1 and name = 'Ensalada de temporada'", [org.local]);
+  await page.goto(BASE + "/escandallos/" + rec.id);
+  await vis(page.getByLabel("Cantidad de Burrata")).fill("75");
+  await page.getByRole("heading", { name: "Valoración del cambio" }).waitFor();
+  await page.getByRole("link", { name: "Volver" }).click();
+  const salir = page.getByRole("dialog", { name: /Salir sin aceptar/ });
+  await salir.waitFor();
+  await salir.getByRole("button", { name: "Salir sin guardar" }).click();
+  await page.waitForURL((u) => u.pathname === "/escandallos", { timeout: 10000 });
+  const [l] = await sql("select l.cantidad::float as c from receta_lineas l join articulos a on a.id = l.articulo_id where l.receta_id = $1 and a.name = 'Burrata'", [rec.id]);
+  if (l.c !== 60) throw new Error("el borrador descartado se ha guardado: " + l.c);
 });
 
 await step("carta: subir carta de ejemplo", async () => {

@@ -24,6 +24,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const ck = (await cookies()).get("rs_theme")?.value;
   return (
     <AppFrame>
+      <a className="skip" href="#content">Saltar al contenido</a>
       <div className="scr appx">
         <SideNav items={items} local={ctx.local.name} user={ctx.name} roleLabel={ROLE_LABEL[ctx.role]} initials={initials(ctx.name)} />
         <div className="main">

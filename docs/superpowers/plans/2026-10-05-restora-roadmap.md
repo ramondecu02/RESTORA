@@ -4,7 +4,7 @@
 
 **Goal:** Dejar RESTORA lista para cobrar de verdad y venderse en directo: producto pulido y coherente (A), aislamiento entre negocios verificado (B), cobro con Stripe (C), web de producto terminado (D) y un plan de salida a mercado preparado pero sin activar (E).
 
-**Architecture:** Un solo producto (`producto/`: Next 16 + PostgreSQL con RLS en Vercel/Neon) y una web de marketing separada (raíz del repo: Next estático en Cloudflare Pages). Cinco áreas con dependencias explícitas (ver «Qué bloquea a qué»). Cada tarea termina con un commit verificable (pruebas unitarias + los 9 bloques e2e en verde).
+**Architecture:** Un solo producto (`producto/`: Next 16 + PostgreSQL con RLS en Vercel/Neon) y una web de marketing separada (raíz del repo: Next estático en Cloudflare Pages). Cinco áreas con dependencias explícitas (ver «Qué bloquea a qué»). Cada tarea termina con un commit verificable (pruebas unitarias + los 13 bloques e2e en verde).
 
 **Tech Stack:** Next 16 (App Router), React 19, PostgreSQL 16 + RLS, Stripe, Resend, Vercel Blob, Anthropic API (lectura de albaranes), Playwright (e2e), Vitest (unitarias), Cloudflare Pages/D1 (web).
 
@@ -21,7 +21,7 @@
 - **Diseño responsive:** la app mide **la zona de contenido**, no la ventana: contenedor `pg` (columnas a 940 px de contenido; el escandallo a 1000) y contenedor `app` solo para el armazón (barra lateral, cabecera, hojas). Matriz de comprobación: 390 · 768 · 1093 · 1280 · 1440.
 - **Datos:** migraciones aditivas e idempotentes en `producto/db/migrations/`; toda tabla con `tenant_id` lleva RLS; ninguna consulta de negocio fuera de `withTenant()`.
 - **Rama y despliegue:** se trabaja en `claude/new-session-c92ohx`; cada push despliega a producción en Vercel (la app) — solo se hace push con las pruebas en verde. La web se publica aparte con `actualizar-restora.bat` (opción P), solo tras aprobación.
-- **Calidad:** `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` y `node tests/e2e/run.mjs` (9 bloques) en verde antes de cada commit que toque `producto/`.
+- **Calidad:** `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` y `node tests/e2e/run.mjs` (13 bloques) en verde antes de cada commit que toque `producto/`.
 - **Atribución en commits:** los trailers que pide el entorno (Co-Authored-By y Claude-Session).
 
 ## Estado de partida (hechos comprobados en esta sesión)
@@ -36,7 +36,7 @@
 | **Varios locales por negocio** | **NO implementado**: el esquema tiene `locales`/`local_id`, pero `loadLocal()` toma siempre el primero (`order by created_at limit 1`); no hay selector ni alta de locales. La web promete «comparar entre locales» (perfil Pequeño grupo) | `ctx.ts` línea 50, `lib/copy/precios.ts` |
 | Stripe | Implementado y **apagado**: Checkout, portal, webhook con idempotencia (`stripe_events`) y estados de suscripción; **un solo precio** (`STRIPE_PRICE_ID`), sin planes, sin datos fiscales, sin reintentos propios | `billing.ts`, `api/stripe/webhook` |
 | Web | Con lenguaje de fundadores en `lib/site-copy.ts`, `lib/dictionaries.ts`, `lib/copy/{precios,contacto,sobre,preguntas,legal}.ts`, `app/[locale]/precios/page.tsx`, `contacto/page.tsx`; pendientes con `TODO(Ramon)`: redes, foto, vídeo, dónde se alojan los datos | `grep` |
-| Pruebas | 320 unitarias + 9 bloques e2e (alta, recorrido 52 pantallas, flujos, RLS, prueba gratuita y bloqueo —con el impago a 5 días—, calidad de lectura, borrado, Hoy, pantallas renovadas) | `tests/` |
+| Pruebas | 320 unitarias + 13 bloques e2e (alta, recorrido 52 pantallas, flujos, RLS, prueba gratuita y bloqueo —con el impago a 5 días—, calidad de lectura, borrado de albaranes, corregir y borrar, Hoy, pantallas renovadas, coherencia entre pantallas, matriz de 156 comprobaciones de anchos y accesibilidad con axe) | `tests/` |
 
 ## Decisiones del propietario (estado a 5 de octubre de 2026)
 
@@ -86,7 +86,10 @@ Reglas duras:
 
 > **Estado a 5 de octubre de 2026 (hecho directamente, sin subagentes, por ser la prioridad de la Fase 2):** Task 1 (sistema común: `Kpi`, `Atencion`, `Esqueleto`, `SelectNav`, series mensuales) ✓ ·
 > Tasks 2–7 (Compras, Escandallos, Carta, Proveedores, Inventario, Ventas) ✓ con su bloque e2e `pantallas.mjs` · Task 8 (Avisos como centro de inteligencia) ✓ salvo los estados persistentes «resuelto/ignorado»
-> · **Quedan** Task 9 (Cuenta, Mi local, Facturación y Más), las fichas de detalle (compra, plato, proveedor, artículo), Task 10 (matriz de anchos con todas las rutas y accesibilidad con axe) y Task 11 (criterios de «MVP terminado»).
+> · Task 10 (QA transversal) ✓ salvo Lighthouse sobre el dominio real y una prueba con lector de pantalla: matriz de 156 comprobaciones de anchos, axe (WCAG 2.2 AA) con 0 violaciones, coherencia entre pantallas, corregir y borrar,
+> revisión con la guía de interfaz de Vercel y Lighthouse local (informe en `docs/superpowers/informes/2026-10-05-qa-transversal.md`) · Task 11 redactada, **pendiente de tu firma** (`docs/superpowers/mvp-terminado.md`)
+> · La ficha del proveedor ya lleva cifras (gasto, peso en tus compras, subidas, albaranes) y el gasto por mes en un solo color; la del artículo ya cumplía el sistema.
+> · **Quedan** Task 9 (Cuenta, Mi local, Facturación y Más: lo de Facturación espera a D1), los estados persistentes «resuelto/ignorado» de Avisos y la ficha de la compra (la pantalla de validación).
 > Los pasos de abajo se conservan como referencia de lo que se hizo y de lo que falta.
 
 ### Task 1: [A1] Sistema de diseño compartido: KPI, movimiento, esqueletos y estados vacíos

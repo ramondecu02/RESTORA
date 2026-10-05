@@ -95,6 +95,24 @@ export async function tapados(page) {
   }));
 }
 
+/** Textos cortados en seco: un elemento con overflow oculto, sin puntos suspensivos, cuyo texto no cabe en su caja. */
+export async function recortados(page) {
+  return page.evaluate(() => {
+    const out = [];
+    const nombre = (el) => el.tagName.toLowerCase() + (typeof el.className === "string" && el.className.trim() ? "." + el.className.trim().split(/\s+/).slice(0, 2).join(".") : "") + "«" + (el.innerText || "").trim().replace(/\s+/g, " ").slice(0, 30) + "»";
+    for (const el of document.querySelectorAll("body *")) {
+      if (!el.checkVisibility?.({ checkOpacity: true, checkVisibilityCSS: true })) continue;
+      const cs = getComputedStyle(el);
+      if (cs.overflowX !== "hidden" && cs.overflowX !== "clip") continue;
+      if (cs.display === "inline" || (cs.textOverflow === "ellipsis" && !/flex|grid/.test(cs.display))) continue;
+      // Solo cajas con texto propio: las que recortan imágenes o adornos no importan
+      if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+      if (el.scrollWidth > el.clientWidth + 1) out.push(nombre(el) + ` ${el.scrollWidth}>${el.clientWidth}`);
+    }
+    return out;
+  });
+}
+
 /** Rutas de la app con datos: las fijas y, para las fichas de detalle, el primer elemento de cada lista. Hay que tener la sesión abierta. */
 export async function rutasDeLaApp(page) {
   async function primero(path, re) {

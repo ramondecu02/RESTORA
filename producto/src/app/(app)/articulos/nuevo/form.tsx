@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { Icon } from "@/components/icons";
 import { NumInput } from "@/components/ui/num-input";
+import { useAutoFocusDesktop } from "@/components/ui/use-autofocus";
 import { toastError } from "@/components/ui/toast";
 import { bestMatches } from "@/lib/fuzzy";
 import type { BaseUnit } from "@/lib/units";
@@ -12,6 +13,7 @@ type CatItem = { id: string; name: string; unit: BaseUnit; categoryId: string; r
 
 export function NuevoArticulo({ cats, catalog }: { cats: { id: string; name: string; iva: number }[]; catalog: CatItem[] }) {
   const router = useRouter();
+  const campoNombre = useAutoFocusDesktop<HTMLInputElement>();
   const [f, setF] = useState({ name: "", categoryId: "verdura", unit: "kg" as BaseUnit, rend: 100, precio: null as number | null, catalogId: null as string | null, stockMin: null as number | null, consumo: null as number | null, stock: null as number | null });
   const [pending, start] = useTransition();
   const sug = useMemo(() => (f.name.trim().length >= 3 && !f.catalogId ? bestMatches(f.name, catalog, (c) => [c.name, ...c.aliases], 0.5, 4) : []), [f.name, f.catalogId, catalog]);
@@ -23,7 +25,7 @@ export function NuevoArticulo({ cats, catalog }: { cats: { id: string; name: str
     <div className="stack narrow-col">
       <div className="fld">
         <label htmlFor="n-name">Nombre</label>
-        <input id="n-name" className="inp" autoFocus value={f.name} onChange={(e) => setF({ ...f, name: e.target.value, catalogId: null })} placeholder="Ej.: Aceite de oliva virgen extra" />
+        <input id="n-name" ref={campoNombre} className="inp" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value, catalogId: null })} placeholder="Ej.: Aceite de oliva virgen extra" />
         {sug.length ? <div className="stack-xs"><span className="hint">¿Es alguno de estos del catálogo? Así ya sabemos su tipo, unidad y merma habitual:</span>
           <div className="tags">{sug.map((s) => <button key={s.item.id} type="button" className="chip" onClick={() => setF({ ...f, name: s.item.name, catalogId: s.item.id, categoryId: s.item.categoryId, unit: s.item.unit, rend: s.item.rend })}>{s.item.name}</button>)}</div></div> : null}
         {f.catalogId ? <span className="tag tag-ok"><Icon name="check" size={14} sw={3} /> Del catálogo del sector</span> : null}

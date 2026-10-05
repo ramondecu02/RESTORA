@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { Screen } from "@/components/shell/screen";
 import { BarsH } from "@/components/charts";
+import { Kpi, Kpis } from "@/components/ui/kpi";
 import { all, isUuid, one, withTenant } from "@/server/db";
 import { requireApp, hasPerm } from "@/server/ctx";
-import { eur, eur0, fecha, pct } from "@/lib/format";
+import { eur, eur0, fecha, pct, ultimosMeses } from "@/lib/format";
 import { BorrarProveedor, ProvFormButton } from "../form";
 
 export const metadata = { title: "Proveedor" };
@@ -26,15 +27,34 @@ export default async function Proveedor({ params }: { params: Promise<{ id: stri
       "select id, numero, fecha, total, kind from documentos where proveedor_id = $1 and status = 'guardado' order by fecha desc limit 12", [id]);
     const meses = await all<{ mes: string; total: number }>(c, `select to_char(date_trunc('month', fecha), 'YYYY-MM') as mes, sum(base)::float as total from documentos
       where proveedor_id = $1 and status = 'guardado' and fecha >= date_trunc('month', current_date) - interval '5 months' group by 1 order by 1`, [id]);
-    return { p, productos, docs, meses };
+    // Las cifras de la cabecera: lo que le compras en 30 días (y los 30 anteriores), su peso en tus compras, sus subidas y sus albaranes
+    const resumen = await one<{ g30: number; ant30: number; tot30: number; subidas: number; docs: number }>(c, `select
+      (select coalesce(sum(base), 0)::float from documentos where proveedor_id = $1 and status = 'guardado' and fecha > current_date - 30) as g30,
+      (select coalesce(sum(base), 0)::float from documentos where proveedor_id = $1 and status = 'guardado' and fecha > current_date - 60 and fecha <= current_date - 30) as ant30,
+      (select coalesce(sum(base), 0)::float from documentos where local_id = $2 and status = 'guardado' and fecha > current_date - 30) as tot30,
+      (select count(distinct articulo_id)::int from precio_eventos where proveedor_id = $1 and variacion > 0 and fecha >= current_date - 90) as subidas,
+      (select count(*)::int from documentos where proveedor_id = $1 and status = 'guardado') as docs`, [id, ctx.local.id]);
+    return { p, productos, docs, meses, resumen };
   });
   if (!data) notFound();
   const { p } = data;
   const canEdit = hasPerm(ctx, "proveedores:editar");
   const mLabel = (m: string) => new Date(m + "-15T12:00:00").toLocaleDateString("es-ES", { month: "long" });
+  // Seis meses seguidos (los que no compras, a cero), para ver los huecos
+  const seisMeses = ultimosMeses(6);
+  const serie = seisMeses.map((m) => data.meses.find((x) => x.mes === m)?.total ?? 0);
+  const r = data.resumen ?? { g30: 0, ant30: 0, tot30: 0, subidas: 0, docs: 0 };
+  const vsAnt = r.ant30 > 0 ? ((r.g30 - r.ant30) / r.ant30) * 100 : null;
+  const cuota = r.tot30 > 0 ? (r.g30 / r.tot30) * 100 : null;
   return (
     <Screen title={p.name} sub={[p.tipo, p.empresa].filter(Boolean).join(" · ") || "Proveedor"} back="/proveedores"
       actions={canEdit ? <span className="only-wide row"><ProvFormButton id={p.id} initial={p} label="Editar" icon="edit" /><BorrarProveedor id={p.id} name={p.name} /></span> : undefined}>
+      <Kpis label={`Resumen de ${p.name}`}>
+        <Kpi i={0} label="Gasto · 30 días" value={r.g30} fmt="eur0" delta={vsAnt} goodWhenUp={false} vs="vs los 30 días anteriores" spark={serie} marca={serie.length - 1} sub="sin IVA · lo guardado" />
+        <Kpi i={1} label="Peso en tus compras" value={cuota} fmt="pct0" hint="Sin compras en 30 días" sub="del gasto de los últimos 30 días" />
+        <Kpi i={2} label="Subidas de precio" value={r.subidas} fmt="int" tone={r.subidas ? "warn" : "ok"} sub={r.subidas ? "productos que han subido en 90 días" : "ningún producto ha subido en 90 días"} />
+        <Kpi i={3} label="Albaranes y facturas" value={r.docs} fmt="int" sub={data.docs[0]?.fecha ? `el último, el ${fecha(data.docs[0].fecha, { day: "numeric", month: "long" })}` : "aún no hay ninguno guardado"} href={r.docs ? `/compras?prov=${p.id}` : undefined} />
+      </Kpis>
       <div className="art-grid">
         <div className="stack">
           <section className="card" aria-labelledby="h-prod">
@@ -73,7 +93,7 @@ export default async function Proveedor({ params }: { params: Promise<{ id: stri
           </section>
           <section className="card" aria-labelledby="h-gasto">
             <div className="card-h"><h2 className="h3" id="h-gasto">Gasto por mes</h2><span className="muted small">Sin IVA</span></div>
-            {data.meses.length ? <BarsH fmt={eur0} rows={data.meses.map((m) => ({ label: mLabel(m.mes), value: m.total }))} /> : <p className="muted small">Sin compras en los últimos meses.</p>}
+            {data.meses.length ? <BarsH fmt={eur0} rows={seisMeses.map((m, i) => ({ label: mLabel(m), value: serie[i], color: i === seisMeses.length - 1 ? "var(--accent)" : "color-mix(in srgb, var(--accent) 40%, var(--surface))" }))} /> : <p className="muted small">Sin compras en los últimos meses.</p>}
           </section>
           {canEdit ? <div className="row-wrap only-narrow"><ProvFormButton id={p.id} initial={p} label="Editar" icon="edit" /><BorrarProveedor id={p.id} name={p.name} /></div> : null}
         </div>

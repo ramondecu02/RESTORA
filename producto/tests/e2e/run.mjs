@@ -12,9 +12,11 @@ const suites = [
   ["Prueba gratuita y bloqueo", "plan.mjs"],
   ["Calidad de la lectura (descuento, portes, dudas)", "calidad.mjs"],
   ["Borrar albaranes (impacto, ventas con coste congelado)", "borrado.mjs"],
+  ["Corregir y borrar (proveedores, artículos, platos, inventario, ventas, equipo)", "correcciones.mjs"],
   ["Panel Hoy (atención, mes elegido, cifras que cuentan)", "hoy.mjs"],
   ["Pantallas renovadas (fichas, filtros, orden, esqueleto)", "pantallas.mjs"],
-  ["Matriz de anchos (390 a 1440, todas las pantallas)", "matriz.mjs"],
+  ["Coherencia entre pantallas (la misma cifra sale igual en todas)", "coherencia.mjs"],
+  ["Matriz de anchos (360 a 1440, todas las pantallas)", "matriz.mjs"],
   ["Accesibilidad (axe, WCAG 2.2 AA) y foco al tabular", "a11y.mjs"],
 ];
 // ONLY=plan,hoy ejecuta solo los bloques cuyo fichero empieza así

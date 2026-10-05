@@ -12,7 +12,7 @@ export function TaskScreen({ title, sub, back, actions, foot, children }: { titl
         <div className="top-title"><h1>{title}</h1>{sub ? <p className="top-sub">{sub}</p> : null}</div>
         {actions ? <div className="top-actions">{actions}</div> : null}
       </header>
-      <div className="content" id="content"><div className="wrap">{children}</div></div>
+      <div className="content" id="content" tabIndex={-1}><div className="wrap">{children}</div></div>
       {foot ? <footer className="foot">{foot}</footer> : null}
     </>
   );

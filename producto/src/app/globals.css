@@ -420,6 +420,7 @@ button.li:hover .li-main b, a.li:hover .li-main b { color: var(--brand); text-de
 .top-actions { display: flex; align-items: center; gap: 8px; flex: none; }
 .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; font-size: 14px; display: grid; place-items: center; flex: none; }
 .content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.content:focus { outline: none; } /* se enfoca por el enlace «Saltar al contenido», no es un control */
 .wrap { display: flex; flex-direction: column; gap: 16px; padding: 4px 16px 28px; }
 .has-fab .wrap { padding-bottom: 96px; }
 .tabs { flex: none; display: flex; height: 64px; padding: 4px 6px; background: var(--surface); border-top: 1px solid var(--line); box-sizing: content-box; padding-bottom: max(4px, env(safe-area-inset-bottom)); }
@@ -1335,3 +1336,17 @@ a.barh-row:hover .barh-l, button.barh-row:hover .barh-l { color: var(--brand); t
 .li-main small, .av-t small, .tile-vs, .fc-p { text-wrap: pretty; }
 /* El enlace que se estira sobre la tarjeta no se encoge al pulsar: con transform dejaría de ser el bloque de referencia del recuadro y el clic se perdería */
 .btn.dishcard-go:active:not(:disabled) { transform: none; }
+
+
+/* ================= Accesibilidad y táctil ================= */
+/* Enlace para saltar la barra lateral: aparece al tabular */
+.skip { position: absolute; left: 12px; top: 12px; z-index: 200; padding: 10px 16px; border-radius: 10px; background: var(--brand); color: #fff; font-size: 14px; font-weight: 600; box-shadow: var(--sh-3); transform: translateY(-200%); transition: transform .15s var(--ease-out); }
+.skip:focus-visible { transform: translateY(0); outline: 2px solid #fff; outline-offset: -4px; }
+/* Sin el doble toque que amplía y sin el resalte gris de iOS: cada control ya tiene su propio estado al pulsar */
+html { -webkit-tap-highlight-color: transparent; }
+a, button, summary, label, select, input, textarea, [role="button"], [role="radio"], [role="tab"] { touch-action: manipulation; }
+
+/* Subnavegación del móvil: cada pestaña mide lo que dice su texto y, si no caben todas (360 px), se desliza en vez de cortar el nombre */
+.subnav { overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+.subnav::-webkit-scrollbar { display: none; }
+.subnav > a { flex: 1 0 auto; min-width: auto; padding: 0 6px; overflow: visible; text-overflow: clip; }

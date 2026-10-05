@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { Icon } from "@/components/icons";
+import { Confirm } from "@/components/ui/sheet";
 import { toast, toastError } from "@/components/ui/toast";
 import { initials, fecha } from "@/lib/format";
 import { cambiarRol, invitar, quitarMiembro, revocarInvitacion } from "../actions";
@@ -10,6 +11,7 @@ export function Equipo({ me, miembros, invit, roles }: { me: string; miembros: M
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("cocina");
   const [link, setLink] = useState<{ url: string; enviado: boolean } | null>(null);
+  const [quitar, setQuitar] = useState<M | null>(null);
   const [pending, start] = useTransition();
   const label = (r: string) => roles.find((x) => x.id === r)?.label ?? r;
   return (
@@ -27,7 +29,7 @@ export function Equipo({ me, miembros, invit, roles }: { me: string; miembros: M
                   {roles.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
                 </select>
                 {m.id !== me ? <button type="button" className="iconbtn iconbtn-sm iconbtn-danger" aria-label={`Quitar a ${m.name}`} disabled={pending}
-                  onClick={() => start(async () => { const r = await quitarMiembro(m.id); if (r.ok) toast(r.msg ?? "Hecho"); else toastError(r.error); })}><Icon name="close" size={16} /></button> : null}
+                  onClick={() => setQuitar(m)}><Icon name="close" size={16} /></button> : null}
               </div>
             </div>))}</div>
         </section>
@@ -57,6 +59,9 @@ export function Equipo({ me, miembros, invit, roles }: { me: string; miembros: M
           {link ? <div className={`note ${link.enviado ? "note-ok" : "note-warn"}`}><Icon name={link.enviado ? "check" : "info"} /><p>{link.enviado ? "Le hemos enviado un email. También puedes pasarle el enlace: " : "No hemos podido enviarle el email. Pásale tú el enlace: "}<button type="button" className="link" onClick={() => navigator.clipboard?.writeText(link.url).then(() => toast("Enlace copiado"))}>copiar enlace</button>. Caduca en 7 días.</p></div> : null}
         </section>
       </div>
+      <Confirm open={!!quitar} onClose={() => setQuitar(null)} title={`¿Quitar a ${quitar?.name ?? ""}?`} danger confirm="Quitar" busy={pending}
+        text="Pierde el acceso a este negocio ahora mismo y se le cierra la sesión. No se borra nada de lo que hizo y puedes volver a invitarle."
+        onConfirm={() => start(async () => { const r = await quitarMiembro(quitar!.id); if (r.ok) { toast(r.msg ?? "Hecho"); setQuitar(null); } else toastError(r.error); })} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ const AXE = createRequire(import.meta.url).resolve("axe-core/axe.min.js");
 const ETIQUETAS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const SOLO = process.env.ONLY ? process.env.ONLY.split(",") : null;
 const GRAVES = new Set(["serious", "critical"]);
+const SIN_ARMAZON = new Set(["carta-imprimir"]); // la vista de impresión no lleva la barra lateral ni, por tanto, el enlace para saltarla
 const b = await launch();
 const porRegla = new Map(); // id → { impacto, ayuda, paginas: Set, nodos: n }
 let graves = 0;
@@ -18,11 +19,13 @@ async function axe(page) {
   return page.evaluate((tags) => window.axe.run(document, { runOnly: { type: "tag", values: tags }, resultTypes: ["violations"] }), ETIQUETAS);
 }
 
-async function revisar(cx, nombre, ruta, W, tema) {
+async function revisar(cx, nombre, ruta, W, tema, armazon = false) {
   const page = await cx.newPage();
   await page.goto(BASE + ruta, { waitUntil: "networkidle" });
   await page.waitForTimeout(700);
   const r = await axe(page);
+  // Las pantallas de la app llevan el enlace «Saltar al contenido» y su destino (si no, hay que tabular por toda la barra lateral)
+  if (armazon && !(await page.evaluate(() => { const a = document.querySelector("a.skip"); return !!a && !!document.querySelector(a.getAttribute("href")); }))) { graves++; console.log("✗", `falta «Saltar al contenido» o su destino en ${nombre} ${W}px`); }
   for (const v of r.violations) {
     const grave = GRAVES.has(v.impact);
     if (grave) graves++; else leves++;
@@ -94,7 +97,7 @@ try {
       await sin.close();
       const con = await b.newContext({ ...base, storageState: state });
       await con.addInitScript({ path: AXE });
-      for (const [n, p] of app) await revisar(con, n, p, W, tema);
+      for (const [n, p] of app) await revisar(con, n, p, W, tema, !SIN_ARMAZON.has(n));
       await con.close();
       console.log(`· ${tema} ${W}px revisado (${app.length + publicas.length} pantallas)`);
     }
