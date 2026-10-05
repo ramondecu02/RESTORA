@@ -54,7 +54,7 @@ export function HomeHero({ copy, locale }: { copy: SiteCopy; locale: Locale }) {
     >
       <Frame
         src="/images/kitchen-hero.webp"
-        alt="Chef emplatando en una cocina profesional"
+        alt={copy.images.hero}
         sizes="100vw"
         priority
         fetchPriority="high"

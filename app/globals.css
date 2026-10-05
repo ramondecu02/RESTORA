@@ -373,8 +373,8 @@
 .focal-producto {
   object-position: 50% 52%;
 }
-.focal-mercancia {
-  object-position: 52% 56%;
+.focal-servicio {
+  object-position: 50% 45%;
 }
 .focal-operativa {
   object-position: 50% 42%;
@@ -392,8 +392,8 @@
   .focal-chef {
     object-position: 54% 42%;
   }
-  .focal-mercancia {
-    object-position: 56% 54%;
+  .focal-servicio {
+    object-position: 52% 45%;
   }
   .focal-operativa {
     object-position: 46% 40%;

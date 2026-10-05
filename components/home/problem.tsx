@@ -13,7 +13,7 @@ export function HomeProblem({ copy, locale }: { copy: SiteCopy; locale: Locale }
       <div className="grid items-stretch md:grid-cols-[1.02fr_1fr]">
         <Frame
           src="/images/operativa.webp"
-          alt="Cocina de restaurante durante el servicio"
+          alt={copy.images.problem}
           sizes="(max-width: 860px) 100vw, 52vw"
           focal="focal-operativa"
           zoom

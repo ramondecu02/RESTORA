@@ -81,7 +81,7 @@ export default async function FuncionalidadesPage(props: {
         <section style={{ padding: "clamp(56px, 7vw, 100px) 28px" }}>
           <Frame
             src="/images/chef-funcionalidades.webp"
-            alt="Chef trabajando en cocina profesional"
+            alt={copy.images.funcionalidades}
             sizes="(max-width: 1336px) 100vw, 1280px"
             focal="focal-chef"
             kenburns

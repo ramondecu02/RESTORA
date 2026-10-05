@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, ImageOff, Mail } from "lucide-react";
+import { ArrowRight, Mail } from "lucide-react";
 import { getSiteCopy } from "@/lib/site-copy";
 import { getSobre } from "@/lib/pages-copy";
 import { isLocale } from "@/lib/types";
@@ -32,32 +32,21 @@ export default async function SobreNosotrosPage(props: { params: Promise<{ local
       <main>
         <PageHead eyebrow={c.hero.eyebrow} title={c.hero.title} sub={c.hero.sub} />
 
-        {/* Who is behind it — real photo and bio still pending, never invented */}
+        {/* Who is behind it — bio still pending, never invented. The photo is a workplace (no faces), not a portrait. */}
         <section style={{ padding: "clamp(44px, 5.5vw, 78px) 28px" }}>
           <div className="mx-auto grid max-w-[1180px] items-start lg:grid-cols-[minmax(0,0.42fr)_minmax(0,1fr)]" style={{ gap: "clamp(24px, 4vw, 60px)" }}>
-            <div className="reveal" style={{ minWidth: 0 }}>
-              {/* TODO(Ramon): sustituir por <Frame src="/images/ramon.webp" …> cuando exista la foto. */}
-              <div
-                role="img"
-                aria-label={c.who.photoPlaceholder}
-                style={{
-                  aspectRatio: "4 / 5",
-                  borderRadius: 22,
-                  border: "1px dashed color-mix(in srgb, var(--earth) 55%, var(--hair))",
-                  background: "color-mix(in srgb, var(--earth) 10%, var(--surface))",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 12,
-                  padding: 24,
-                  textAlign: "center",
-                  color: "var(--muted)",
-                }}
-              >
-                <ImageOff size={26} strokeWidth={1.6} color="var(--earth)" />
-                <span className="mono" style={{ fontSize: 13, lineHeight: 1.5, maxWidth: "28ch" }}>{c.who.photoPlaceholder}</span>
-              </div>
+            <div className="reveal mx-auto w-full max-w-[440px] lg:mx-0" style={{ minWidth: 0 }}>
+              {/* TODO(Ramon): cuando exista su foto real, ponerla aquí en lugar de la de ambientación (mismo hueco 4:5). */}
+              <Frame
+                src="/images/sobre-nosotros.webp"
+                alt={copy.images.sobreNosotros}
+                sizes="(max-width: 1023px) 440px, 340px"
+                ratio="4 / 5"
+                radius={22}
+                zoom
+                grain
+                style={{ border: "1px solid var(--hair)" }}
+              />
             </div>
 
             <div className="reveal" style={{ minWidth: 0 }}>
@@ -109,13 +98,13 @@ export default async function SobreNosotrosPage(props: { params: Promise<{ local
           </div>
         </section>
 
-        {/* The thesis, over a real kitchen */}
+        {/* The thesis, over a dining room in service: every sale at a table is data */}
         <section style={{ padding: "clamp(56px, 7vw, 100px) 28px" }}>
           <Frame
-            src="/images/cocina-abierta.webp"
-            alt="Cocina abierta de restaurante en servicio"
+            src="/images/sala-servicio.webp"
+            alt={copy.images.salaServicio}
             sizes="(max-width: 1236px) 100vw, 1180px"
-            focal="focal-operativa"
+            focal="focal-servicio"
             kenburns
             radius={28}
             className="reveal mx-auto max-w-[1180px]"

@@ -95,7 +95,7 @@ export default async function ContactoPage(props: {
 
               <Frame
                 src="/images/sala-contacto.webp"
-                alt="Interior de un restaurante"
+                alt={copy.images.contacto}
                 sizes="(max-width: 1024px) 100vw, 46vw"
                 focal="focal-sala"
                 ratio="16 / 10"

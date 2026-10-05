@@ -14,8 +14,8 @@ import { VideoPlayer } from "./video-player";
  *     "no listado" y pegar aquí la URL de *embed*
  *     (https://www.youtube-nocookie.com/embed/ID  ·  https://player.vimeo.com/video/ID).
  *   · Subtítulos en castellano (y catalán si es posible): el 80 % se ve sin sonido.
- *   · Miniatura: un fotograma real en .webp 1600×900 → public/images/video-poster.webp
- *     y actualizar VIDEO_POSTER en lib/site.ts.
+ *   · Miniatura: ya puesta (public/images/video-poster.webp, 1600×900; ver docs/marketing/imagenes.md).
+ *     Si el vídeo lleva otro fotograma, cambiarla con scripts/importar-imagen.mjs.
  * Dónde configurarlo: lib/site.ts → VIDEO_EMBED_URL. Mientras esté vacío, este
  * bloque muestra el placeholder "próximamente" (sin reproductor roto).
  */

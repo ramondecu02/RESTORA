@@ -21,7 +21,7 @@ export function HomeClosing({ copy, locale }: { copy: SiteCopy; locale: Locale }
     >
       <Frame
         src="/images/restaurante-cta.webp"
-        alt="Sala de restaurante al caer la tarde"
+        alt={copy.images.closing}
         sizes="100vw"
         focal="focal-closing"
         kenburns

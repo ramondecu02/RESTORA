@@ -137,6 +137,7 @@ export function SiteFooter({ copy, locale }: { copy: SiteCopy; locale: Locale })
       <div style={{ borderTop: RULE }}>
         <div className="mx-auto max-w-[1200px]" style={{ padding: "18px 28px", fontSize: 12.5, color: HEAD, display: "flex", flexWrap: "wrap", gap: "6px 18px", justifyContent: "space-between" }}>
           <span>© 2026 RESTORA · {copy.footer.rights}</span>
+          <span>{copy.footer.imagesNote}</span>
           <span>{copy.footer.made}</span>
         </div>
       </div>

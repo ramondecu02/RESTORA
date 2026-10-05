@@ -59,7 +59,7 @@ export default async function HomePage(props: {
           ctaLabel={copy.features.cta}
           ctaHref={`/${locale}/funcionalidades`}
           src="/images/producto.webp"
-          alt="Producto fresco recibido en cocina"
+          alt={copy.images.compras}
           focal="focal-producto"
           overlay={
             <OverlayCard position="bottom-left">
@@ -82,9 +82,8 @@ export default async function HomePage(props: {
           sub={copy.proveedores.sub}
           ctaLabel={copy.proveedores.cta}
           ctaHref={`/${locale}/funcionalidades`}
-          src="/images/mercancia.webp"
-          alt="Recepción de mercancía en el restaurante"
-          focal="focal-mercancia"
+          src="/images/recepcion.webp"
+          alt={copy.images.recepcion}
           overlay={
             <OverlayCard position="bottom-right">
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -108,7 +107,7 @@ export default async function HomePage(props: {
           ctaLabel={copy.escandallos.cta}
           ctaHref={`/${locale}/funcionalidades`}
           src="/images/chef-plating.webp"
-          alt="Chef terminando un plato"
+          alt={copy.images.escandallos}
           focal="focal-chef"
           overlay={
             <OverlayCard position="bottom-right">

@@ -69,7 +69,7 @@ export default async function PreguntasPage(props: {
         <section style={{ padding: "clamp(56px, 7vw, 100px) 28px" }}>
           <Frame
             src="/images/sala.webp"
-            alt="Sala de restaurante"
+            alt={copy.images.preguntas}
             sizes="(max-width: 1136px) 100vw, 1080px"
             focal="focal-sala"
             kenburns

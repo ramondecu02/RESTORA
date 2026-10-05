@@ -9,7 +9,7 @@ export function HomeProfit({ copy }: { copy: SiteCopy }) {
     <section style={{ padding: "clamp(58px, 7vw, 104px) 28px" }}>
       <Frame
         src="/images/mesa.webp"
-        alt="Mesa de restaurante preparada para el servicio"
+        alt={copy.images.profit}
         sizes="(max-width: 1336px) 100vw, 1280px"
         focal="focal-sala"
         kenburns

@@ -13,9 +13,9 @@ const CARD_ICONS: Record<string, typeof Boxes> = {
 };
 
 const CARD_PHOTOS: Record<string, { src: string; focal?: string }> = {
-  funcionalidades: { src: "/images/producto.webp" },
-  "como-funciona": { src: "/images/plating-line.webp" },
-  precios: { src: "/images/mesa.webp" },
+  funcionalidades: { src: "/images/explorar-funcionalidades.webp" },
+  "como-funciona": { src: "/images/explorar-como-funciona.webp" },
+  precios: { src: "/images/explorar-precios.webp" },
   preguntas: { src: "/images/sala.webp" },
 };
 

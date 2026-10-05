@@ -55,7 +55,7 @@ export const TRUST_EU_HOSTING = false;
 // clear placeholder. Accepts a YouTube/Vimeo *embed* URL or a direct .mp4.
 // TODO(Ramon): vídeo de presentación — specs en components/home/video.tsx
 export const VIDEO_EMBED_URL = "";
-export const VIDEO_POSTER = "/images/plating-line.webp";
+export const VIDEO_POSTER = "/images/video-poster.webp";
 
 // Lead magnet delivered by the newsletter block (one file per language).
 export const LEAD_MAGNET: Record<Locale, string> = {

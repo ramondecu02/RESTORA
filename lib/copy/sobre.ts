@@ -12,7 +12,6 @@ const es = {
     eyebrow: "Quién está detrás",
     name: "Ramon",
     role: "[PENDIENTE: cargo y trayectoria real de Ramon]",
-    photoPlaceholder: "[PENDIENTE: foto real de Ramon · vertical, mín. 800×1000 px]",
     bio: [
       "[PENDIENTE: bio real de Ramon — 3 o 4 líneas: de dónde viene, qué relación tiene con la hostelería y qué vio en cocina que le llevó a construir RESTORA.]",
       "[PENDIENTE: una frase en primera persona sobre cómo quiere trabajar con los primeros restaurantes.]",
@@ -59,7 +58,6 @@ const ca: SobreCopy = {
     eyebrow: "Qui hi ha al darrere",
     name: "Ramon",
     role: "[PENDENT: càrrec i trajectòria real d'en Ramon]",
-    photoPlaceholder: "[PENDENT: foto real d'en Ramon · vertical, mín. 800×1000 px]",
     bio: [
       "[PENDENT: bio real d'en Ramon — 3 o 4 línies: d'on ve, quina relació té amb l'hostaleria i què va veure a cuina que el va portar a construir RESTORA.]",
       "[PENDENT: una frase en primera persona sobre com vol treballar amb els primers restaurants.]",

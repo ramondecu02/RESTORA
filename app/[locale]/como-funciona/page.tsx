@@ -120,7 +120,7 @@ export default async function ComoFuncionaPage(props: {
         <section style={{ padding: "clamp(56px, 7vw, 100px) 28px" }}>
           <Frame
             src="/images/cocina-abierta.webp"
-            alt="Cocina abierta de restaurante en servicio"
+            alt={copy.images.cocinaAbierta}
             sizes="(max-width: 1336px) 100vw, 1280px"
             focal="focal-operativa"
             kenburns
