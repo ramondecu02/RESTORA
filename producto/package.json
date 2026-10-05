@@ -15,6 +15,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "eval:lectura": "vitest run --config vitest.eval.config.mts",
     "e2e": "node tests/e2e/run.mjs"
   },
   "dependencies": {
