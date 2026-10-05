@@ -39,6 +39,14 @@ describe("esquemas que se envían a la API de Claude", () => {
     expect(p.confianza_total.enum).toEqual(["alta", "media", "baja"]);
     expect(ESQUEMA_ALBARAN).not.toHaveProperty("$schema");
   });
+  it("pide el tipo de cada línea, el descuento general del pie, los precios con IVA y el total sin IVA (sin pasarse de campos con unión)", () => {
+    const p = ESQUEMA_ALBARAN.properties as Record<string, Obj>;
+    for (const k of ["descuento_global_pct", "descuento_global_importe", "precios_con_iva", "total_sin_iva"]) expect(p[k]).toBeDefined();
+    expect(p.precios_con_iva.type).toBe("boolean");
+    const linea = (p.lineas.items as Obj).properties as Record<string, Obj>;
+    expect(linea.tipo.enum).toEqual(["producto", "portes", "envase", "devolucion", "descuento", "otro"]);
+    expect(camposConUnion(ESQUEMA_ALBARAN)).toBe(12);
+  });
   it("camposConUnion cuenta tipos múltiples y anyOf", () => {
     expect(camposConUnion({ type: "object", properties: { a: { type: ["string", "null"] }, b: { anyOf: [{ type: "string" }, { type: "number" }] }, c: { type: "number" } } })).toBe(2);
   });
@@ -48,7 +56,8 @@ describe("de lo que devuelve el modelo al tipo de la app", () => {
   const wire = () => ({
     ...MOCK_ALBARAN,
     numero_alternativo: "", observaciones: "  ",
-    lineas: MOCK_ALBARAN.lineas.map((l) => ({ ...l, descuento_pct: 0, bonificadas: 0, duda: "" })),
+    descuento_global_pct: 0, descuento_global_importe: 0, precios_con_iva: false, total_sin_iva: 0,
+    lineas: MOCK_ALBARAN.lineas.map((l) => ({ ...l, descuento_pct: 0, bonificadas: 0, duda: "", tipo: "producto" })),
   });
   it("0 y cadena vacía vuelven a ser «sin dato»", () => {
     const o = albaranDeWire(WireAlbaran.parse(wire()));

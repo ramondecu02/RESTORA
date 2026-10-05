@@ -127,7 +127,7 @@ export async function confirmarAlbaran(ctx: AppCtx, docId: string, input: Draft,
   }
   if (d.total != null && !num(d.total, -1e9, 1e9)) return { ok: false, error: "Revisa el total del documento.", kind: "pendientes" };
   const chk = draftCheck(d);
-  if (d.total != null && !chk.cuadra && !opts.forzarTotal) return { ok: false, error: "El total no cuadra con el del documento.", kind: "total", diff: chk.diff ?? 0 };
+  if (chk.objetivo != null && !chk.cuadra && !opts.forzarTotal) return { ok: false, error: "El total no cuadra con el del documento.", kind: "total", diff: chk.diff ?? 0 };
   const provName = (d.proveedor.nombre || prettyName(d.proveedor.nombreLeido ?? "")).trim();
   if (!d.proveedor.id && provName.length < 2) return { ok: false, error: "Indica el proveedor.", kind: "pendientes" };
   const fecha = validDate(d.fecha) ?? isoDate();

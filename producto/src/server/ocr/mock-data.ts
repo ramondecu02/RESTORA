@@ -70,6 +70,57 @@ export const MOCK_ALBARAN_GIL: OcrAlbaran = {
   observaciones: null,
 };
 
+/** Albarán de distribución con un descuento general del 15 % al pie (subtotal 2.800, base 2.380). Con OCR_PROVIDER=mock se lee al subir
+ *  un archivo cuyo nombre contiene «descuento»: sirve para probar cómo se reparte el descuento entre las líneas. */
+export const MOCK_ALBARAN_DESCUENTO: OcrAlbaran = {
+  tipo_documento: "albaran",
+  proveedor_nombre: "DISTRIBUCIONES DEL CENTRO, S.A.",
+  proveedor_cif: "A39020202",
+  confianza_proveedor: "alta",
+  numero: null,
+  numero_alternativo: null,
+  confianza_numero: "baja",
+  fecha: hace(1),
+  confianza_fecha: "alta",
+  lineas: [
+    l("C09456", 100, "ud", 6, 10),
+    l("D12456", 120, "ud", 10, 10),
+    l("E03738", 200, "ud", 5, 10),
+  ],
+  desglose_iva: [{ tipo: 4, base: null, cuota: 0 }, { tipo: 10, base: null, cuota: 280 }, { tipo: 21, base: null, cuota: 0 }],
+  total: 2660,
+  confianza_total: "alta",
+  observaciones: null,
+  descuento_global_pct: 15,
+  descuento_global_importe: 420,
+};
+
+/** Albarán con casco, portes, una devolución y líneas dudosas (precio poco legible, importe que no cuadra). Con OCR_PROVIDER=mock se lee
+ *  al subir un archivo cuyo nombre contiene «dudas». */
+export const MOCK_ALBARAN_DUDAS: OcrAlbaran = {
+  tipo_documento: "albaran",
+  proveedor_nombre: "BODEGAS Y BEBIDAS EL TONEL S.L.",
+  proveedor_cif: "B43555111",
+  confianza_proveedor: "alta",
+  numero: "T-5521",
+  numero_alternativo: null,
+  confianza_numero: "alta",
+  fecha: hace(1),
+  confianza_fecha: "alta",
+  lineas: [
+    l("TOMATE PERA", 10, "kg", 2, 4),
+    l("CASCO BARRIL CERVEZA 30L", 1, "ud", 30, 21, { tipo: "envase" }),
+    l("PORTES", 1, "ud", 8, 21, { tipo: "portes" }),
+    l("ACEITE OLIVA V.EXTRA 5L", 2, "garrafa", 34.5, 4, { confianza: "media", confianza_precio: "baja", duda: "El precio se lee 34,50 pero podría ser 24,50" }),
+    l("REFRESCO COLA 6X1L", 4, "caja", 9.6, 10, { importe: 48 }),
+    l("DEVOLUCION TOMATE PERA", -2, "kg", 2, 4, { tipo: "devolucion" }),
+  ],
+  desglose_iva: [],
+  total: null,
+  confianza_total: "media",
+  observaciones: null,
+};
+
 export const MOCK_CARTA: OcrCarta = {
   nombre_local: null,
   platos: [

@@ -26,6 +26,7 @@ type Base = { unit: BaseUnit; iva: number; name: string; categoryId: string };
 type PriceRef = { id: string; precioUnit: number; proveedor: string; propio: boolean };
 
 const RATES = [4, 10, 21];
+const TIPO_CARGO = { portes: "Portes", envase: "Envase o fianza", devolucion: "Devolución o abono", otro: "Otro cargo" } as const;
 
 export function Validacion({ docId, initial, files, arts, catalog, cats, provs, precios, meta, tourSeen }: {
   docId: string; initial: Draft; files: FileRef[]; arts: Art[]; catalog: CatItem[]; cats: Cat[]; provs: Prov[]; precios: PriceRef[];
@@ -130,7 +131,7 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
     await guardarBorrador(docId, d);
     const r = await confirmar(docId, d, opts);
     if (r.ok) { router.push(`/compras/${r.id}?guardado=1`); router.refresh(); return; }
-    if (r.kind === "total") setAsk({ kind: "total", opts, text: `Las líneas suman ${eur(chk.total)} y el documento dice ${eur(d.total)} (diferencia de ${eur(Math.abs(r.diff ?? 0))}). Revisa cantidades y precios, o guárdalo igualmente si sabes por qué no cuadra.` });
+    if (r.kind === "total") setAsk({ kind: "total", opts, text: `Las líneas suman ${eur(chk.comparado)}${chk.sinIva ? " sin IVA" : ""} y el documento dice ${eur(chk.objetivo)} (diferencia de ${eur(Math.abs(r.diff ?? 0))}). Revisa cantidades y precios, o guárdalo igualmente si sabes por qué no cuadra.` });
     else if (r.kind === "duplicado") setAsk({ kind: "duplicado", opts, text: `${r.error} Si lo guardas otra vez, esa compra contará dos veces.` });
     else toastError(r.error);
   });
@@ -145,8 +146,8 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
 
   const numWarn = !manual && d.confNumero !== "alta" && !d.numeroRevisado;
   const totalTag = chk.incompleto || nPend ? <span className="tag">Se comprueba al decidir</span>
-    : d.total == null ? <span className="tag">Calculado: {eur(chk.total)}</span>
-    : chk.cuadra ? <span className="tag tag-ok"><Icon name="check" size={14} sw={3} /> Cuadra con las líneas</span>
+    : chk.objetivo == null ? <span className="tag">Calculado: {eur(chk.total)}</span>
+    : chk.cuadra ? <span className="tag tag-ok"><Icon name="check" size={14} sw={3} /> Cuadra con las líneas{chk.sinIva ? " (sin IVA)" : ""}</span>
     : <span className="tag tag-bad">No cuadra: {chk.diff! > 0 ? "+" : "−"}{eur(Math.abs(chk.diff!))}</span>;
 
   const provSel = (
@@ -319,11 +320,12 @@ function LineCard({ l, base, catName, cats, manual, defaultCat, priceRef, editin
   const qTxt = !l.resuelto.cantidad && l.decisiones.cantidad ? `${l.cantidadTexto || "?"} ${l.unidadCompra}` : `${qty(l.cantidad)} ${l.unidadCompra}`;
   const ivaTxt = l.ignorar ? "" : (l.iva ?? null) == null ? " · IVA por decidir" : ` · IVA ${l.iva} %`;
   const conv = unit && l.factor && l.factor !== 1 && l.precio != null ? <small> = {qty((l.cantidad ?? 0) * l.factor)} {unit} a {eur(l.precio / l.factor)}/{unit}</small> : null;
-  const confCls = pend.length ? "conf-baja" : l.conf.linea === "media" || l.conf.precio === "media" ? "conf-media" : "conf-alta";
+  const confCls = pend.length ? "conf-baja" : l.conf.linea === "media" || l.conf.precio === "media" || l.conf.cantidad === "media" ? "conf-media" : "conf-alta";
   // Coste por unidad base de esta línea, para compararlo con lo que costaba antes (avisa de subidas y de precios mal leídos).
   const nowUnit = !l.ignorar && l.precio != null && l.cantidad != null && l.factor ? lineaCoste(l.cantidad, l.precio, l.descuento || 0, l.bonificadas || 0, l.factor).costeUnit : null;
   const priceDelta = priceRef && nowUnit != null && nowUnit > 0 && priceRef.precioUnit > 0 ? (nowUnit - priceRef.precioUnit) / priceRef.precioUnit : null;
   const [qTmp, setQTmp] = useState<number | null>(l.cantidad ?? (l.importe != null && l.precio ? Math.round((l.importe / l.precio) * 1000) / 1000 : null));
+  const [pTmp, setPTmp] = useState<number | null>(l.precio);
   const [fTmp, setFTmp] = useState<number | null>(l.factor);
   const [nv, setNv] = useState<NonNullable<DraftLine["nuevo"]>>(l.nuevo ?? { name: prettyProduct(l.texto), categoryId: defaultCat, unit: guessUnit(l.texto, l.unidadCompra), rend: 100 });
   useEffect(() => { if (creating) setNv(l.nuevo ?? { name: prettyProduct(l.texto), categoryId: defaultCat, unit: guessUnit(l.texto, l.unidadCompra), rend: 100 }); }, [creating, l.nuevo, l.texto, l.unidadCompra, defaultCat]);
@@ -332,7 +334,7 @@ function LineCard({ l, base, catName, cats, manual, defaultCat, priceRef, editin
   if (!l.ignorar && l.match && !l.match.porUsuario && l.resuelto.articulo) tags.push(<span key="m" className="tag tag-ok"><Icon name="check" size={14} sw={3} /> {l.match.tipo === "tuyo" ? `Tu artículo · ${Math.round(l.match.score * 100)} %` : "Nuevo en tu lista · catálogo"}</span>);
   if (base && !pend.length && !l.ignorar) tags.push(<span key="c" className="tag">{catName.get(base.categoryId)}</span>);
   if (!l.ignorar && !l.decisiones.iva && l.iva != null && l.ivaEsperado != null && l.iva === l.ivaEsperado && !manual) tags.push(<span key="i" className="tag tag-ok">IVA {l.iva} % · coincide</span>);
-  if (l.ignorar) tags.push(<span key="x" className="tag">No es un producto · solo cuenta para el total</span>);
+  if (l.ignorar) tags.push(<span key="x" className="tag">{l.tipo ? TIPO_CARGO[l.tipo] : "No es un producto"} · solo cuenta para el total</span>);
 
   const expected = l.importe != null && l.precio ? l.importe / (l.precio * (1 - (l.descuento || 0) / 100)) : null;
   const rates = [...new Set([l.ivaEsperado, l.ivaLeido, ...RATES].filter((x): x is number => x != null && Number.isInteger(x)))];
@@ -389,10 +391,13 @@ function LineCard({ l, base, catName, cats, manual, defaultCat, priceRef, editin
 
       {!l.ignorar && l.resuelto.articulo && !l.resuelto.cantidad ? (
         <div className="dec">
-          <p>La cantidad no se lee bien («{l.cantidadTexto || "?"}»).{expected != null ? <> Por el importe de la línea ({eur(l.importe)} a {eur(l.precio)}) serían <b>{qty(expected)} {l.unidadCompra}</b>.</> : null}</p>
+          <p>{l.cantidad == null || l.conf.cantidad === "baja"
+            ? <>La cantidad no se lee bien («{l.cantidadTexto || "?"}»).{expected != null ? <> Por el importe de la línea ({eur(l.importe)} a {eur(l.precio)}) serían <b>{qty(expected)} {l.unidadCompra}</b>.</> : null}</>
+            : <>Revisa la cantidad y el precio de esta línea: puede que no la hayamos leído bien.</>}</p>
           <div className="dec-q">
             <div className="fld"><label htmlFor={`q-${l.id}`}>Cantidad</label><div className="inp-unit"><NumInput id={`q-${l.id}`} value={qTmp} onValue={setQTmp} /><span>{l.unidadCompra}</span></div></div>
-            <button type="button" className="btn" disabled={!(qTmp && qTmp > 0)} onClick={() => onChange((x) => ({ ...x, cantidad: qTmp, resuelto: { ...x.resuelto, cantidad: true } }))}>Confirmar</button>
+            <div className="fld"><label htmlFor={`p-${l.id}`}>Precio (sin IVA)</label><div className="inp-unit"><NumInput id={`p-${l.id}`} decimals={4} value={pTmp} onValue={setPTmp} /><span>€</span></div></div>
+            <button type="button" className="btn" disabled={!(qTmp && qTmp > 0) || pTmp == null || pTmp < 0} onClick={() => onChange((x) => ({ ...x, cantidad: qTmp, precio: pTmp, resuelto: { ...x.resuelto, cantidad: true } }))}>Confirmar</button>
           </div>
         </div>
       ) : null}
@@ -421,8 +426,8 @@ function LineCard({ l, base, catName, cats, manual, defaultCat, priceRef, editin
       ) : null}
 
       {l.match?.porUsuario && l.resuelto.articulo && !l.manual ? <Done txt={l.match.tipo === "nuevo" ? "Artículo creado por ti" : "Emparejado por ti"} onUndo={onUndo} /> : null}
-      {l.ignorar ? <Done txt="Marcado como no producto" onUndo={() => onChange((x) => ({ ...x, ignorar: false, resuelto: { ...x.resuelto, articulo: !!x.match } }))} /> : null}
-      {l.decisiones.cantidad && l.resuelto.cantidad ? <Done txt={`Cantidad confirmada: ${qty(l.cantidad)} ${l.unidadCompra}`} onUndo={() => onChange((x) => ({ ...x, resuelto: { ...x.resuelto, cantidad: false } }))} /> : null}
+      {l.ignorar ? <Done txt={l.tipo ? `Leído como ${TIPO_CARGO[l.tipo].toLowerCase()}` : "Marcado como no producto"} onUndo={() => onChange((x) => ({ ...x, ignorar: false, tipo: undefined, decisiones: { ...x.decisiones, articulo: true }, resuelto: { ...x.resuelto, articulo: !!x.match } }))} /> : null}
+      {l.decisiones.cantidad && l.resuelto.cantidad ? <Done txt={`Línea confirmada: ${qty(l.cantidad)} ${l.unidadCompra} a ${eur(l.precio)}`} onUndo={() => onChange((x) => ({ ...x, resuelto: { ...x.resuelto, cantidad: false } }))} /> : null}
       {l.factorFuente === "usuario" && l.resuelto.unidad ? <Done txt={`1 ${l.unidadCompra} = ${qty(l.factor)} ${unit ?? ""}`} onUndo={() => onChange((x) => ({ ...x, factorFuente: null, resuelto: { ...x.resuelto, unidad: false } }))} /> : null}
       {l.decisiones.iva && l.resuelto.iva ? <Done txt={`IVA ${l.iva} % · confirmado por ti`} onUndo={() => onChange((x) => ({ ...x, iva: null, resuelto: { ...x.resuelto, iva: false } }))} /> : null}
 

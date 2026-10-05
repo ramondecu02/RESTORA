@@ -22,7 +22,8 @@ import { OcrError } from "@/server/ocr/errors";
 
 const wire = (o: typeof MOCK_ALBARAN = MOCK_ALBARAN) => ({
   ...o, numero_alternativo: o.numero_alternativo ?? "", observaciones: o.observaciones ?? "",
-  lineas: o.lineas.map((l) => ({ ...l, descuento_pct: l.descuento_pct ?? 0, bonificadas: l.bonificadas ?? 0, duda: l.duda ?? "" })),
+  descuento_global_pct: 0, descuento_global_importe: 0, precios_con_iva: false, total_sin_iva: 0,
+  lineas: o.lineas.map((l) => ({ ...l, descuento_pct: l.descuento_pct ?? 0, bonificadas: l.bonificadas ?? 0, duda: l.duda ?? "", tipo: "producto" })),
 });
 const respuesta = (texto: string, extra: Record<string, unknown> = {}, usage = { input_tokens: 3000, output_tokens: 1500 }) => () => ({
   stop_reason: "end_turn", stop_details: null, usage, content: [{ type: "thinking", thinking: "" }, { type: "text", text: texto }], ...extra,
@@ -60,6 +61,15 @@ describe("lectura de albaranes con la API de Claude", () => {
     expect(body.messages[0].content.map((c) => c.type)).toEqual(["image", "text"]);
     expect(usage).toMatchObject({ model: "claude-sonnet-5-5", escalated: false, inputTokens: 3000, outputTokens: 1500 });
     expect(usage.costUsd).toBeCloseTo((3000 * 2 + 1500 * 10) / 1e6, 6);
+  });
+
+  it("un descuento general del pie llega a la lectura (albarán de distribución con el 15 %)", async () => {
+    h.cola.push(ok({ ...wire(), descuento_global_pct: 15, descuento_global_importe: 420, lineas: wire().lineas.map((l, i) => (i === 0 ? { ...l, tipo: "portes" } : l)) }));
+    const { ocr } = await readAlbaran(FOTO, "Casa Pujol");
+    expect(ocr.descuento_global_pct).toBe(15);
+    expect(ocr.descuento_global_importe).toBe(420);
+    expect(ocr.lineas[0].tipo).toBe("portes");
+    expect(h.llamadas[0].body.system).toMatch(/descuento_global_pct/); // el prompt le explica dónde ponerlo
   });
 
   it("los PDF viajan como documento", async () => {

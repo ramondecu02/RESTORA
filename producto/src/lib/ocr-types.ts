@@ -4,6 +4,10 @@ import { z } from "zod";
 export const Conf = z.enum(["alta", "media", "baja"]);
 export type Conf = z.infer<typeof Conf>;
 
+/** Qué es una línea del documento. Solo «producto» crea compra y toca precios y stock; el resto solo cuenta para el total. */
+export const TipoLinea = z.enum(["producto", "portes", "envase", "devolucion", "descuento", "otro"]);
+export type TipoLinea = z.infer<typeof TipoLinea>;
+
 export const OcrLinea = z.object({
   descripcion: z.string().describe("Texto del producto tal cual aparece en la línea"),
   cantidad: z.number().nullable().describe("Cantidad facturada. null si no se lee"),
@@ -18,6 +22,8 @@ export const OcrLinea = z.object({
   confianza_cantidad: Conf,
   confianza_precio: Conf,
   duda: z.string().nullable().describe("Qué no se lee bien, en pocas palabras"),
+  /** Ausente en lecturas antiguas: se entiende «producto». */
+  tipo: TipoLinea.optional(),
 });
 export const OcrAlbaran = z.object({
   tipo_documento: z.enum(["albaran", "factura", "ticket", "otro"]),
@@ -34,6 +40,13 @@ export const OcrAlbaran = z.object({
   total: z.number().nullable().describe("Total a pagar con IVA"),
   confianza_total: Conf,
   observaciones: z.string().nullable(),
+  /** Descuento general del pie (pronto pago, rappel...): porcentaje impreso y/o importe. Ausentes = sin descuento general. */
+  descuento_global_pct: z.number().optional(),
+  descuento_global_importe: z.number().optional(),
+  /** Los precios e importes de las líneas ya llevan el IVA (tickets de tienda). */
+  precios_con_iva: z.boolean().optional(),
+  /** Total de un documento que no desglosa IVA (albarán valorado sin IVA). */
+  total_sin_iva: z.number().nullable().optional(),
 });
 export type OcrAlbaran = z.infer<typeof OcrAlbaran>;
 export type OcrLinea = z.infer<typeof OcrLinea>;
@@ -75,6 +88,8 @@ export type DraftLine = {
   resuelto: { articulo: boolean; iva: boolean; cantidad: boolean; unidad: boolean };
   /** Cargos que no son producto (portes, envases): cuentan para el total pero no crean compra. */
   ignorar?: boolean;
+  /** Qué cargo es, cuando no es un producto (para decirlo en la pantalla de revisión). */
+  tipo?: "portes" | "envase" | "devolucion" | "otro";
   /** Línea añadida a mano por el usuario. */
   manual?: boolean;
 };
@@ -87,6 +102,8 @@ export type Draft = {
   numero: string | null; numeroAlt: string | null; confNumero: Conf; numeroRevisado: boolean;
   fecha: string | null; confFecha: Conf;
   total: number | null; confTotal: Conf;
+  /** Total sin IVA de un documento que no desglosa IVA: con él se comprueba la suma de las bases. */
+  totalSinIva?: number | null;
   desglose: { tipo: number; base: number | null; cuota: number | null }[];
   lineas: DraftLine[];
   observaciones: string | null;

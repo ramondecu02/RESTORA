@@ -14,7 +14,7 @@ import { PLANTILLAS } from "@/lib/plantillas";
 import { compatible, type BaseUnit, type LineUnit } from "@/lib/units";
 import { env } from "../env";
 import { detalleDeError, mensajeDeError, OcrError, OcrRefusal } from "./errors";
-import { MOCK_ALBARAN, MOCK_ALBARAN_GIL, MOCK_CARTA, SAMPLE_HASHES } from "./mock-data";
+import { MOCK_ALBARAN, MOCK_ALBARAN_DESCUENTO, MOCK_ALBARAN_DUDAS, MOCK_ALBARAN_GIL, MOCK_CARTA, SAMPLE_HASHES } from "./mock-data";
 
 export type OcrFile = { data: Buffer; mime: string; name: string };
 export type OcrUsage = { model: string; inputTokens: number; outputTokens: number; costUsd: number; ms: number; escalated: boolean };
@@ -45,10 +45,13 @@ Reglas:
 - Todas las imágenes o páginas forman un único documento. No repitas líneas que aparezcan en dos fotos solapadas. Si las páginas parecen ser de documentos distintos (otro proveedor u otro número), lee solo el primero y dilo en "observaciones".
 - Si la imagen no es un documento de compra (albarán, factura o ticket), pon tipo_documento "otro", deja las líneas vacías y explícalo en "observaciones".
 - El proveedor es quien EMITE el documento (logotipo, CIF del emisor), no el cliente al que va dirigido.
-- Una línea por producto o cargo con importe. Incluye portes, envases o recargos si tienen importe, para que los totales cuadren.
+- Una línea por producto o cargo con importe. Incluye portes, envases o recargos si tienen importe, para que los totales cuadren, y marca cada línea con su "tipo": producto, portes, envase (cascos, fianzas, cajas o barriles retornables), devolucion, o otro.
+- Las devoluciones, abonos y retornos de envase llevan cantidad e importe NEGATIVOS: no les quites el signo.
+- Un descuento general del pie (pronto pago, rappel, descuento comercial sobre el subtotal) NO es una línea: ponlo en descuento_global_pct y/o descuento_global_importe y deja las líneas con sus precios sin rebajar. El "total" es el que queda después de aplicarlo.
 - Números con punto decimal (1.234,56 € en el papel → 1234.56). Fechas en formato AAAA-MM-DD (los documentos españoles usan día/mes/año).
 - "unidad": la unidad de venta impresa (kg, ud, caja, garrafa 5 L, estuche 30...). La cantidad es en esa unidad.
-- "precio_unitario" e "importe" SIN IVA. Si el documento solo muestra precios con IVA incluido, indícalo en "observaciones".
+- "precio_unitario" e "importe": cópialos tal cual aparecen, sin quitar ni añadir IVA. Si los precios de las líneas ya incluyen el IVA (tickets de tienda, algunos albaranes de venta al público), pon precios_con_iva en true.
+- "total_sin_iva": solo si el documento no desglosa ningún IVA (albarán valorado sin IVA): su total va ahí y "total" en null. En los demás casos, total_sin_iva es 0.
 - "descuento_pct" (0 si no hay descuento) y "bonificadas" (unidades regaladas, por ejemplo 6+1 → 1; 0 si no hay).
 - "iva_pct": el tipo de la línea si aparece (a veces como código A/B/C con leyenda en el pie: tradúcelo al porcentaje). Si no aparece, null.
 - "desglose_iva": las bases y cuotas por tipo del pie del documento. "total": el total a pagar.
@@ -124,8 +127,11 @@ export async function readAlbaran(files: OcrFile[], clienteNombre: string): Prom
   const sample = sampleOf(files);
   if (sample === "albaran" || sample === "albaran-gil" || env.ocrProvider === "mock") {
     await pause();
-    const gil = sample ? sample === "albaran-gil" : files.some((f) => /gil|fg-/i.test(f.name));
-    const ocr = OcrAlbaran.parse(JSON.parse(JSON.stringify(gil ? MOCK_ALBARAN_GIL : MOCK_ALBARAN)));
+    // Sin documento de ejemplo, el nombre del archivo elige la lectura simulada (para probar la pantalla de revisión)
+    const nombre = files.map((f) => f.name).join(" ");
+    const mock = sample ? (sample === "albaran-gil" ? MOCK_ALBARAN_GIL : MOCK_ALBARAN)
+      : /descuento/i.test(nombre) ? MOCK_ALBARAN_DESCUENTO : /dudas/i.test(nombre) ? MOCK_ALBARAN_DUDAS : /gil|fg-/i.test(nombre) ? MOCK_ALBARAN_GIL : MOCK_ALBARAN;
+    const ocr = OcrAlbaran.parse(JSON.parse(JSON.stringify(mock)));
     return { ocr, usage: NO_USAGE(sample ? "ejemplo" : "mock") };
   }
   if (env.ocrProvider === "off") throw new OcrError(OFF);

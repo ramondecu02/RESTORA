@@ -5,7 +5,7 @@
 // Por eso aquí «sin dato» se pide como 0 o como cadena vacía en los campos menos importantes, y se vuelve a null
 // al convertir. Tests: tests/unit/ocr-wire.test.ts (cuenta los campos con unión de cada esquema).
 import { z } from "zod";
-import { OcrAlbaran, OcrCarta, type OcrAlbaran as OcrAlbaranT } from "./ocr-types";
+import { OcrAlbaran, OcrCarta, TipoLinea, type OcrAlbaran as OcrAlbaranT } from "./ocr-types";
 
 const CONF = z.enum(["alta", "media", "baja"]);
 
@@ -23,6 +23,7 @@ const WireLinea = z.object({
   confianza_cantidad: CONF,
   confianza_precio: CONF,
   duda: z.string().describe("Qué no se lee bien, en pocas palabras. Cadena vacía si no hay dudas"),
+  tipo: TipoLinea.describe("Qué es la línea: «producto» (lo que se compra); «portes» (transporte); «envase» (casco, fianza, caja, barril o garrafa retornable); «devolucion» (devolución, abono o retorno de envase, con cantidad e importe en NEGATIVO); «descuento» (un descuento general escrito como línea); «otro» (cualquier otro cargo que no es un producto)"),
 });
 export const WireAlbaran = z.object({
   tipo_documento: z.enum(["albaran", "factura", "ticket", "otro"]).describe("«otro» si la imagen no es un documento de compra"),
@@ -39,6 +40,10 @@ export const WireAlbaran = z.object({
   total: z.number().nullable().describe("Total a pagar con IVA"),
   confianza_total: CONF,
   observaciones: z.string().describe("Avisos sobre el documento en pocas palabras. Cadena vacía si no hay"),
+  descuento_global_pct: z.number().describe("Descuento general del pie del documento (pronto pago, rappel, descuento comercial sobre el subtotal) en %. 0 si no hay. No lo repitas dentro de las líneas"),
+  descuento_global_importe: z.number().describe("Importe de ese descuento general del pie, en positivo. 0 si no hay"),
+  precios_con_iva: z.boolean().describe("true si los precios unitarios e importes de las líneas YA incluyen el IVA (tickets de tienda y algunos albaranes de venta al público); false en un albarán o factura normal"),
+  total_sin_iva: z.number().describe("Total del documento SOLO si no desglosa ningún IVA (albarán valorado sin IVA). 0 en cualquier otro caso"),
 });
 type WireAlbaranT = z.infer<typeof WireAlbaran>;
 
@@ -46,11 +51,20 @@ const vacio = (s: string): string | null => (s.trim() ? s.trim() : null);
 
 /** Lo que devuelve el modelo → el tipo que usa la app (con null donde no hay dato). */
 export function albaranDeWire(w: WireAlbaranT): OcrAlbaranT {
+  // Un descuento general escrito como línea («DTO. PRONTO PAGO −12,50») se pasa al descuento general del pie;
+  // si el modelo ya lo había puesto en el pie, la línea sobra (sería contarlo dos veces)
+  const comoLinea = w.lineas.filter((l) => l.tipo === "descuento");
+  const importeLineas = comoLinea.reduce((s, l) => s + Math.abs(l.importe ?? (l.cantidad ?? 1) * (l.precio_unitario ?? 0)), 0);
+  const hayGlobal = w.descuento_global_pct > 0 || w.descuento_global_importe > 0;
   return OcrAlbaran.parse({
     ...w,
     numero_alternativo: vacio(w.numero_alternativo),
     observaciones: vacio(w.observaciones),
-    lineas: w.lineas.map((l) => ({
+    descuento_global_pct: w.descuento_global_pct > 0 ? w.descuento_global_pct : undefined,
+    descuento_global_importe: w.descuento_global_importe > 0 ? w.descuento_global_importe : hayGlobal || !(importeLineas > 0) ? undefined : importeLineas,
+    precios_con_iva: w.precios_con_iva || undefined,
+    total_sin_iva: w.total_sin_iva > 0 ? w.total_sin_iva : null,
+    lineas: w.lineas.filter((l) => l.tipo !== "descuento").map((l) => ({
       ...l,
       descuento_pct: l.descuento_pct > 0 ? l.descuento_pct : null,
       bonificadas: l.bonificadas > 0 ? l.bonificadas : null,
@@ -81,9 +95,11 @@ export function camposConUnion(schema: unknown): number {
 
 const sinAcentos = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
 const TIPOS = new Set(["albaran", "factura", "ticket", "otro"]);
+const TIPOS_LINEA = new Set(["producto", "portes", "envase", "devolucion", "descuento", "otro"]);
 const CONFS = new Set(["alta", "media", "baja"]);
 /** La API no garantiza mayúsculas ni tildes en los valores de un enum: se corrigen aquí (confianza desconocida → «baja»,
- *  tipo desconocido → «otro») en vez de tirar una lectura entera, ya pagada, por una «Media» o un «albarán». */
+ *  tipo de documento desconocido → «otro», tipo de línea desconocido → «producto») en vez de tirar una lectura entera,
+ *  ya pagada, por una «Media» o un «albarán». */
 export function suavizarEnums(x: unknown): unknown {
   if (Array.isArray(x)) return x.map(suavizarEnums);
   if (!x || typeof x !== "object") return x;
@@ -91,6 +107,7 @@ export function suavizarEnums(x: unknown): unknown {
   for (const [k, v] of Object.entries(x as Record<string, unknown>)) {
     if (typeof v === "string" && k.startsWith("confianza")) out[k] = CONFS.has(sinAcentos(v)) ? sinAcentos(v) : "baja";
     else if (typeof v === "string" && k === "tipo_documento") out[k] = TIPOS.has(sinAcentos(v)) ? sinAcentos(v) : "otro";
+    else if (typeof v === "string" && k === "tipo") out[k] = TIPOS_LINEA.has(sinAcentos(v)) ? sinAcentos(v) : "producto"; // (en el desglose de IVA «tipo» es un número y no entra aquí)
     else out[k] = suavizarEnums(v);
   }
   return out;

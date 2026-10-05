@@ -689,8 +689,8 @@ a.barh-row:hover .barh-l, button.barh-row:hover .barh-l { color: var(--brand); t
 .dec-opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--bad-line); font-size: 14px; font-weight: 600; text-align: left; }
 .dec-opt:hover { border-color: var(--bad); }
 .dec-opt small { font-weight: 500; color: var(--muted); }
-.dec-q { display: flex; align-items: flex-end; gap: 8px; }
-.dec-q .fld { flex: 1; }
+.dec-q { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
+.dec-q .fld { flex: 1 1 130px; }
 .dec-q .btn { flex: none; }
 .done-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .done-row .linkbtn { min-height: 32px; font-size: 13px; }

@@ -10,6 +10,7 @@ const suites = [
   ["Flujos con comprobación en base de datos", "flujos.mjs"],
   ["Aislamiento entre negocios (RLS)", "rls.mjs"],
   ["Prueba gratuita y bloqueo", "plan.mjs"],
+  ["Calidad de la lectura (descuento, portes, dudas)", "calidad.mjs"],
 ];
 let failed = 0;
 for (const [name, file] of suites) {
