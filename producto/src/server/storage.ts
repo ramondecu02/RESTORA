@@ -6,8 +6,10 @@ import { isUuid } from "./db";
 import { env } from "./env";
 
 const LOCAL_DIR = path.join(process.cwd(), ".storage");
+/** Una clave que se puede servir: solo letras, cifras y «/ _ . -», sin «..». Las que genera la app siempre lo cumplen. */
+export const claveValida = (key: string) => /^[a-zA-Z0-9/_.-]+$/.test(key) && !key.includes("..");
 const safeKey = (key: string) => {
-  if (!/^[a-zA-Z0-9/_.-]+$/.test(key) || key.includes("..")) throw new Error("Ruta de archivo no válida");
+  if (!claveValida(key)) throw new Error("Ruta de archivo no válida");
   return key;
 };
 const blobOn = () => {

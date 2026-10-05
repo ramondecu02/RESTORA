@@ -5,38 +5,14 @@
 //     sensibles no son accesibles.
 //  2) Por HTTP, la sesión de A recibe 404 en las páginas y archivos de B.
 import pg from "pg";
-import { BASE, DB, launch, sql, signup, cargarDemo } from "./lib.mjs";
+import { BASE, DB, launch, sql, negocios } from "./lib.mjs";
 
 let fails = 0, checks = 0;
 const ok = (cond, msg) => { checks++; if (!cond) { fails++; console.log("✗", msg); } };
 const b = await launch();
 
-async function negocio(tag) {
-  const ctx = await b.newContext({ viewport: { width: 1280, height: 860 }, locale: "es-ES" });
-  const page = await ctx.newPage();
-  const email = `rls-${tag}+${Date.now()}@example.com`;
-  await signup(page, { email, negocio: `Negocio ${tag}` });
-  await cargarDemo(page);
-  // Un pedido (pedidos, pedido_lineas) y una carta subida (documento_archivos)
-  await page.goto(BASE + "/inventario");
-  await page.getByRole("button", { name: /Preparar pedido/ }).click();
-  await page.getByRole("button", { name: "Guardar pedido" }).filter({ visible: true }).first().click();
-  await page.waitForTimeout(800);
-  await page.goto(BASE + "/carta/subir");
-  await page.getByRole("button", { name: /Probar con una carta de ejemplo/ }).click();
-  await page.waitForURL(/\/carta\/subir\/[0-9a-f-]{36}/, { timeout: 30000 });
-  // Un aviso de precio resuelto (avisos_estado)
-  await page.goto(BASE + "/hoy/avisos");
-  await page.getByRole("button", { name: /Ya lo he resuelto/ }).first().click();
-  await page.waitForTimeout(800);
-  const [t] = await sql("select m.org_id as id from memberships m join users u on u.id = m.user_id where lower(u.email) = lower($1)", [email]);
-  if (!(await sql("select 1 from avisos_estado where tenant_id = $1", [t.id])).length) throw new Error(`no se ha guardado el aviso resuelto del negocio ${tag}`);
-  console.log(`· negocio ${tag} creado (${t.id})`);
-  return { id: t.id, ctx, page };
-}
-
-const A = await negocio("A");
-const B = await negocio("B");
+// Los negocios A y B se crean con el mismo helper que usa fugas.mjs (lib.mjs)
+const { A, B } = await negocios(b);
 
 // ---------- 1) Base de datos ----------
 const tables = (await sql(`select c.relname as t from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r'

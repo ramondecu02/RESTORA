@@ -65,7 +65,7 @@ Para explorar sin subir nada: Cuenta → **Cargar datos de ejemplo** (seis meses
 ## Pruebas
 
 ```bash
-npm run lint && npm run typecheck && npm test     # lint, tipos y 44 pruebas unitarias
+npm run lint && npm run typecheck && npm test     # lint, tipos y pruebas unitarias
 npm run e2e                                       # con la app arrancada (dev o build + start)
 npm run audit:tenancy                             # auditoría de aislamiento entre negocios (RLS en cada tabla, usos de sys())
 ```
@@ -75,7 +75,8 @@ npm run audit:tenancy                             # auditoría de aislamiento en
 1. **Alta y primer albarán** — registro, código, briefing, local, tour y lectura del albarán de ejemplo con sus decisiones.
 2. **Recorrido** — las 26 pantallas con datos de ejemplo en móvil (390 px) y escritorio (1280 px): respuesta 200, sin errores de consola y sin desbordamiento horizontal. Guarda capturas en `tests/e2e/shots/`.
 3. **Flujos** — editar stock, preparar pedido, aceptar cambios en un escandallo, subir carta, importar ventas, borrar un albarán (revierte stock), invitar a cocina y comprobar sus permisos, quitar datos de ejemplo y eliminar el negocio; cada paso se comprueba en la base de datos.
-4. **Aislamiento (RLS)** — crea dos negocios reales y verifica 161 casos: en las 17 tablas, el negocio A no puede leer, cambiar, borrar ni crear filas del negocio B; sin contexto no se ve nada; el rol de la app no accede a contraseñas ni sesiones; y por HTTP las páginas y archivos de B devuelven 404 a A.
+4. **Aislamiento (RLS)** — crea dos negocios reales y verifica, en cada tabla de negocio, que el negocio A no puede leer, cambiar, borrar ni crear filas del negocio B; que sin contexto no se ve nada; que el rol de la app no accede a contraseñas ni sesiones; y que por HTTP las páginas y archivos de B devuelven 404 a A.
+5. **Fugas entre negocios** (`fugas.mjs`) — con la sesión de A y los ids de B: las rutas con id (páginas, `/api/documentos/…`, `/api/archivos/…`) dan 404 con el mismo cuerpo que un id inexistente (nunca 403), la búsqueda y las exportaciones no traen nada de B, cada acción de servidor que recibe un id (49 llamadas) responde igual con ids de B que con ids inexistentes y deja los datos de B idénticos, A no puede aceptar la invitación de B ni cambiar a B, y borrar un albarán mientras se importan ventas deja un resultado coherente.
 
 Necesitan Chromium (Playwright) y acceso a la base de datos (`DATABASE_URL`) para leer los códigos de verificación del buzón de pruebas.
 

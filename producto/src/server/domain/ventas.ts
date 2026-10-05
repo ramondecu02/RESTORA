@@ -6,7 +6,7 @@ import { explode, recetaCost } from "@/lib/costing";
 import { norm } from "@/lib/fuzzy";
 import { neto } from "@/lib/costing";
 import { diasPeriodo, errorVentas, fechaIsoValida, type FilaVenta } from "@/lib/csv";
-import { loadCostContext, recomputeCosts } from "./costs";
+import { bloquearCostesDeVentas, loadCostContext, recomputeCosts } from "./costs";
 import { rebuildArticulo } from "./articulos";
 
 export type ImportIn = {
@@ -46,6 +46,9 @@ export async function importarVentas(ctx: AppCtx, input: ImportIn): Promise<Impo
   const filename = String(input.filename ?? "").slice(0, 120), fuente = String(input.fuente ?? "").slice(0, 40);
 
   return withTenant(ctx.tenantId, async (c): Promise<ImportRes> => {
+    // Se espera a que acabe cualquier borrado de albarán de este local (y viceversa): así lo que se congela aquí son los precios de después
+    // del borrado, o el borrado ve esta importación y pide elegir qué hacer con ella
+    await bloquearCostesDeVentas(c, ctx.local.id);
     // Las ventas de unas fechas ya importadas contarían dos veces (y el stock se descontaría otra vez): se pregunta antes.
     if (input.forzar !== true) {
       const dup = await one<{ filename: string; desde: string; hasta: string }>(c, `select filename, desde, hasta from ventas_importes

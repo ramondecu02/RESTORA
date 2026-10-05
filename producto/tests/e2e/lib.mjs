@@ -201,3 +201,82 @@ export async function cargarDemo(page) {
   await page.getByRole("button", { name: "Cargar datos de ejemplo" }).click();
   await page.getByText("Cargados", { exact: true }).waitFor({ timeout: 60000 });
 }
+
+/**
+ * Crea un negocio real por la interfaz (alta, datos de ejemplo, un pedido, una carta subida y un aviso de precio resuelto) para que
+ * todas las tablas de negocio tengan filas. Devuelve su id, su local, el email, el contexto del navegador y la página con la sesión abierta.
+ * Lo usan las pruebas de aislamiento entre negocios (rls.mjs, fugas.mjs): crean un negocio A y otro B y miran qué ve cada uno del otro.
+ */
+export async function negocio(b, tag) {
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 860 }, locale: "es-ES" });
+  const page = await ctx.newPage();
+  const email = `rls-${tag}+${Date.now()}@example.com`;
+  await signup(page, { email, negocio: `Negocio ${tag}` });
+  await cargarDemo(page);
+  // Un pedido (pedidos, pedido_lineas) y una carta subida (documento_archivos)
+  await page.goto(BASE + "/inventario");
+  await page.getByRole("button", { name: /Preparar pedido/ }).click();
+  await page.getByRole("button", { name: "Guardar pedido" }).filter({ visible: true }).first().click();
+  await page.waitForTimeout(800);
+  await page.goto(BASE + "/carta/subir");
+  await page.getByRole("button", { name: /Probar con una carta de ejemplo/ }).click();
+  await page.waitForURL(/\/carta\/subir\/[0-9a-f-]{36}/, { timeout: 30000 });
+  // Un aviso de precio resuelto (avisos_estado)
+  await page.goto(BASE + "/hoy/avisos");
+  await page.getByRole("button", { name: /Ya lo he resuelto/ }).first().click();
+  await page.waitForTimeout(800);
+  const [t] = await sql("select m.org_id as id, (select l.id from locales l where l.tenant_id = m.org_id order by l.created_at limit 1) as local, m.user_id from memberships m join users u on u.id = m.user_id where lower(u.email) = lower($1)", [email]);
+  if (!(await sql("select 1 from avisos_estado where tenant_id = $1", [t.id])).length) throw new Error(`no se ha guardado el aviso resuelto del negocio ${tag}`);
+  console.log(`· negocio ${tag} creado (${t.id})`);
+  return { tag, id: t.id, local: t.local, userId: t.user_id, email, ctx, page };
+}
+/**
+ * Los dos negocios de las pruebas de aislamiento: A y B (en este orden, por el límite de altas por conexión).
+ * Con REUSE=1 y los negocios de una pasada anterior guardados, se reabren sin darlos de alta otra vez (para iterar sobre una prueba).
+ */
+export async function negocios(b) {
+  const fichero = SHOTS + "state-negocios.json";
+  if (process.env.REUSE === "1" && existsSync(fichero)) {
+    const guardado = JSON.parse(readFileSync(fichero, "utf8"));
+    const out = {};
+    for (const tag of ["A", "B"]) {
+      const { state, ...datos } = guardado[tag];
+      const ctx = await b.newContext({ storageState: state, viewport: { width: 1280, height: 860 }, locale: "es-ES" });
+      out[tag] = { ...datos, ctx, page: await ctx.newPage() };
+    }
+    return out;
+  }
+  const A = await negocio(b, "A");
+  const B = await negocio(b, "B");
+  const guarda = async ({ ctx, page: _, ...datos }) => ({ ...datos, state: await ctx.storageState() });
+  writeFileSync(fichero, JSON.stringify({ A: await guarda(A), B: await guarda(B) }));
+  return { A, B };
+}
+
+/**
+ * Acciones de servidor de la compilación actual, tal como las lista Next en .next/server/server-reference-manifest.json:
+ * «archivo#nombre» (el archivo, sin src/app/) → { id, workers }. null si no hay compilación local (servidor remoto).
+ */
+export function accionesDelServidor() {
+  const f = new URL("../../.next/server/server-reference-manifest.json", import.meta.url).pathname;
+  if (!existsSync(f)) return null;
+  const out = new Map();
+  for (const [id, v] of Object.entries(JSON.parse(readFileSync(f, "utf8")).node)) out.set(`${v.filename.replace(/^src\/app\//, "")}#${v.exportedName}`, { id, workers: Object.keys(v.workers) });
+  return out;
+}
+/**
+ * Llama a una acción de servidor como lo haría el navegador (misma petición que envía React), con la sesión de `request`
+ * (el contexto de un navegador con la sesión abierta). `ruta` es una página donde existe esa acción. Devuelve el estado HTTP,
+ * el destino de la redirección (x-action-redirect), el cuerpo entero y el resultado de la acción ({ ok, error, data… }) si lo hay.
+ */
+export async function llamarAccion(request, accion, args, ruta) {
+  const r = await request.post(BASE + ruta, {
+    headers: { "next-action": accion.id, accept: "text/x-component", "content-type": "text/plain;charset=UTF-8", origin: new URL(BASE).origin },
+    data: JSON.stringify(args), maxRedirects: 0, timeout: 120000,
+  });
+  const cuerpo = await r.text();
+  const fila = cuerpo.split("\n").map((l) => l.replace(/^[0-9a-f]+:/, "")).find((l) => l.startsWith('{"ok":'));
+  let resultado = null;
+  try { resultado = fila ? JSON.parse(fila) : null; } catch { resultado = null; }
+  return { status: r.status(), redirect: r.headers()["x-action-redirect"] ?? null, cuerpo, resultado };
+}

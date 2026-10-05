@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { putFile, readFileBytes } from "@/server/storage";
+import { claveValida, putFile, readFileBytes } from "@/server/storage";
 
 // El SDK de Blob de mentira: se comprueba qué credencial le pasa la app según cómo esté conectado el store
 const llamadas: { fn: string; opts: Record<string, unknown> }[] = [];
@@ -33,5 +33,16 @@ describe("archivos en Vercel Blob", () => {
   it("en Vercel sin Blob conectado falla con un mensaje claro", async () => {
     await expect(putFile("t/negocio/doc.jpg", Buffer.from("x"), "image/jpeg")).rejects.toThrow(/Falta el Blob/);
     expect(llamadas).toEqual([]);
+  });
+});
+
+// La ruta /api/archivos da 404 (nunca un 500) a toda clave que no se pueda servir: la de otro negocio, con «..» o con caracteres raros
+describe("claves de archivo válidas", () => {
+  it("las que genera la app lo son", () => {
+    expect(claveValida("t/4f1d2c3a-0000-4000-8000-000000000001/docs/9a8b7c6d-0000-4000-8000-000000000002/0-abc_DEF-12.jpg")).toBe(true);
+    expect(claveValida("t/4f1d2c3a-0000-4000-8000-000000000001/fotos/9a8b7c6d-0000-4000-8000-000000000002-Zx9.webp")).toBe(true);
+  });
+  it("las que llevan «..», espacios, acentos, comillas u otros caracteres no lo son", () => {
+    for (const k of ["t/x/../y/a.jpg", "t/x/docs/a b.jpg", "t/x/docs/ñ.jpg", "t/x/docs/\"'.jpg", "t/x/docs/a\\b.jpg", "t/x/docs/a%2fb.jpg", "t/x/docs/a\u0000b.jpg", "", "t/x/docs/a?b.jpg", "t/x/docs/a#b.jpg"]) expect(claveValida(k), k).toBe(false);
   });
 });
