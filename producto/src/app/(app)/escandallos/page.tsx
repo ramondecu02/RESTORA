@@ -54,7 +54,7 @@ export default async function Escandallos({ searchParams }: { searchParams: Prom
       <section className="card" data-tour="esc-list">
         <div className="card-h"><h2 className="h3">Carta completa</h2><span className="muted small">Objetivo {ctx.local.fc_objetivo} % · media ponderada {pct(res.fc)}</span></div>
         {rows.length ? <>
-          <div className="tbl-wrap only-wide"><table className="tbl">
+          <div className="tbl-wrap pg-wide"><table className="tbl">
             <thead><tr><th>Plato</th><th className="r">Coste</th><th className="r">PVP</th><th className="r">Food cost</th><th className="r">Margen</th><th className="r">Uds/mes</th><th>Estado</th></tr></thead>
             <tbody>{rows.map((r) => (
               <tr key={r.id}>
@@ -68,7 +68,7 @@ export default async function Escandallos({ searchParams }: { searchParams: Prom
                 <td><span className={`tag ${tagCls(r.est.estado)}`}>{r.est.label}</span></td>
               </tr>))}</tbody>
           </table></div>
-          <div className="list only-narrow">{rows.map((r) => (
+          <div className="list pg-narrow">{rows.map((r) => (
             <Link key={r.id} className="li" href={`/escandallos/${r.id}`}>
               <span className="li-ic">{fotoUrl(r.foto_key) ? <img src={fotoUrl(r.foto_key)!} alt="" /> : <Icon name={r.reventa ? "tag" : "book"} />}</span>
               <span className="li-main"><b>{r.name}</b><small>{r.familia} · coste {r.sinCoste ? "—" : eur(r.coste)} · PVP {eur(r.pvp)}</small></span>

@@ -123,7 +123,7 @@ export function InvTable({ rows: initial, untracked, catalog, cats, local, pedid
         </div>
         {!rows.length ? <div className="empty"><span className="li-ic"><Icon name="cart" /></span><b>Aún no controlas stock</b><p>Añade las referencias que quieras vigilar. Las compras de tus albaranes suman stock solas.</p></div> : null}
         {rows.length ? <>
-          <div className="tbl-wrap only-wide"><table className="tbl">
+          <div className="tbl-wrap pg-wide"><table className="tbl">
             <thead><tr><th>Producto</th><th className="r">Stock</th><th className="r">Consumo/sem</th><th>Cobertura</th><th className="r">Mínimo</th><th>Estado</th><th className="r">A pedir</th><th /></tr></thead>
             <tbody>
               {shown.map((r, i) => {
@@ -145,7 +145,7 @@ export function InvTable({ rows: initial, untracked, catalog, cats, local, pedid
               })}
             </tbody>
           </table></div>
-          <div className="mcard-list only-narrow">
+          <div className="mcard-list pg-narrow">
             {shown.map((r) => (
               <div className="mcard" key={r.id}>
                 <div className="mcard-h"><div><Link className="link" href={`/articulos/${r.id}`}><b>{r.name}</b></Link><div className="xs muted">{r.categoria} · {r.proveedor ?? "Sin proveedor"}</div></div><span className={`tag ${r.est.estado === "crit" ? "tag-bad" : r.est.estado === "warn" ? "tag-warn" : "tag-ok"}`}>{r.est.label}</span></div>

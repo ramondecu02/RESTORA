@@ -6,8 +6,9 @@ import { isUuid, one, withTenant } from "@/server/db";
 import { requireApp, requirePerm, UserError } from "@/server/ctx";
 import { run, type Result } from "@/server/action";
 import { rateLimit } from "@/server/ratelimit";
+import { plural } from "@/lib/format";
 import { setFlash } from "@/server/session";
-import { borrarDocumento, confirmarAlbaran, crearManual, processDocumento, type ConfirmResult } from "@/server/domain/compras";
+import { borrarDocumento, confirmarAlbaran, crearManual, processDocumento, type ConfirmResult, type ImpactoBorrado } from "@/server/domain/compras";
 import type { Draft } from "@/lib/ocr-types";
 
 export async function guardarBorrador(docId: string, draft: Draft): Promise<Result> {
@@ -39,14 +40,32 @@ export async function confirmar(docId: string, draft: Draft, opts: { forzarTotal
   return r.data!;
 }
 
-export async function borrar(docId: string): Promise<Result> {
+/** Lo que cambiaría borrar este albarán (stock, PMP, platos, ventas con coste congelado). No borra nada. */
+export async function impactoBorrado(docId: string): Promise<Result<ImpactoBorrado>> {
+  return run(async () => {
+    const ctx = await requireApp();
+    requirePerm(ctx, "compras");
+    if (!isUuid(docId)) throw new UserError("Documento no válido.");
+    return { ok: true as const, data: await borrarDocumento(ctx, docId, { simular: true }) };
+  });
+}
+
+/** `ventas`: qué hacer con el coste congelado de las ventas ya importadas que usaron este albarán (obligatorio si las hay). */
+export async function borrar(docId: string, ventas?: "dejar" | "recalcular"): Promise<Result> {
+  let hecho: ImpactoBorrado | null = null;
   const r = await run(async () => {
     const ctx = await requireApp();
     requirePerm(ctx, "compras");
     if (!isUuid(docId)) throw new UserError("Documento no válido.");
-    await borrarDocumento(ctx, docId);
+    if (ventas !== undefined && ventas !== "dejar" && ventas !== "recalcular") throw new UserError("Opción no válida.");
+    hecho = await borrarDocumento(ctx, docId, { ventas });
   });
-  if (r.ok) { await setFlash("Albarán borrado. Precios, stock y costes vuelven a como estaban."); redirect("/compras"); }
+  if (r.ok) {
+    await setFlash(hecho && (hecho as ImpactoBorrado).recalculadas
+      ? `Albarán borrado. Precios, stock y costes vuelven a como estaban, y se ha recalculado el coste de ${plural((hecho as ImpactoBorrado).recalculadas, "línea de venta", "líneas de venta")}.`
+      : "Albarán borrado. Precios, stock y costes vuelven a como estaban.");
+    redirect("/compras");
+  }
   return r;
 }
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { Screen } from "@/components/shell/screen";
 import { ComprasNav } from "@/components/subnav";
+import { BorrarDoc } from "./borrar-doc";
 import { BarsH, Delta, LineChart } from "@/components/charts";
 import { all, one, withTenant } from "@/server/db";
 import { requireApp, hasPerm } from "@/server/ctx";
@@ -81,14 +82,17 @@ export default async function Compras({ searchParams }: { searchParams: Promise<
                 {docs.map((d) => {
                   const [label, cls] = STATUS[d.status] ?? [d.status, "tag"];
                   return (
-                    <Link key={d.id} className="li" href={`/compras/${d.id}`}>
-                      <span className={`li-ic ${d.status === "revisar" ? "warn" : d.status === "error" ? "bad" : ""}`}><Icon name={d.status === "leyendo" ? "refresh" : "receipt"} /></span>
-                      <span className="li-main">
-                        <b>{d.proveedor ?? (d.status === "guardado" ? "Sin proveedor" : d.status === "revisar" ? "Proveedor por confirmar" : "Documento subido")}</b>
-                        <small>{d.kind === "factura" ? "Factura" : "Albarán"}{d.numero ? ` ${d.numero}` : ""} · {fecha(d.fecha ?? new Date(d.created_at).toISOString())}{d.lineas ? ` · ${plural(d.lineas, "línea", "líneas")}` : ""}{d.source === "manual" ? " · a mano" : ""}</small>
-                      </span>
-                      <span className="li-end"><b>{eur(d.total)}</b><span className={cls}>{label}</span></span>
-                    </Link>
+                    <div key={d.id} className="li-wrap">
+                      <Link className="li" href={`/compras/${d.id}`}>
+                        <span className={`li-ic ${d.status === "revisar" ? "warn" : d.status === "error" ? "bad" : ""}`}><Icon name={d.status === "leyendo" ? "refresh" : "receipt"} /></span>
+                        <span className="li-main">
+                          <b>{d.proveedor ?? (d.status === "guardado" ? "Sin proveedor" : d.status === "revisar" ? "Proveedor por confirmar" : "Documento subido")}</b>
+                          <small>{d.kind === "factura" ? "Factura" : "Albarán"}{d.numero ? ` ${d.numero}` : ""} · {fecha(d.fecha ?? new Date(d.created_at).toISOString())}{d.lineas ? ` · ${plural(d.lineas, "línea", "líneas")}` : ""}{d.source === "manual" ? " · a mano" : ""}</small>
+                        </span>
+                        <span className="li-end"><b>{eur(d.total)}</b><span className={cls}>{label}</span></span>
+                      </Link>
+                      {canUpload ? <BorrarDoc id={d.id} status={d.status} kind={d.kind} variant="icon" /> : null}
+                    </div>
                   );
                 })}
               </div>

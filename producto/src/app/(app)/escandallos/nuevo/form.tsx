@@ -56,7 +56,7 @@ export function NuevaReceta({ tipoInicial, plantilla, tpls, iva, canPrecios, iaO
       </div>
       <div className="fld"><label htmlFor="nr-n">Nombre</label><input id="nr-n" className="inp" autoFocus value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder={tipo === "elaboracion" ? "Ej.: Salsa brava de la casa" : tipo === "reventa" ? "Ej.: Copa de vino tinto" : "Ej.: Tortilla de patatas"} /></div>
       {tipo !== "elaboracion" ? <div className="fld"><label htmlFor="nr-f">Grupo de la carta</label><input id="nr-f" className="inp" list="nr-fams" value={f.familia} onChange={(e) => setF({ ...f, familia: e.target.value })} /><datalist id="nr-fams">{FAMILIAS.map((x) => <option key={x} value={x} />)}</datalist></div> : null}
-      {tipo === "plato" || tipo === "menu" ? <div className="fld"><label htmlFor="nr-p">Precio en carta, con IVA (opcional)</label><div className="inp-unit"><NumInput id="nr-p" decimals={2} value={f.pvp} disabled={!canPrecios} onValue={(n) => setF({ ...f, pvp: n })} /><span>€</span></div></div> : null}
+      {tipo === "plato" || tipo === "menu" ? <div className="fld"><label htmlFor="nr-p">Precio en carta, con IVA (opcional)</label><div className="inp-sfx"><NumInput id="nr-p" decimals={2} value={f.pvp} disabled={!canPrecios} onValue={(n) => setF({ ...f, pvp: n })} /><span>€</span></div></div> : null}
       {tipo === "reventa" ? <div className="fgrid fgrid-2">
         <div className="fld"><label htmlFor="nr-c">Precio de compra (€ por unidad)</label><NumInput id="nr-c" decimals={4} value={f.coste} disabled={!canPrecios} onValue={(n) => setF({ ...f, coste: n == null ? null : Math.max(0, n) })} /></div>
         <div className="fld"><label htmlFor="nr-m">Margen deseado (%)</label><NumInput id="nr-m" decimals={1} value={f.margen} disabled={!canPrecios} onValue={(n) => setF({ ...f, margen: n == null ? null : Math.min(99, Math.max(0, n)) })} /></div>
@@ -70,7 +70,7 @@ export function NuevaReceta({ tipoInicial, plantilla, tpls, iva, canPrecios, iaO
         <section className="card">
           <div className="card-h"><h2 className="h3">Sugerir ingredientes con IA</h2></div>
           <p className="muted small">Escribe el nombre del plato y la IA propone sus ingredientes y cantidades a partir de tu catálogo. Luego los ajustas en la ficha.</p>
-          <button type="button" className="btn btn-2 btn-sm" disabled={iaBusy || f.name.trim().length < 2} onClick={sugerir}>{iaBusy ? <span className="spin" /> : <Icon name="spark" size={18} />} Sugerir para «{f.name.trim() || "…"}»</button>
+          <button type="button" className="btn btn-2 btn-sm" disabled={iaBusy || f.name.trim().length < 2} onClick={sugerir}>{iaBusy ? <span className="spin" /> : <Icon name="spark" size={18} />} {f.name.trim() ? `Sugerir para «${f.name.trim()}»` : "Sugerir ingredientes"}</button>
           {sug ? (
             <div className="stack-sm" style={{ marginTop: 12 }}>
               <p className="small"><b>{sug.lineas.length} {sug.lineas.length === 1 ? "ingrediente" : "ingredientes"}</b> para {sug.raciones} {sug.raciones === 1 ? "ración" : "raciones"}{sug.pvp != null ? ` · PVP sugerido ${eur(sug.pvp)}` : ""}:</p>
@@ -89,7 +89,7 @@ export function NuevaReceta({ tipoInicial, plantilla, tpls, iva, canPrecios, iaO
         const visibles = filtradas.slice(0, 8);
         return (
           <section className="card">
-            <div className="card-h"><h2 className="h3">Empezar desde una plantilla (opcional)</h2><span className="tag">{tpls.length}</span></div>
+            <div className="card-h card-h-nw"><h2 className="h3">Empezar desde una plantilla <span className="muted">(opcional)</span></h2><span className="tag">{tpls.length}</span></div>
             <p className="muted small">Con ingredientes del catálogo y cantidades orientativas. Los que ya compras llevan tu precio; el resto se completa con tus próximos albaranes.</p>
             <div className="searchbox"><Icon name="search" size={18} /><input className="inp" type="search" value={tplq} onChange={(e) => setTplq(e.target.value)} placeholder="Buscar plato (tortilla, paella, croquetas…)" aria-label="Buscar plantilla" /></div>
             {visibles.length ? <div className="pick-list">{visibles.map((t) => (

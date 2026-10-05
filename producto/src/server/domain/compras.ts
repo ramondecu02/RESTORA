@@ -7,10 +7,11 @@ import { hmac } from "../crypto";
 import { audit } from "../audit";
 import { UserError, type AppCtx } from "../ctx";
 import { getCatalog } from "../queries/catalog";
-import { recomputeCosts } from "./costs";
+import { loadCostContext, recomputeCosts } from "./costs";
 import { aliasDe, aprenderAlias, articuloDesdeCatalogo, crearArticulo, rebuildArticulo } from "./articulos";
 import { buildDraft, draftCheck, matchProveedor, pendientes, prettyName, type ArtRef, type CatRef, type PackMemory, type ProvRef } from "@/lib/draft";
 import { lineaCoste } from "@/lib/pmp";
+import { explode, recetaCost } from "@/lib/costing";
 import { isoDate } from "@/lib/format";
 import type { Draft, Resumen } from "@/lib/ocr-types";
 import type { BaseUnit } from "@/lib/units";
@@ -270,49 +271,156 @@ export async function confirmarAlbaran(ctx: AppCtx, docId: string, input: Draft,
 }
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** Borra un albarán guardado y deshace su efecto en stock, PMP, precios, capa anónima, lo aprendido y costes. */
-export async function borrarDocumento(ctx: AppCtx, docId: string): Promise<void> {
-  const keys = await withTenant(ctx.tenantId, async (c) => {
-    const doc = await one<{ id: string; status: string; local_id: string; aprendido: Aprendido | null }>(c,
-      "select id, status, local_id, aprendido from documentos where id = $1 for update", [docId]);
-    if (!doc || doc.local_id !== ctx.local.id) throw new UserError("Documento no encontrado.");
-    const arts = (await all<{ articulo_id: string }>(c, "select distinct articulo_id from compra_lineas where documento_id = $1 order by 1", [docId])).map((r) => r.articulo_id);
-    const pairs = await all<{ articulo_id: string; proveedor_id: string }>(c, "select articulo_id, proveedor_id from articulo_proveedor where documento_id = $1", [docId]);
-    const files = (await all<{ storage_key: string }>(c, "select storage_key from documento_archivos where documento_id = $1", [docId])).map((r) => r.storage_key);
-    // Albaranes guardados después con esos artículos: su subida o bajada de precio se midió quizá contra este
-    const despues = arts.length ? await all<{ id: string; articulo_id: string }>(c, `select distinct cl.documento_id as id, cl.articulo_id
-      from compra_lineas cl join documentos d on d.id = cl.documento_id
-      where cl.articulo_id = any($1::uuid[]) and d.status = 'guardado' and d.saved_at > (select saved_at from documentos where id = $2)`, [arts, docId]) : [];
-    // Sus precios salen de la capa anónima (las observaciones anteriores a la referencia se guardaron en la misma transacción que el albarán)
-    await c.query(`delete from bench_price_obs where documento_ref = $1
-      or (documento_ref is null and contributor = $2 and created_at = (select saved_at from documentos where id = $3))`,
-      [benchRef(ctx.tenantId, docId), hmac("bench:" + ctx.tenantId), docId]);
-    await c.query("delete from stock_movimientos where ref_id = $1", [docId]);
-    await c.query("update articulo_proveedor set documento_id = null where documento_id = $1", [docId]);
-    await c.query("delete from documentos where id = $1", [docId]);
-    for (const p of pairs) {
-      const last = await one<{ unidad_compra: string; factor: number; precio: number; coste_unit: number; fecha: string; documento_id: string }>(c, `
-        select cl.unidad_compra, cl.factor, cl.precio, cl.coste_unit, d.fecha, d.id as documento_id from compra_lineas cl join documentos d on d.id = cl.documento_id
-        where cl.articulo_id = $1 and d.proveedor_id = $2 and d.status = 'guardado' order by d.fecha desc, d.saved_at desc limit 1`, [p.articulo_id, p.proveedor_id]);
-      if (last) await c.query(`update articulo_proveedor set unidad_compra = $3, factor = $4, precio = $5, precio_unit = $6, fecha = $7, documento_id = $8
-        where articulo_id = $1 and proveedor_id = $2`, [p.articulo_id, p.proveedor_id, last.unidad_compra, last.factor, last.precio, last.coste_unit, last.fecha, last.documento_id]);
-      else {
-        // Ya no queda ningún albarán de ese proveedor: vuelve la cotización que había antes, si el albarán la sustituyó
-        const r = await c.query(`update articulo_proveedor set unidad_compra = coalesce(cotizacion_previa->>'unidad_compra', ''),
-            factor = coalesce((cotizacion_previa->>'factor')::numeric, 1), precio = (cotizacion_previa->>'precio')::numeric,
-            precio_unit = (cotizacion_previa->>'precio_unit')::numeric, fecha = (cotizacion_previa->>'fecha')::date, documento_id = null, origen = 'cotizacion', cotizacion_previa = null
-          where articulo_id = $1 and proveedor_id = $2 and origen = 'albaran' and cotizacion_previa is not null`, [p.articulo_id, p.proveedor_id]);
-        if (!r.rowCount) await c.query("delete from articulo_proveedor where articulo_id = $1 and proveedor_id = $2 and origen = 'albaran'", [p.articulo_id, p.proveedor_id]);
+/** Lo que borrar un albarán cambia, medido con el mismo código que lo borra (simulado, sin guardar nada). */
+export type ImpactoBorrado = {
+  doc: { id: string; status: string; kind: string; proveedor: string | null; numero: string | null; fecha: string | null; total: number | null; lineas: number };
+  /** Artículos del albarán: lo que valen hoy y lo que valdrían sin él. */
+  articulos: { id: string; name: string; unit: string; stock: [number, number]; pmp: [number | null, number | null]; ultimo: [number | null, number | null] }[];
+  /** Platos con escandallo cuyo coste cambia. `incompleto`: sin este albarán se quedan sin precio en algún ingrediente. */
+  platos: { id: string; name: string; antes: number | null; ahora: number | null; incompleto: boolean }[];
+  /** Subidas o bajadas de precio detectadas con este albarán, que desaparecen. */
+  avisos: number;
+  /** Albaranes guardados después con alguno de sus artículos: su comparación de precio se rehace. */
+  posteriores: number;
+  /** Importaciones de ventas hechas después de guardar este albarán con platos cuyo coste cambia sin él: su coste congelado se calculó con estos precios. */
+  ventas: { id: string; filename: string; desde: string; hasta: string; importadoEl: string; lineas: number; unidades: number; coste: number; efecto: number; platos: string[] }[];
+  /** Líneas de venta recalculadas (solo si se pidió). */
+  recalculadas: number;
+};
+export type BorrarOpts = {
+  /** Calcula y devuelve el impacto sin borrar nada. */
+  simular?: boolean;
+  /** Qué hacer con el coste congelado de las ventas ya importadas que usaron este albarán. Obligatorio si las hay. */
+  ventas?: "dejar" | "recalcular";
+};
+/** Para deshacer la transacción al simular: lleva el resultado hasta fuera. */
+class Simulacion extends Error { constructor(readonly impacto: ImpactoBorrado) { super("simulación"); } }
+const cambia = (a: number | null, b: number | null) => (a == null) !== (b == null) || (a != null && b != null && Math.abs(a - b) > 0.0005);
+
+/** Coste por ración de cada receta del local y si usa alguno de los artículos dados. */
+async function costesRecetas(c: Db, localId: string, arts: Set<string>) {
+  const { recetas, ctx } = await loadCostContext(c, localId);
+  const out = new Map<string, { name: string; tipo: string; coste: number | null; faltan: number; usa: boolean }>();
+  for (const r of recetas) {
+    const rc = recetaCost(r.id, ctx);
+    out.set(r.id, { name: r.name, tipo: r.tipo, coste: rc.cycle ? null : rc.perUnit, faltan: rc.missing, usa: [...explode(r.id, ctx).keys()].some((a) => arts.has(a)) });
+  }
+  return out;
+}
+
+/**
+ * Borra un albarán (o descarta un documento sin guardar) y deshace su efecto: stock, PMP, último precio, avisos de precio,
+ * capa anónima, lo que aprendió y el coste de los platos. Con `simular` solo mide ese efecto. Si hay ventas ya importadas
+ * cuyo coste congelado se calculó con estos precios, hay que decir qué hacer con ellas (dejarlas o recalcularlas).
+ */
+export async function borrarDocumento(ctx: AppCtx, docId: string, opts: BorrarOpts = {}): Promise<ImpactoBorrado> {
+  let hecho: { impacto: ImpactoBorrado; keys: string[] };
+  try {
+    hecho = await withTenant(ctx.tenantId, async (c) => {
+      const doc = await one<{ id: string; status: string; kind: string; local_id: string; aprendido: Aprendido | null; numero: string | null; fecha: string | null; total: number | null; saved_at: Date | null; proveedor: string | null }>(c,
+        `select d.id, d.status, d.kind, d.local_id, d.aprendido, d.numero, d.fecha, d.total, d.saved_at, p.name as proveedor
+         from documentos d left join proveedores p on p.id = d.proveedor_id where d.id = $1 for update of d`, [docId]);
+      if (!doc || doc.local_id !== ctx.local.id) throw new UserError("Documento no encontrado.");
+      const guardado = doc.status === "guardado";
+      const arts = (await all<{ articulo_id: string }>(c, "select distinct articulo_id from compra_lineas where documento_id = $1 order by 1", [docId])).map((r) => r.articulo_id);
+      const pairs = await all<{ articulo_id: string; proveedor_id: string }>(c, "select articulo_id, proveedor_id from articulo_proveedor where documento_id = $1", [docId]);
+      const files = (await all<{ storage_key: string }>(c, "select storage_key from documento_archivos where documento_id = $1", [docId])).map((r) => r.storage_key);
+      const nLineas = (await one<{ n: number }>(c, "select count(*)::int as n from compra_lineas where documento_id = $1", [docId]))?.n ?? 0;
+      const leer = (ids: string[]) => ids.length ? all<{ id: string; name: string; unit: string; stock: number; pmp: number | null; last_price: number | null }>(c,
+        "select id, name, unit, stock, pmp, last_price from articulos where id = any($1::uuid[]) order by name", [ids]) : Promise.resolve([]);
+      // Cómo está todo antes de tocar nada
+      const antesArts = guardado ? await leer(arts) : [];
+      const antesRec = guardado && arts.length ? await costesRecetas(c, ctx.local.id, new Set(arts)) : new Map<string, { name: string; tipo: string; coste: number | null; faltan: number; usa: boolean }>();
+      const avisos = guardado ? (await one<{ n: number }>(c, "select count(*)::int as n from precio_eventos where documento_id = $1", [docId]))?.n ?? 0 : 0;
+      // Albaranes guardados después con esos artículos: su subida o bajada de precio se midió quizá contra este
+      const despues = arts.length ? await all<{ id: string; articulo_id: string }>(c, `select distinct cl.documento_id as id, cl.articulo_id
+        from compra_lineas cl join documentos d on d.id = cl.documento_id
+        where cl.articulo_id = any($1::uuid[]) and d.status = 'guardado' and d.saved_at > (select saved_at from documentos where id = $2)`, [arts, docId]) : [];
+      // Sus precios salen de la capa anónima (las observaciones anteriores a la referencia se guardaron en la misma transacción que el albarán)
+      await c.query(`delete from bench_price_obs where documento_ref = $1
+        or (documento_ref is null and contributor = $2 and created_at = (select saved_at from documentos where id = $3))`,
+        [benchRef(ctx.tenantId, docId), hmac("bench:" + ctx.tenantId), docId]);
+      await c.query("delete from stock_movimientos where ref_id = $1", [docId]);
+      await c.query("update articulo_proveedor set documento_id = null where documento_id = $1", [docId]);
+      await c.query("delete from documentos where id = $1", [docId]);
+      for (const p of pairs) {
+        const last = await one<{ unidad_compra: string; factor: number; precio: number; coste_unit: number; fecha: string; documento_id: string }>(c, `
+          select cl.unidad_compra, cl.factor, cl.precio, cl.coste_unit, d.fecha, d.id as documento_id from compra_lineas cl join documentos d on d.id = cl.documento_id
+          where cl.articulo_id = $1 and d.proveedor_id = $2 and d.status = 'guardado' order by d.fecha desc, d.saved_at desc limit 1`, [p.articulo_id, p.proveedor_id]);
+        if (last) await c.query(`update articulo_proveedor set unidad_compra = $3, factor = $4, precio = $5, precio_unit = $6, fecha = $7, documento_id = $8
+          where articulo_id = $1 and proveedor_id = $2`, [p.articulo_id, p.proveedor_id, last.unidad_compra, last.factor, last.precio, last.coste_unit, last.fecha, last.documento_id]);
+        else {
+          // Ya no queda ningún albarán de ese proveedor: vuelve la cotización que había antes, si el albarán la sustituyó
+          const r = await c.query(`update articulo_proveedor set unidad_compra = coalesce(cotizacion_previa->>'unidad_compra', ''),
+              factor = coalesce((cotizacion_previa->>'factor')::numeric, 1), precio = (cotizacion_previa->>'precio')::numeric,
+              precio_unit = (cotizacion_previa->>'precio_unit')::numeric, fecha = (cotizacion_previa->>'fecha')::date, documento_id = null, origen = 'cotizacion', cotizacion_previa = null
+            where articulo_id = $1 and proveedor_id = $2 and origen = 'albaran' and cotizacion_previa is not null`, [p.articulo_id, p.proveedor_id]);
+          if (!r.rowCount) await c.query("delete from articulo_proveedor where articulo_id = $1 and proveedor_id = $2 and origen = 'albaran'", [p.articulo_id, p.proveedor_id]);
+        }
       }
-    }
-    await olvidar(c, doc.aprendido);
-    for (const a of arts) await rebuildArticulo(c, a);
-    for (const a of arts) await rehacerEventos(c, ctx.tenantId, a, despues.filter((x) => x.articulo_id === a).map((x) => x.id));
-    if (doc.status === "guardado") await recomputeCosts(c, ctx.local.id);
-    await audit(c, ctx.tenantId, ctx.userId, "borrar", "documento", docId, { status: doc.status });
-    return files;
-  });
-  for (const k of keys) await deleteFile(k);
+      await olvidar(c, doc.aprendido);
+      for (const a of arts) await rebuildArticulo(c, a);
+      for (const a of arts) await rehacerEventos(c, ctx.tenantId, a, despues.filter((x) => x.articulo_id === a).map((x) => x.id));
+      if (guardado) await recomputeCosts(c, ctx.local.id);
+
+      // Cómo queda
+      const despArts = guardado ? await leer(arts) : [];
+      const despRec = guardado && arts.length ? await costesRecetas(c, ctx.local.id, new Set(arts)) : antesRec;
+      const articulos: ImpactoBorrado["articulos"] = antesArts.map((a) => {
+        const d = despArts.find((x) => x.id === a.id);
+        return { id: a.id, name: a.name, unit: a.unit, stock: [a.stock, d?.stock ?? a.stock], pmp: [a.pmp, d?.pmp ?? null], ultimo: [a.last_price, d?.last_price ?? null] };
+      });
+      const platos: ImpactoBorrado["platos"] = [];
+      const cambiadas = new Map<string, number>();
+      for (const [id, d] of despRec) {
+        const a = antesRec.get(id);
+        if (!a || !d.usa || !cambia(a.coste, d.coste)) continue;
+        if (d.coste != null) cambiadas.set(id, d.coste);
+        if (d.tipo !== "elaboracion") platos.push({ id, name: d.name, antes: a.coste, ahora: d.coste, incompleto: d.faltan > a.faltan });
+      }
+      platos.sort((x, y) => Math.abs((y.ahora ?? 0) - (y.antes ?? 0)) - Math.abs((x.ahora ?? 0) - (x.antes ?? 0)));
+      // Ventas importadas después de guardar este albarán: su coste congelado usó estos precios
+      const vrows = guardado && doc.saved_at && cambiadas.size ? await all<{ id: string; filename: string; desde: string; hasta: string; importado: string; receta_id: string; lineas: number; unidades: number; coste: number }>(c, `
+        select vi.id, vi.filename, vi.desde, vi.hasta, vi.created_at::text as importado, vl.receta_id, count(*)::int as lineas,
+          coalesce(sum(vl.unidades), 0) as unidades, coalesce(sum(vl.coste_total), 0) as coste
+        from ventas_importes vi join ventas_lineas vl on vl.import_id = vi.id
+        where vi.local_id = $1 and vi.created_at > $2 and vl.receta_id = any($3::uuid[])
+        group by vi.id, vi.filename, vi.desde, vi.hasta, vi.created_at, vl.receta_id order by vi.created_at`, [ctx.local.id, doc.saved_at, [...cambiadas.keys()]]) : [];
+      const porImp = new Map<string, ImpactoBorrado["ventas"][number]>();
+      for (const v of vrows) {
+        const x = porImp.get(v.id) ?? { id: v.id, filename: v.filename, desde: v.desde, hasta: v.hasta, importadoEl: v.importado, lineas: 0, unidades: 0, coste: 0, efecto: 0, platos: [] };
+        x.lineas += v.lineas; x.unidades += v.unidades; x.coste += v.coste;
+        x.efecto += v.unidades * ((despRec.get(v.receta_id)?.coste ?? 0) - (antesRec.get(v.receta_id)?.coste ?? 0));
+        const n = despRec.get(v.receta_id)?.name; if (n && !x.platos.includes(n)) x.platos.push(n);
+        porImp.set(v.id, x);
+      }
+      const ventas = [...porImp.values()].map((x) => ({ ...x, coste: Math.round(x.coste * 100) / 100, efecto: Math.round(x.efecto * 100) / 100, unidades: Math.round(x.unidades * 100) / 100 }));
+      if (ventas.length && !opts.ventas && !opts.simular) throw new UserError("Este albarán afecta al coste de ventas que ya importaste. Revisa el resumen y elige qué hacer con ellas.");
+      let recalculadas = 0;
+      if (opts.ventas === "recalcular" && ventas.length) {
+        const rids = [...cambiadas.keys()];
+        const r = await c.query(`update ventas_lineas vl set coste_unit = x.cu, coste_total = x.cu * vl.unidades
+          from unnest($1::uuid[], $2::numeric[]) as x(rid, cu) where vl.receta_id = x.rid and vl.import_id = any($3::uuid[])`,
+          [rids, rids.map((id) => cambiadas.get(id)), ventas.map((v) => v.id)]);
+        recalculadas = r.rowCount ?? 0;
+      }
+      const impacto: ImpactoBorrado = {
+        doc: { id: doc.id, status: doc.status, kind: doc.kind, proveedor: doc.proveedor, numero: doc.numero, fecha: doc.fecha, total: doc.total, lineas: nLineas },
+        articulos, platos, avisos, posteriores: new Set(despues.map((x) => x.id)).size, ventas, recalculadas,
+      };
+      await audit(c, ctx.tenantId, ctx.userId, "borrar", "documento", docId, {
+        status: doc.status, proveedor: doc.proveedor, numero: doc.numero, fecha: doc.fecha, total: doc.total, lineas: nLineas,
+        platos: platos.length, ventasAfectadas: ventas.length, ventas: opts.ventas ?? null, recalculadas,
+      });
+      if (opts.simular) throw new Simulacion(impacto);
+      return { impacto, keys: files };
+    });
+  } catch (e) {
+    if (e instanceof Simulacion) return e.impacto;
+    throw e;
+  }
+  for (const k of hecho.keys) await deleteFile(k);
+  return hecho.impacto;
 }
 
 /** Deshace lo que aprendió un albarán borrado, salvo que otro albarán guardado lo respalde (la misma línea en el mismo artículo). */

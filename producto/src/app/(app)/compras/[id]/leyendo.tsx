@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/icons";
 import { TaskScreen } from "@/components/shell/task-screen";
+import { BorrarDoc } from "../borrar-doc";
 
 const STEPS = ["Documento recibido", "Leyendo proveedor, fecha y líneas", "Contrastando el IVA con el desglose", "Emparejando con tus artículos", "Comprobando que los totales cuadran"];
 
@@ -49,6 +50,7 @@ export function Leyendo({ id, name, pages, thumb, kind }: { id: string; name: st
           ))}
         </ol>
         <p className="muted">Suele tardar entre 10 y 30 segundos. Puedes seguir con otra cosa: te avisamos en Hoy cuando esté listo para revisar.</p>
+        <BorrarDoc id={id} status="leyendo" kind={kind} variant="link" label="Cancelar y descartar" />
       </div>
     </TaskScreen>
   );

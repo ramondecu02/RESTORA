@@ -284,7 +284,7 @@ export function Validacion({ docId, initial, files, arts, catalog, cats, provs, 
 
   return (
     <TaskScreen title={manual ? "Apunta la compra" : "Revisa el albarán"} sub={d.proveedor.nombre || d.proveedor.nombreLeido || undefined} back="/compras" foot={foot}
-      actions={files.length ? <button type="button" className="btn btn-2 btn-xs only-narrow" onClick={() => setShowDoc(true)}>Ver original</button> : undefined}>
+      actions={files.length ? <button type="button" className="btn btn-2 btn-xs pg-narrow" onClick={() => setShowDoc(true)}>Ver original</button> : undefined}>
       <div className={files.length ? "val-grid" : "stack"}>
         {files.length ? <aside className="docpane" aria-label="Documento original"><div className="docpane-h"><b>Original</b><span className="muted">{files[0].name}</span></div>{docPane}</aside> : null}
         <div className="val-col">{warnings}{head}{lines}</div>

@@ -11,6 +11,7 @@ const suites = [
   ["Aislamiento entre negocios (RLS)", "rls.mjs"],
   ["Prueba gratuita y bloqueo", "plan.mjs"],
   ["Calidad de la lectura (descuento, portes, dudas)", "calidad.mjs"],
+  ["Borrar albaranes (impacto, ventas con coste congelado)", "borrado.mjs"],
 ];
 let failed = 0;
 for (const [name, file] of suites) {

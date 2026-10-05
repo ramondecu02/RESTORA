@@ -176,7 +176,7 @@ export function Ficha({ id, tipo, reventa, initial, fotoUrl, arts, recetas, cata
       <div className="er" key={l.key}>
         <div className="er-n">
           <b>{name}{sub ? <span className="tag tag-line">{sub.tipo === "elaboracion" ? "Elaboración" : "Plato"}</span> : null}{nuevo ? <span className="tag tag-line">Nuevo</span> : null}</b>
-          <small>{art ? (lc?.unitCost != null ? `${eur(lc.unitCost)}/${art.unit} neto${(pr?.rend ?? art.rend) < 100 ? ` · aprovechable ${qty(pr?.rend ?? art.rend)} %` : ""}` : nuevo ? "Se añadirá a tus artículos al aceptar. Sin precio todavía: pónselo aquí o sube un albarán." : "Sin precio: sube un albarán que lo incluya o pon un precio a mano")
+          <small>{art ? (lc?.unitCost != null ? <><span>{eur(lc.unitCost)}/{art.unit} neto</span>{(pr?.rend ?? art.rend) < 100 ? <span> · aprovechable {qty(pr?.rend ?? art.rend)} %</span> : null}</> : nuevo ? "Se añadirá a tus artículos al aceptar. Sin precio todavía: pónselo aquí o sube un albarán." : "Sin precio: sube un albarán que lo incluya o pon un precio a mano")
             : sub ? `${eur(subC?.perUnit)}/${sub.tipo === "elaboracion" ? sub.rindeUnit : "ración"}` : ""}</small>
           {art ? <button type="button" className="er-toggle" aria-expanded={!!open[l.key]} onClick={() => setOpen((o) => ({ ...o, [l.key]: !o[l.key] }))}>{open[l.key] ? "Ocultar" : "Precio y merma"} <Icon name="chevD" size={16} /></button> : null}
           {sub ? <button type="button" className="er-toggle" aria-expanded={!!open[l.key]} onClick={() => setOpen((o) => ({ ...o, [l.key]: !o[l.key] }))}>{open[l.key] ? "Ocultar" : "Ver"} su receta <Icon name="chevD" size={16} /></button> : null}
@@ -279,7 +279,7 @@ export function Ficha({ id, tipo, reventa, initial, fotoUrl, arts, recetas, cata
 
           <section className="card" aria-labelledby="h-ing">
             <div className="card-h"><h2 className="h3" id="h-ing">{reventa ? "Sale de este artículo (opcional)" : tipo === "menu" ? "Platos del menú" : "Ingredientes"}</h2><span className="hint">{reventa ? "Ej.: 0,2 L de cerveza de barril por caña" : "Precios de tus albaranes"}</span></div>
-            <div className="ers">{d.lineas.length ? d.lineas.map(lineRow) : <p className="muted">{reventa ? "Si lo enlazas a un artículo, el coste se actualiza solo con cada albarán." : "Añade el primer ingrediente."}</p>}</div>
+            <div className="ers er-box">{d.lineas.length ? d.lineas.map(lineRow) : <p className="muted">{reventa ? "Si lo enlazas a un artículo, el coste se actualiza solo con cada albarán." : "Añade el primer ingrediente."}</p>}</div>
             {cNow.missing ? <p className="ferr">{plural(cNow.missing, "ingrediente sin precio", "ingredientes sin precio")}: el coste está incompleto.</p> : null}
             <button type="button" className="linkbtn" onClick={() => setPicker(true)} disabled={pending}><Icon name="plus" size={18} /> Añadir {tipo === "menu" ? "plato, elaboración o artículo" : "ingrediente o elaboración"}</button>
           </section>
@@ -306,7 +306,7 @@ export function Ficha({ id, tipo, reventa, initial, fotoUrl, arts, recetas, cata
                 <div className="pills pills-5" role="radiogroup" aria-labelledby="l-fc">{[25, 28, 30, 33, 35].map((v) => (
                   <button key={v} type="button" role="radio" aria-checked={fcObj === v} className={`pill ${fcObj === v ? "is-on" : ""}`} disabled={!canPrecios} onClick={() => set("fcObjetivo", v === fcLocal ? null : v)}>{v} %</button>))}</div></div> : null}
               {!reventa ? <div className="pvp"><span className="eyebrow">PVP para un food cost del {qty(fcObj, 1)} %</span><b>{eur(obj.gross)}</b><small>{eur(obj.net)} + IVA {iva} %</small></div> : null}
-              {!reventa ? <div className="fld"><label htmlFor="r-pvp">Tu precio en carta, con IVA</label><div className="inp-unit"><NumInput id="r-pvp" decimals={2} value={d.pvp} disabled={!canPrecios} onValue={(n) => set("pvp", n)} placeholder="0,00" /><span>€</span></div>
+              {!reventa ? <div className="fld"><label htmlFor="r-pvp">Tu precio en carta, con IVA</label><div className="inp-sfx"><NumInput id="r-pvp" decimals={2} value={d.pvp} disabled={!canPrecios} onValue={(n) => set("pvp", n)} placeholder="0,00" /><span>€</span></div>
                 {!canPrecios ? <p className="hint">Tu rol no cambia precios de carta.</p> : null}</div> : null}
               <div className={`fcr fcr-${est.estado === "none" ? "none" : est.estado === "crit" ? "bad" : est.estado}`}>
                 <Icon name={est.estado === "ok" ? "check" : est.estado === "none" ? "info" : "alert"} />

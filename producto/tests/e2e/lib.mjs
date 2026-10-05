@@ -81,7 +81,7 @@ export async function signup(page, { email, nombre = "Marta Pujol", negocio = "C
   await page.waitForURL("**/alta/proveedores");
   await page.getByRole("button", { name: "Ir a mi cocina" }).click();
   await page.waitForURL("**/hoy**");
-  for (let i = 0; i < 4; i++) { const n = page.locator(".tour-next"); try { await n.waitFor({ timeout: 1500 }); await n.click(); } catch { break; } }
+  for (let i = 0; i < 4; i++) { const n = page.locator(".tour-next"); try { await n.waitFor({ timeout: 3000 }); await n.click(); } catch { break; } }
 }
 /** Carga los datos de ejemplo desde Cuenta. */
 export async function cargarDemo(page) {

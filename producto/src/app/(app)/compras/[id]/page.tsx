@@ -13,7 +13,7 @@ import type { BaseUnit } from "@/lib/units";
 import { Leyendo } from "./leyendo";
 import { ErrorDoc } from "./error-doc";
 import { Validacion } from "./validacion";
-import { BorrarAlbaran } from "./borrar";
+import { BorrarDoc } from "../borrar-doc";
 
 // «Volver a leer» se ejecuta con el límite de esta página: la lectura con IA puede tardar varios minutos
 export const maxDuration = 300;
@@ -110,6 +110,7 @@ export default async function DocPage({ params, searchParams }: { params: Promis
             <div className="saved-h"><h2>{title} guardado</h2><p className="muted">{doc.proveedor} · {fecha(doc.fecha)} · {plural(det.lineas.length, "línea", "líneas")} · {eur(doc.total)}</p></div>
             {res?.proveedorNuevo ? <div className="note note-ok"><Icon name="truck" /><p>{doc.proveedor} se ha añadido a tus proveedores.</p></div> : null}
             {res?.nuevos.length ? <div className="note note-ok"><Icon name="box" /><p>{plural(res.nuevos.length, "artículo nuevo", "artículos nuevos")} en tu lista: {lista(res.nuevos.map((n) => n.name), 4)}.</p></div> : null}
+            {hasPerm(ctx, "compras") ? <BorrarDoc id={doc.id} status={doc.status} kind={doc.kind} variant="link" label={`¿Hay algo mal? Borrar este ${title.toLowerCase()}`} /> : null}
           </div>
           <div className="saved-ins stack">
             {subidas.length ? (
@@ -173,12 +174,12 @@ export default async function DocPage({ params, searchParams }: { params: Promis
 
   return (
     <Screen title={`${title} ${doc.numero ?? ""}`.trim()} sub={`${doc.proveedor ?? "Sin proveedor"} · ${fecha(doc.fecha, { day: "numeric", month: "long", year: "numeric" })}`} back="/compras"
-      actions={hasPerm(ctx, "compras") ? <span className="only-wide"><BorrarAlbaran id={doc.id} label={title.toLowerCase()} /></span> : undefined}>
+      actions={hasPerm(ctx, "compras") ? <span className="only-wide"><BorrarDoc id={doc.id} status={doc.status} kind={doc.kind} /></span> : undefined}>
       <div className="list-grid">
         <div className="stack">
           <section className="card">
             <div className="card-h"><h2 className="h3">Líneas</h2><span className="tag">{det.lineas.length}</span></div>
-            <div className="tbl-wrap only-wide"><table className="tbl">
+            <div className="tbl-wrap pg-wide"><table className="tbl">
               <thead><tr><th>Producto</th><th className="r">Cantidad</th><th className="r">Precio</th><th className="r">Coste neto</th><th className="r">Variación</th><th className="r">IVA</th><th className="r">Importe</th></tr></thead>
               <tbody>{det.lineas.map((l) => (
                 <tr key={l.idx}>
@@ -191,14 +192,14 @@ export default async function DocPage({ params, searchParams }: { params: Promis
                   <td className="r"><b>{eur(l.importe)}</b></td>
                 </tr>))}</tbody>
             </table></div>
-            <div className="list only-narrow">{det.lineas.map((l) => (
+            <div className="list pg-narrow">{det.lineas.map((l) => (
               <Link key={l.idx} className="li" href={`/articulos/${l.articulo_id}`}>
                 <span className="li-main"><b>{l.name}</b><small>{qty(l.cantidad)} {l.unidad_compra} × {eur(l.precio)} · {eur(l.coste_unit)}/{l.unit}</small></span>
                 <span className="li-end"><b>{eur(l.importe)}</b>{l.variacion != null ? <span className={`tag ${l.variacion > 0 ? "tag-bad" : "tag-ok"}`}>{l.variacion > 0 ? "+" : "−"}{pct(Math.abs(l.variacion))}</span> : null}</span>
               </Link>))}</div>
             {ignored.length ? <p className="hint">Además: {ignored.map((l) => `${l.texto} (${eur(l.importe)})`).join(", ")} · no son productos, solo cuentan para el total.</p> : null}
           </section>
-          <div className="only-narrow">{hasPerm(ctx, "compras") ? <BorrarAlbaran id={doc.id} label={title.toLowerCase()} /> : null}</div>
+          <div className="only-narrow">{hasPerm(ctx, "compras") ? <BorrarDoc id={doc.id} status={doc.status} kind={doc.kind} /> : null}</div>
         </div>
         <div className="stack">
           <section className="card">

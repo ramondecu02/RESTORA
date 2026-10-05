@@ -86,7 +86,12 @@ await step("compras: borrar un albarán revierte el stock", async () => {
   const s0 = (await art(ln.name)).stock;
   await page.goto(BASE + "/compras/" + doc.id);
   await page.getByRole("button", { name: /Borrar albarán/ }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Borrar" }).click();
+  const dlg = page.getByRole("dialog");
+  // El servidor calcula primero qué cambia; si hay ventas ya calculadas con esos precios, hay que elegir qué hacer con ellas
+  await dlg.getByText(/Calculando qué cambia/).waitFor({ state: "detached", timeout: 20000 });
+  const dejar = dlg.getByRole("radio", { name: /Dejarlo como está/ });
+  if (await dejar.count()) await dejar.click();
+  await dlg.getByRole("button", { name: /^Borrar albarán$/ }).click();
   await until("select count(*)::int as n from documentos where id = $1", [doc.id], (r) => r[0].n === 0);
   const s1 = (await art(ln.name)).stock;
   if (Math.abs(s0 - ln.q - s1) > 0.001) throw new Error(`Stock de ${ln.name}: ${s0} − ${ln.q} ≠ ${s1}`);

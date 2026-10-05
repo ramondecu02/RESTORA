@@ -20,7 +20,7 @@ const subir = async (page, nombre) => {
   await page.getByRole("button", { name: /Leer albarán · 1 página/ }).click();
   await page.waitForURL(/\/compras\/[0-9a-f-]{36}$/);
   await page.getByRole("heading", { name: "Revisa el albarán" }).waitFor({ timeout: 40000 });
-  for (let i = 0; i < 4; i++) { const n = page.locator(".tour-next"); try { await n.waitFor({ timeout: 1500 }); await n.click(); } catch { break; } }
+  for (let i = 0; i < 4; i++) { const n = page.locator(".tour-next"); try { await n.waitFor({ timeout: 3000 }); await n.click(); } catch { break; } }
 };
 const txt = (loc) => loc.innerText().then((t) => t.replace(/\s+/g, " ").trim());
 
@@ -37,7 +37,7 @@ try {
       await page.getByLabel("Contraseña", { exact: true }).fill("una-clave-segura-2026");
       await page.getByRole("button", { name: "Entrar" }).click();
       await page.waitForURL("**/hoy**");
-      for (let i = 0; i < 4; i++) { const n = page.locator(".tour-next"); try { await n.waitFor({ timeout: 1500 }); await n.click(); } catch { break; } }
+      for (let i = 0; i < 4; i++) { const n = page.locator(".tour-next"); try { await n.waitFor({ timeout: 3000 }); await n.click(); } catch { break; } }
     }
 
     await step(page, `${tag} descuento general`, async () => {
