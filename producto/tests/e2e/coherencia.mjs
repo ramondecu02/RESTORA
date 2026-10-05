@@ -41,6 +41,24 @@ await step("avisos de precio: menú, Avisos, Compras y Proveedores cuentan lo mi
   igual(0, ["menú", delMenu], ["Avisos abiertos", avisos], ["Compras", compras], ["Proveedores", prov]);
 });
 
+await step("cerrar un aviso baja la cuenta en el menú, Avisos, Compras y Proveedores a la vez", async () => {
+  await ir("/hoy/avisos"); const antes = await ficha("Avisos abiertos");
+  await page.getByRole("button", { name: /Ya lo he resuelto/ }).first().click();
+  await page.locator(".toast", { hasText: "Aviso resuelto" }).waitFor({ timeout: 8000 });
+  await page.waitForTimeout(1300);
+  const avisos = await ficha("Avisos abiertos"); const delMenu = await menu("/hoy/avisos");
+  await ir("/compras"); const compras = await ficha("Avisos de precio");
+  await ir("/proveedores"); const prov = await ficha("Avisos de precio");
+  igual(0, ["menú", delMenu], ["Avisos abiertos", avisos], ["Compras", compras], ["Proveedores", prov]);
+  if (avisos !== antes - 1) throw new Error(`debería bajar de ${antes} a ${antes - 1} y está en ${avisos}`);
+  // Se deja como estaba para los pasos siguientes
+  await ir("/hoy/avisos");
+  await page.getByRole("button", { name: /^Resueltos e ignorados/ }).click();
+  await page.getByRole("button", { name: /^Reabrir el aviso/ }).first().click();
+  await page.waitForTimeout(1300);
+  if ((await ficha("Avisos abiertos")) !== antes) throw new Error("no se ha podido reabrir");
+});
+
 await step("platos fuera de objetivo: menú, Escandallos y Avisos cuentan lo mismo", async () => {
   await ir("/escandallos"); const esc = await ficha("Fuera de objetivo"); const delMenu = await menu("/escandallos");
   await ir("/hoy/avisos"); const av = await ficha("Platos fuera de objetivo");

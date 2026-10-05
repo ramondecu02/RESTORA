@@ -25,7 +25,12 @@ async function negocio(tag) {
   await page.goto(BASE + "/carta/subir");
   await page.getByRole("button", { name: /Probar con una carta de ejemplo/ }).click();
   await page.waitForURL(/\/carta\/subir\/[0-9a-f-]{36}/, { timeout: 30000 });
+  // Un aviso de precio resuelto (avisos_estado)
+  await page.goto(BASE + "/hoy/avisos");
+  await page.getByRole("button", { name: /Ya lo he resuelto/ }).first().click();
+  await page.waitForTimeout(800);
   const [t] = await sql("select m.org_id as id from memberships m join users u on u.id = m.user_id where lower(u.email) = lower($1)", [email]);
+  if (!(await sql("select 1 from avisos_estado where tenant_id = $1", [t.id])).length) throw new Error(`no se ha guardado el aviso resuelto del negocio ${tag}`);
   console.log(`· negocio ${tag} creado (${t.id})`);
   return { id: t.id, ctx, page };
 }

@@ -1350,3 +1350,9 @@ a, button, summary, label, select, input, textarea, [role="button"], [role="radi
 .subnav { overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
 .subnav::-webkit-scrollbar { display: none; }
 .subnav > a { flex: 1 0 auto; min-width: auto; padding: 0 6px; overflow: visible; text-overflow: clip; }
+
+/* Avisos cerrados (resueltos o ignorados) y los botones para cerrarlos */
+.av-cerrado { --c: var(--line-2); animation-fill-mode: backwards; }
+.av-cerrado .av-h-fijo { padding-bottom: 12px; grid-template-columns: auto minmax(0, 1fr) auto; }
+.av-cerrado .av-t b { color: var(--ink-2); }
+.av-cierre { border-top: 1px dashed var(--line); padding-top: 10px; margin-top: 4px; }

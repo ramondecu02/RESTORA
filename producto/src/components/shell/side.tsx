@@ -20,7 +20,7 @@ export function SideNav({ items, local, user, roleLabel, initials }: { items: Na
           </Link>
         ))}
       <div className="side-foot">
-        <Link href="/cuenta" className="avatar" aria-label="Tu cuenta">{initials}</Link>
+        <Link href="/cuenta" className="avatar" aria-label={`Tu cuenta (${initials})`}>{initials}</Link>
         <div><b>{user}</b><small>{roleLabel}</small></div>
       </div>
     </nav>

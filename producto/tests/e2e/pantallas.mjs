@@ -205,6 +205,40 @@ try {
     }
   });
 
+  await step(page, "avisos: resolver o ignorar baja la cuenta en todas partes, se deshace y se conserva al recargar", async () => {
+    await ir(page, "/hoy/avisos");
+    const abiertos = async () => num(await fichas(page).nth(2).locator(".tile-val").innerText());
+    const delMenu = async () => { const n = page.locator('[data-tour="side"] a[href="/hoy/avisos"] .badge'); return (await n.count()) ? num(await n.first().innerText()) : 0; };
+    const asienta = () => page.waitForTimeout(1300); // recarga de la página y cifra que cuenta
+    const antes = await abiertos();
+    if (antes < 3) throw new Error("la demo debería traer varios avisos: " + antes);
+    if ((await delMenu()) !== antes) throw new Error(`el menú (${await delMenu()}) y la ficha (${antes}) no cuentan lo mismo antes de empezar`);
+    // Resolver el primero: baja la ficha y baja el menú
+    await page.getByRole("button", { name: /Ya lo he resuelto/ }).first().click();
+    await page.locator(".toast", { hasText: "Aviso resuelto" }).waitFor({ timeout: 8000 });
+    await asienta();
+    if ((await abiertos()) !== antes - 1) throw new Error(`la ficha no baja al resolver (${antes} → ${await abiertos()})`);
+    if ((await delMenu()) !== antes - 1) throw new Error(`el menú no baja al resolver (${antes} → ${await delMenu()})`);
+    // Deshacer desde el propio aviso
+    await page.locator(".toast button", { hasText: "Deshacer" }).click();
+    await asienta();
+    if ((await abiertos()) !== antes || (await delMenu()) !== antes) throw new Error("«Deshacer» no devuelve el aviso");
+    // Ignorar: el aviso pasa a la pestaña de cerrados y se conserva al recargar
+    await page.getByRole("button", { name: /^Ignorar$/ }).first().click();
+    await page.locator(".toast", { hasText: "Aviso ignorado" }).waitFor({ timeout: 8000 });
+    await asienta();
+    await ir(page, "/hoy/avisos");
+    if ((await abiertos()) !== antes - 1) throw new Error("al recargar vuelve a haber el mismo número de avisos abiertos");
+    const cerrados = page.getByRole("button", { name: /^Resueltos e ignorados/ });
+    if (num(await cerrados.locator(".cnt").innerText()) !== 1) throw new Error("la pestaña de cerrados no cuenta uno");
+    await cerrados.click();
+    if (!(await page.locator(".av-cerrado", { hasText: "Ignorado" }).count())) throw new Error("el aviso ignorado no sale en cerrados");
+    // Reabrir: vuelve a contar
+    await page.getByRole("button", { name: /^Reabrir el aviso/ }).first().click();
+    await asienta();
+    if ((await abiertos()) !== antes || (await delMenu()) !== antes) throw new Error("«Reabrir» no devuelve el aviso");
+  });
+
   // ───────── Sin desbordes en cuatro anchos ─────────
   for (const w of [1280, 1093, 768, 390]) {
     await step(page, `${w} sin desbordes ni errores en las siete pantallas`, async () => {

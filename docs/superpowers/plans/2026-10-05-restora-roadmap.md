@@ -85,11 +85,11 @@ Reglas duras:
 ## ÁREA A — Interfaz y producto (V1)
 
 > **Estado a 5 de octubre de 2026 (hecho directamente, sin subagentes, por ser la prioridad de la Fase 2):** Task 1 (sistema común: `Kpi`, `Atencion`, `Esqueleto`, `SelectNav`, series mensuales) ✓ ·
-> Tasks 2–7 (Compras, Escandallos, Carta, Proveedores, Inventario, Ventas) ✓ con su bloque e2e `pantallas.mjs` · Task 8 (Avisos como centro de inteligencia) ✓ salvo los estados persistentes «resuelto/ignorado»
+> Tasks 2–7 (Compras, Escandallos, Carta, Proveedores, Inventario, Ventas) ✓ con su bloque e2e `pantallas.mjs` · Task 8 (Avisos como centro de inteligencia) ✓, con «resuelto» e «ignorado» persistentes y deshacer (migración `0009`)
 > · Task 10 (QA transversal) ✓ salvo Lighthouse sobre el dominio real y una prueba con lector de pantalla: matriz de 156 comprobaciones de anchos, axe (WCAG 2.2 AA) con 0 violaciones, coherencia entre pantallas, corregir y borrar,
 > revisión con la guía de interfaz de Vercel y Lighthouse local (informe en `docs/superpowers/informes/2026-10-05-qa-transversal.md`) · Task 11 redactada, **pendiente de tu firma** (`docs/superpowers/mvp-terminado.md`)
 > · La ficha del proveedor ya lleva cifras (gasto, peso en tus compras, subidas, albaranes) y el gasto por mes en un solo color; la del artículo ya cumplía el sistema.
-> · **Quedan** Task 9 (Cuenta, Mi local, Facturación y Más: lo de Facturación espera a D1), los estados persistentes «resuelto/ignorado» de Avisos y la ficha de la compra (la pantalla de validación).
+> · **Quedan** Task 9 (Cuenta, Mi local, Facturación y Más: lo de Facturación espera a D1), y la ficha de la compra (la pantalla de validación).
 > Los pasos de abajo se conservan como referencia de lo que se hizo y de lo que falta.
 
 ### Task 1: [A1] Sistema de diseño compartido: KPI, movimiento, esqueletos y estados vacíos

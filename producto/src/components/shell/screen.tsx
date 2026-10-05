@@ -22,7 +22,7 @@ export async function Screen({ title, sub, back, actions, task, fab, foot, child
           {actions}
           {!task ? <TopSearch /> : null}
           {!task ? <AddButton /> : null}
-          {ctx ? <Link className={`avatar ${back || task ? "only-wide" : ""}`} href="/cuenta" aria-label="Tu cuenta">{initials(ctx.name)}</Link> : null}
+          {ctx ? <Link className={`avatar ${back || task ? "only-wide" : ""}`} href="/cuenta" aria-label={`Tu cuenta (${initials(ctx.name)})`}>{initials(ctx.name)}</Link> : null}
         </div>
       </header>
       <div className="content" id="content" tabIndex={-1}><div className={`wrap ${wide ? "wrap-wide" : ""}`}>{children}</div></div>

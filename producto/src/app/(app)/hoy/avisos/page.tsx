@@ -8,7 +8,7 @@ import { all, withTenant } from "@/server/db";
 import { requireApp, type AppCtx } from "@/server/ctx";
 import { priceAlerts } from "@/server/domain/avisos";
 import { estadoFC, foodCost } from "@/lib/costing";
-import { eur, fecha, nb, pct } from "@/lib/format";
+import { eur, fecha, nb, pct, plural } from "@/lib/format";
 import { ListaAvisos } from "./lista";
 
 export const metadata = { title: "Avisos" };
@@ -39,12 +39,16 @@ async function AvisosContenido({ ctx }: { ctx: AppCtx }) {
       <Kpis label="Lo que suman estos avisos">
         <Kpi i={0} label="Coste extra al mes" value={total} fmt="eur0" tone={total > 0 ? "bad" : "ok"} sub="si no haces nada" />
         <Kpi i={1} label="Al año" value={total * 12} fmt="eur0" sub="a este ritmo" />
-        <Kpi i={2} label="Avisos abiertos" value={data.alerts.length} fmt="int" tone={accion ? "bad" : data.alerts.length ? "warn" : "ok"} sub={accion ? `${accion} piden acción` : data.alerts.length ? "para vigilar" : "todo en orden"} />
+        <Kpi i={2} label="Avisos abiertos" value={data.alerts.length} fmt="int" tone={accion ? "bad" : data.alerts.length ? "warn" : "ok"}
+          sub={`${accion ? `${accion} piden acción` : data.alerts.length ? "para vigilar" : "todo en orden"}${data.cerrados.length ? ` · ${plural(data.cerrados.length, "cerrado", "cerrados")}` : ""}`} />
         <Kpi i={3} label="Platos fuera de objetivo" value={fuera.length} fmt="int" tone={fuera.length ? "bad" : "ok"} sub="food cost por encima de su objetivo" href={fuera.length ? "/escandallos?f=fuera" : null} />
       </Kpis>
-      {data.alerts.length ? (
-        <ListaAvisos avisos={data.alerts.map((a) => ({
-          id: a.articuloId, nombre: a.name, unit: a.unit, proveedor: a.proveedor, fecha: fecha(a.fecha), antes: a.antes, ahora: a.ahora, variacion: a.variacion,
+      {data.alerts.length || data.cerrados.length ? (
+        <ListaAvisos cerrados={data.cerrados.map((c) => ({
+          eventoId: c.eventoId, id: c.articuloId, nombre: c.name, unit: c.unit, proveedor: c.proveedor, fecha: fecha(c.fecha), antes: c.antes, ahora: c.ahora, variacion: c.variacion,
+          estado: c.estado, cuando: fecha(c.cuando),
+        }))} avisos={data.alerts.map((a) => ({
+          eventoId: a.eventoId, id: a.articuloId, nombre: a.name, unit: a.unit, proveedor: a.proveedor, fecha: fecha(a.fecha), antes: a.antes, ahora: a.ahora, variacion: a.variacion,
           platos: a.platos, salen: a.salen, impactoMes: a.impactoMes, fcAntes: a.fcAntes, fcDespues: a.fcDespues, alternativa: a.alternativa,
         }))} />
       ) : (

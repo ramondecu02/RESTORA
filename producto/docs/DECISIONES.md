@@ -55,6 +55,7 @@ Respuestas a las decisiones D1–D6 del plan (`docs/superpowers/plans/2026-10-05
 - **Impago (D4):** se **bloquea a los 5 días de impago** (no 7). **Hecho**: el aviso empieza el primer día y a los 5 días la app lleva a «No hemos podido cobrar tu suscripción» (pagar, descargar los datos o salir). Faltan los correos de cobro fallido y los reintentos propios (Task 23 del plan).
 - **«Inteligencia» (D6):** se hace lo propuesto: **«Avisos» pasa a ser el centro de inteligencia** (priorizado por impacto en euros, con acción directa). Hoy no usa IA; si se le añade
   un modelo de lenguaje, el coste es ~0,45 € por local y mes.
+  Los avisos se pueden **dar por resueltos o ignorar** (con «Deshacer» y una pestaña de cerrados para reabrirlos): dejan de contar en el menú, en Hoy y en la lista de abiertos, y **se reabren solos si el precio de ese artículo vuelve a cambiar** (el aviso es el último cambio de precio; tabla `avisos_estado`, migración `0009`).
 - **Marca y redes (D5):** «redes sociales e imagen de marca se tienen que crear»: **no existen todavía**. La web no debe enseñar enlaces a redes hasta que existan; se prepara un kit
   de marca (avatar, portadas, imagen para compartir) para crearlas.
 - **Web:** cambiar el teléfono (falta el número nuevo) y **rellenar la web con imágenes generadas**. Las imágenes generadas se usan como ambientación y producto, nunca como retratos de
