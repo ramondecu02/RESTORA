@@ -1,4 +1,6 @@
 // Configuración leída del entorno en el momento de usarla (así las pruebas pueden cambiarla).
+import { maxLecturasMes } from "@/lib/limits";
+
 const v = (k: string) => (process.env[k] ?? "").trim();
 
 export const env = {
@@ -44,6 +46,8 @@ export const env = {
   get stripeKey() { return v("STRIPE_SECRET_KEY"); },
   get stripePrice() { return v("STRIPE_PRICE_ID"); },
   get stripeWebhookSecret() { return v("STRIPE_WEBHOOK_SECRET"); },
+  /** Tope mensual de lecturas con IA por negocio (1.500 si no se indica; 0 apaga la lectura). Ver «Tope mensual de lecturas» en docs/DESPLIEGUE.md. */
+  get maxLecturasMes() { return maxLecturasMes(process.env.MAX_LECTURAS_MES); },
   get trialDays() { const n = Number(v("TRIAL_DAYS")); return Number.isFinite(n) && n > 0 ? n : 14; },
   get isProd() { return process.env.NODE_ENV === "production"; },
   /** Buzón de pruebas en /dev/correo: solo fuera de producción o si se activa a propósito. */

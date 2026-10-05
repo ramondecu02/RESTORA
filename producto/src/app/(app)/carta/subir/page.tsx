@@ -1,11 +1,16 @@
 import { TaskScreen } from "@/components/shell/task-screen";
+import { TopeLecturas } from "@/components/tope-lecturas";
 import { Uploader } from "@/components/uploader";
 import { requireApp } from "@/server/ctx";
+import { topeDeLecturas } from "@/server/ratelimit";
 
 export const metadata = { title: "Subir carta" };
 
 export default async function SubirCarta() {
-  await requireApp();
+  const ctx = await requireApp();
+  // Con el tope mensual de lecturas alcanzado no se ofrece subir nada (la API tampoco lo aceptaría): los platos se pueden crear a mano
+  const tope = await topeDeLecturas(ctx.tenantId);
+  if (tope.agotado) return <TaskScreen title="Subir la carta" back="/carta"><TopeLecturas mensaje={tope.mensaje} alternativa={{ href: "/escandallos/nuevo", texto: "Crear un plato a mano" }} /></TaskScreen>;
   return (
     <TaskScreen title="Subir la carta" back="/carta">
       <Uploader kind="carta" cta="Leer carta" sample={[{ url: "/demo/carta-ejemplo.jpg", name: "carta-ejemplo.jpg", title: "Probar con una carta de ejemplo", sub: "7 platos y bebidas con precio" }]} />

@@ -27,7 +27,7 @@ Tiempo estimado: una tarde. El orden importa: base de datos antes del primer des
 1. En el proyecto de Vercel → **Storage → Create → Neon** (o crea el proyecto en neon.tech y conéctalo). Región: **AWS Europe Central 1 (Frankfurt)**.
 2. La integración añade `DATABASE_URL` (con pooler) y `DATABASE_URL_UNPOOLED` (directa). La app usa la primera; las migraciones, la segunda.
 3. **Entornos de vista previa**: en la integración, activa una rama de Neon por despliegue de vista previa (o define otra `DATABASE_URL` para Preview). Si no, cada vista previa aplicaría migraciones sobre la base de producción.
-4. Copias de seguridad: Neon guarda el historial para restaurar a un momento dado; el periodo depende del plan. Elige uno con al menos 7 días.
+4. Copias de seguridad: Neon guarda el historial para restaurar a un momento dado; el periodo depende del plan. Elige uno con al menos 7 días. El procedimiento paso a paso (recuperar un albarán borrado en una rama, sin tocar producción), el RPO/RTO y el ensayo que falta están en `docs/COPIAS-Y-RESTAURACION.md` y `scripts/restore-drill.md`: **pendiente de ensayar con tu cuenta de Neon antes de pasar Stripe a producción**. Los archivos de Blob no tienen copia.
 
 Qué hacen las migraciones (`db/migrations`, se aplican solas y en orden):
 - `0001` tablas, índices y políticas RLS en las 17 tablas de negocio;
@@ -58,6 +58,16 @@ Con un proveedor real la app no guarda el cuerpo de los correos (llevan códigos
 3. Cómo lee: primero Claude Sonnet 5.5 con esfuerzo medio; si la lectura sale dudosa (muchas líneas con poca confianza o totales que no cuadran) repasa con Claude Opus 5.5 con esfuerzo alto y se queda con esa. Cada documento guarda modelo, tokens, coste y tiempo (`documentos.ocr_*`).
 4. Sin clave, en producción la lectura queda desactivada: el documento muestra «La lectura automática no está disponible todavía» y se puede apuntar a mano. Nunca se usan datos inventados con documentos reales. Los albaranes y la carta **de ejemplo** se reconocen por su huella y se leen siempre sin llamar a la API.
 
+**Tope mensual de lecturas (freno contra un gasto desbocado).** Además del límite de gasto de la clave en Anthropic, cada negocio tiene un tope de lecturas con IA por mes natural (hora de Madrid): `MAX_LECTURAS_MES`, **1500 si no se define**, muy por encima del uso normal (unos 60 albaranes al mes). Cuentan los albaranes, facturas y cartas subidos para leer con Claude más los reintentos de «Volver a leer»; no cuentan los documentos de ejemplo, lo apuntado a mano ni los datos de ejemplo. Al llegar al tope, la pantalla de subida (albaranes y carta) deja de ofrecer subir y dice «Has llegado al máximo de lecturas automáticas de este mes (…); puedes seguir apuntando a mano tus albaranes y tus platos; si necesitas leer más, escribe a hola@restoraapp.com», y la API de subida responde 429 con ese mismo mensaje. El contador vuelve a cero el día 1. **Apuntar a mano nunca se limita.** Para bajarlo, pon la variable (un número entero) y redespliega; `0` apaga la lectura con IA para todos los negocios (interruptor de emergencia). El tope es el mismo para todos: no hay cifras por plan. Como es un freno y no una factura, puede pasarse por unas pocas lecturas si llegan varias a la vez. Quién va más lento o más cerca del tope este mes:
+
+```sql
+select o.name, count(*) as lecturas
+from documentos d join organizations o on o.id = d.tenant_id
+where d.source = 'ocr' and not d.demo and (d.ocr_model is null or d.ocr_model not in ('ejemplo', 'mock'))
+  and d.created_at >= date_trunc('month', now() at time zone 'Europe/Madrid') at time zone 'Europe/Madrid'
+group by 1 order by 2 desc limit 20;
+```
+
 Coste estimado por albarán (precios de API vigentes: Sonnet 5.5, 2 $/10 $ por millón de tokens de entrada/salida; Opus 5.5, 4 $/20 $; el cálculo por local está en `PRECIOS-Y-COSTES.md`): una foto de 10–15 líneas son unos 4–5 mil tokens de entrada y 2–3 mil de salida, **≈ 0,03–0,05 $**; si necesita repaso con Opus, **≈ 0,10–0,15 $** más. Con un 15 % de repasos, **≈ 0,05 $ de media**: un restaurante con 60 albaranes al mes gasta unos **3 $ al mes** en lectura. Compruébalo con los primeros usuarios reales:
 
 ```sql
@@ -77,6 +87,7 @@ En Vercel → **Settings → Environment Variables** (entorno Production; Previe
 | `APP_URL` | `https://app.restoraapp.app` (sin barra final). Con `https`, las cookies de sesión son `Secure`. |
 | `TRIAL_DAYS` | Días de prueba de cada negocio nuevo. Sin ella, `14`. Al terminar sin suscripción la app se bloquea: solo quedan facturación, la cuenta (exportar datos, borrar el negocio) y salir. |
 | `PG_POOL_MAX` | `5` |
+| `MAX_LECTURAS_MES` | Tope mensual de lecturas con IA por negocio. Sin ella, `1500`. Ver el paso 5. |
 
 La lista completa, comentada, está en `producto/.env.example`.
 

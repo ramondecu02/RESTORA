@@ -7,6 +7,7 @@ Todo esto está implementado con un valor por defecto razonable. Cada punto dice
 - **Ahora**: primera lectura con Claude Sonnet 5 (esfuerzo bajo). Si sale dudosa, repaso con Claude Opus 5. Sin límite mensual por negocio; solo un freno de 80 documentos por hora contra abusos.
 - **Coste estimado**: ≈ 0,05 $ por albarán de media (0,03–0,05 $ sin repaso; 0,10–0,15 $ más si hay repaso). Un restaurante con 60 albaranes al mes: ≈ 3 $/mes. Con los precios actuales de la API (Sonnet 5: 2 $/10 $ por millón de tokens; Opus 5: 5 $/25 $). Hay que confirmarlo con documentos reales: la consulta está en `DESPLIEGUE.md`, paso 5.
 - **A decidir**: ¿incluido sin límite en la cuota (como dice ahora Facturación: «sin límite razonable de uso») o con un tope por plan? Alternativas: Opus 5 siempre (más fiable, ≈ 2–3 veces más caro) o repasar menos (más barato, más líneas para revisar a mano). Se cambia con `OCR_MODEL`, `OCR_ESCALATE_MODEL` y `OCR_EFFORT`, sin tocar código.
+- **Freno de seguridad (octubre de 2026)**: además de ese freno por hora hay un tope de lecturas con IA por negocio y mes natural, `MAX_LECTURAS_MES` (1.500 por defecto, muy por encima del uso normal; 0 apaga la lectura). No es un límite de plan: es el mismo para todos y solo evita un gasto desbocado. Al llegar, el negocio no puede subir más documentos hasta el día 1 y se le dice que puede seguir apuntando a mano o escribir a hola@restoraapp.com. Los límites por plan (decisión D1) y su precio siguen pendientes.
 
 ## 2. Precio, prueba y qué pasa al terminarla
 

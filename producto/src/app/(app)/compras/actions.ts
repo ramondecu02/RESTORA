@@ -5,7 +5,8 @@ import { refresh } from "next/cache";
 import { isUuid, one, withTenant } from "@/server/db";
 import { requireApp, requirePerm, UserError } from "@/server/ctx";
 import { run, type Result } from "@/server/action";
-import { rateLimit } from "@/server/ratelimit";
+import { audit } from "@/server/audit";
+import { rateLimit, topeDeLecturas } from "@/server/ratelimit";
 import { plural } from "@/lib/format";
 import { setFlash } from "@/server/session";
 import { borrarDocumento, confirmarAlbaran, crearManual, processDocumento, type ConfirmResult, type ImpactoBorrado } from "@/server/domain/compras";
@@ -93,9 +94,16 @@ export async function reintentar(docId: string): Promise<Result> {
     if (!doc || doc.status !== "error") throw new UserError("No se puede volver a leer este documento.");
     // Si la subida se cortó a medias, leer solo parte de las páginas daría una compra incompleta
     if (!doc.archivos || doc.archivos < doc.pages) throw new UserError("Faltan páginas de este documento. Descártalo y súbelo otra vez.");
-    // Cada lectura cuesta: cuenta en el mismo límite que las subidas
+    // Cada lectura cuesta: cuenta en el tope del mes y en el mismo límite que las subidas
+    const tope = await topeDeLecturas(ctx.tenantId);
+    if (tope.agotado) throw new UserError(tope.mensaje);
     if (!(await rateLimit(`upload:${ctx.tenantId}`, 80, 3600))) throw new UserError("Has leído muchos documentos en poco tiempo. Espera unos minutos.");
-    const ok = await withTenant(ctx.tenantId, (c) => one(c, "update documentos set status = 'leyendo', ocr_error = null, created_at = now() where id = $1 and status = 'error' and source = 'ocr' and local_id = $2 returning id", [docId, ctx.local.id]));
+    const ok = await withTenant(ctx.tenantId, async (c) => {
+      const r = await one(c, "update documentos set status = 'leyendo', ocr_error = null, created_at = now() where id = $1 and status = 'error' and source = 'ocr' and local_id = $2 returning id", [docId, ctx.local.id]);
+      // El reintento no crea otro documento pero cuesta otra lectura: queda anotado para que cuente en el tope del mes
+      if (r) await audit(c, ctx.tenantId, ctx.userId, "reintentar", "documento", docId, {});
+      return r;
+    });
     if (!ok) throw new UserError("No se puede volver a leer este documento.");
     const t = ctx.tenantId;
     after(() => processDocumento(t, docId));
