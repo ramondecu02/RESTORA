@@ -52,11 +52,11 @@ Con un proveedor real la app no guarda el cuerpo de los correos (llevan códigos
 ## 5. Lectura de documentos: API de Claude
 
 1. console.anthropic.com → **API Keys → Create key**. Pon un **límite de gasto mensual** en *Limits* desde el primer día.
-2. Variables: `ANTHROPIC_API_KEY`, `OCR_PROVIDER=anthropic`, `OCR_MODEL=claude-sonnet-5`, `OCR_ESCALATE_MODEL=claude-opus-5`.
-3. Cómo lee: primero Claude Sonnet 5 con esfuerzo bajo; si la lectura sale dudosa (muchas líneas con poca confianza o totales que no cuadran) repasa con Claude Opus 5 y se queda con esa. Cada documento guarda modelo, tokens, coste y tiempo (`documentos.ocr_*`).
+2. Variables: `ANTHROPIC_API_KEY` y `OCR_PROVIDER=anthropic`. **Deja vacías** `OCR_MODEL`, `OCR_ESCALATE_MODEL` y `OCR_EFFORT`: así se usan los valores que lleva la app (Sonnet 5.5 con esfuerzo medio y, si la lectura sale dudosa, repaso con Opus 5.5 con esfuerzo alto). Si en Vercel las tienes con valores de una versión anterior de esta guía (`claude-sonnet-5`, `claude-opus-5`, `OCR_EFFORT=low`), bórralas: son más caras o leen peor.
+3. Cómo lee: primero Claude Sonnet 5.5 con esfuerzo medio; si la lectura sale dudosa (muchas líneas con poca confianza o totales que no cuadran) repasa con Claude Opus 5.5 con esfuerzo alto y se queda con esa. Cada documento guarda modelo, tokens, coste y tiempo (`documentos.ocr_*`).
 4. Sin clave, en producción la lectura queda desactivada: el documento muestra «La lectura automática no está disponible todavía» y se puede apuntar a mano. Nunca se usan datos inventados con documentos reales. Los albaranes y la carta **de ejemplo** se reconocen por su huella y se leen siempre sin llamar a la API.
 
-Coste estimado por albarán (precios de API vigentes: Sonnet 5, 2 $/10 $ por millón de tokens de entrada/salida; Opus 5, 5 $/25 $): una foto de 10–15 líneas son unos 4–5 mil tokens de entrada y 2–3 mil de salida, **≈ 0,03–0,05 $**; si necesita repaso con Opus, **≈ 0,10–0,15 $** más. Con un 15 % de repasos, **≈ 0,05 $ de media**: un restaurante con 60 albaranes al mes gasta unos **3 $ al mes** en lectura. Compruébalo con los primeros usuarios reales:
+Coste estimado por albarán (precios de API vigentes: Sonnet 5.5, 2 $/10 $ por millón de tokens de entrada/salida; Opus 5.5, 4 $/20 $; el cálculo por local está en `PRECIOS-Y-COSTES.md`): una foto de 10–15 líneas son unos 4–5 mil tokens de entrada y 2–3 mil de salida, **≈ 0,03–0,05 $**; si necesita repaso con Opus, **≈ 0,10–0,15 $** más. Con un 15 % de repasos, **≈ 0,05 $ de media**: un restaurante con 60 albaranes al mes gasta unos **3 $ al mes** en lectura. Compruébalo con los primeros usuarios reales:
 
 ```sql
 select date_trunc('month', created_at) as mes, count(*) as documentos,
