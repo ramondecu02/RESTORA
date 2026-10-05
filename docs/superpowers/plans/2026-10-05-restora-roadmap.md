@@ -297,6 +297,14 @@ Reglas duras:
 
 ## ÁREA D — Web de RESTORA (venta directa)
 
+> **Estado a 5 de octubre de 2026 (hecho directamente, tras aprobar el plan):** Task 26 ✓ (sin fundadores ni beta ni las cifras de septiembre; `tests/web/no-founder.test.ts`) ·
+> Task 27 ◐ (capturas reales de la app en la home y en Funcionalidades con `npm run capturas`; el hero sigue con foto y tarjetas marcadas como ejemplo) · Task 28 ⏸ (espera a D1 y a los planes) ·
+> Task 29 ✓ (`docs/AUDITORIA-CONVERSION.md`, 62 afirmaciones cruzadas con el producto y corregidas; `tests/web/promesas.test.ts`) · Task 30 ✓ en lo que es código (los `utm_*` llegan al registro sin guardar nada en el navegador;
+> la medición de visitas la activa el propietario en Cloudflare) · Task 31 ✓ (datos estructurados `WebSite`, `SoftwareApplication` y `FAQPage`; canonical, hreflang y sitemap con prueba) · Task 31b ⏸ (falta el número nuevo) ·
+> Task 31c ✓ (kit de marca) · Task 31d ✓ (7 imágenes del carrusel colocadas con texto alternativo ES/CA y nota de transparencia en el pie; `docs/marketing/imagenes.md`) · Task 32 ⏸ (publicar requiere la orden del propietario: `actualizar-restora.bat`, opción P).
+> Además, la web ya no enseña los `[PENDIENTE]` de la biografía de «Sobre nosotros» (`ABOUT_BIO_READY`), y Lighthouse móvil sale en 93-98 con accesibilidad, buenas prácticas y SEO a 100 tras corregir cómo se mide el LCP.
+> Pruebas del área: `npm run test:web` (19).
+
 ### Task 26: [D1] Eliminar el lenguaje de fundadores y beta
 
 **Files:** Modify `lib/site-copy.ts`, `lib/dictionaries.ts`, `lib/copy/precios.ts`, `lib/copy/contacto.ts`, `lib/copy/sobre.ts`, `lib/copy/preguntas.ts`, `lib/copy/legal.ts`, `app/[locale]/precios/page.tsx`, `app/[locale]/contacto/page.tsx`, `components/**` (los que lean `founder*`); Create `tests/no-founder.test.ts` (raíz).

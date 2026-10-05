@@ -13,6 +13,7 @@ import { ShareBand } from "@/components/site/share-band";
 import { PageHead } from "@/components/pages/page-head";
 import { ModuleDemo } from "@/components/mock/demos";
 import { Frame } from "@/components/home/frame";
+import { ProductShot } from "@/components/home/product-shot";
 
 export async function generateMetadata(props: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await props.params;
@@ -76,6 +77,30 @@ export default async function FuncionalidadesPage(props: {
             </section>
           );
         })}
+
+        {/* The real app: unretouched screenshots (scripts/capturas.mjs) */}
+        <section style={{ padding: "clamp(56px, 7vw, 100px) 28px 0" }}>
+          <div className="mx-auto max-w-[1280px]">
+            <div className="reveal">
+              <div className="editorial-eyebrow" style={{ color: "var(--brand)" }}>{c.real.eyebrow}</div>
+              <h2 className="display-serif" style={{ fontSize: "clamp(27px, 3.4vw, 42px)", margin: "16px 0 0", maxWidth: "20ch" }}>{c.real.title}</h2>
+              <p style={{ fontSize: 16.5, color: "var(--muted)", margin: "14px 0 0", maxWidth: "52ch", lineHeight: 1.6 }}>{c.real.sub}</p>
+            </div>
+            <div className="reveal-group" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))", gap: "clamp(20px, 2.6vw, 34px)", marginTop: "clamp(28px, 3.6vw, 48px)" }}>
+              {c.real.shots.map((sh) => (
+                <figure key={sh.key} style={{ margin: 0, minWidth: 0 }}>
+                  <div style={{ border: "1px solid var(--hair)", borderRadius: 18, overflow: "hidden", background: "var(--surface)", boxShadow: "0 34px 70px -46px rgba(20,32,26,0.5)" }}>
+                    <ProductShot src={sh.src} alt={sh.alt} width={1600} height={1000} sizes="(max-width: 860px) 100vw, 600px" radius={0} />
+                  </div>
+                  <figcaption style={{ marginTop: 14 }}>
+                    <div style={{ fontWeight: 700, fontSize: 15.5 }}>{sh.label}</div>
+                    <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 3 }}>{sh.line}</div>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* Everything is one chain */}
         <section style={{ padding: "clamp(56px, 7vw, 100px) 28px" }}>

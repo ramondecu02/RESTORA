@@ -15,7 +15,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "test:web": "tsx --test \"tests/**/*.test.ts\"",
-    "checklist": "node scripts/checklist.mjs"
+    "checklist": "node scripts/checklist.mjs",
+    "capturas": "node scripts/capturas.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

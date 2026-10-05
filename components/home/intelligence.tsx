@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, BarChart3, Database, Lightbulb, MousePointerClick } from "lucide-react";
 import type { SiteCopy } from "@/lib/site-copy";
 import type { Locale } from "@/lib/types";
-import { DashboardMock } from "@/components/site/dashboard-mock";
+import { ProductShot } from "./product-shot";
 
 const STEP_ICONS = [Database, BarChart3, Lightbulb, MousePointerClick];
 
@@ -61,8 +61,8 @@ export function HomeIntelligence({ copy, locale }: { copy: SiteCopy; locale: Loc
           </Link>
         </div>
 
-        {/* The product, framed like a screen in the room */}
-        <div className="reveal" style={{ position: "relative", paddingBottom: 26, minWidth: 0 }}>
+        {/* The product, framed like a screen in the room: real screenshots of the app */}
+        <div className="reveal" style={{ position: "relative", paddingBottom: 22, minWidth: 0 }}>
           <div
             style={{
               background: "rgba(255,255,255,0.06)",
@@ -72,33 +72,26 @@ export function HomeIntelligence({ copy, locale }: { copy: SiteCopy; locale: Loc
               boxShadow: "0 64px 120px -54px rgba(0,0,0,0.85)",
             }}
           >
-            <DashboardMock demoLabel={copy.demo.label} />
+            <ProductShot src="/images/captura-avisos-escritorio.webp" alt={copy.images.productoAvisos} width={1600} height={1000} sizes="(max-width: 1023px) 100vw, 640px" />
           </div>
 
           <div
             style={{
               position: "absolute",
-              left: 18,
+              right: "clamp(10px, 3%, 26px)",
               bottom: 0,
-              maxWidth: "min(84%, 330px)",
-              display: "flex",
-              gap: 12,
-              alignItems: "flex-start",
-              background: "linear-gradient(180deg, rgba(20,32,25,0.92), rgba(12,20,15,0.95))",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              border: "1px solid rgba(255,255,255,0.16)",
-              borderRadius: 16,
-              padding: "14px 16px",
-              boxShadow: "0 34px 70px -34px rgba(0,0,0,0.9)",
+              width: "min(27%, 150px)",
+              background: "#0b120e",
+              border: "4px solid #0b120e",
+              borderRadius: 22,
+              overflow: "hidden",
+              boxShadow: "0 40px 80px -30px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.18)",
             }}
           >
-            <Lightbulb size={18} strokeWidth={1.8} color="#8fd3b0" style={{ flexShrink: 0, marginTop: 1 }} />
-            <div>
-              <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.5, color: "rgba(255,255,255,0.9)" }}>{c.insight}</p>
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: "#8fd3b0", marginTop: 5, display: "inline-block" }}>{c.insightAction} →</span>
-            </div>
+            <ProductShot src="/images/captura-hoy-movil.webp" alt={copy.images.productoMovil} width={780} height={1688} sizes="150px" radius={0} />
           </div>
+
+          <p style={{ margin: "16px 0 0", maxWidth: "62%", fontSize: 13, lineHeight: 1.45, color: "rgba(255,255,255,0.56)" }}>{copy.demo.shot}</p>
         </div>
       </div>
     </section>

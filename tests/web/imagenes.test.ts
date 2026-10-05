@@ -43,6 +43,12 @@ test("las imágenes de cada hueco miden lo que el hueco pide", async () => {
     "explorar-funcionalidades": [1200, 750],
     "explorar-como-funciona": [1200, 750],
     "explorar-precios": [1200, 750],
+    "captura-hoy-escritorio": [1600, 1000],
+    "captura-avisos-escritorio": [1600, 1000],
+    "captura-compras-escritorio": [1600, 1000],
+    "captura-escandallos-escritorio": [1600, 1000],
+    "captura-proveedores-escritorio": [1600, 1000],
+    "captura-hoy-movil": [780, 1688],
   };
   for (const [nombre, [ancho, alto]] of Object.entries(huecos)) {
     const m = await sharp(path.join(IMAGENES, `${nombre}.webp`)).metadata();

@@ -502,23 +502,17 @@
   animation: glowPulse 10s ease-in-out infinite;
 }
 
-/* ---- Dashboard line-draw ---- */
-@keyframes dmDraw {
+@keyframes lineDraw {
   to {
     stroke-dashoffset: 0;
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .dm-line {
-    stroke-dasharray: 660;
-    stroke-dashoffset: 660;
-    animation: dmDraw 1.5s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s forwards;
-  }
   /* Length-independent draw (requires pathLength="1" on the path) */
   .line-draw {
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
-    animation: dmDraw 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.55s forwards;
+    animation: lineDraw 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.55s forwards;
   }
 }
 
@@ -904,38 +898,3 @@
   }
 }
 
-/* Dashboard mock: sidebar collapses under 640px, tiles go 2-up, charts stack */
-.dm-root {
-  display: grid;
-  grid-template-columns: 150px 1fr;
-}
-.dm-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-.dm-charts {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 8px;
-}
-.dm-lists {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-@media (max-width: 640px) {
-  .dm-root {
-    grid-template-columns: 1fr;
-  }
-  .dm-side {
-    display: none;
-  }
-  .dm-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .dm-charts,
-  .dm-lists {
-    grid-template-columns: 1fr;
-  }
-}

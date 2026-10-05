@@ -160,6 +160,17 @@ const es = {
       },
     },
   ],
+  real: {
+    eyebrow: "La app, de verdad",
+    title: "Las mismas pantallas que verás al entrar.",
+    sub: "Capturas reales de RESTORA con un restaurante de ejemplo. Nada retocado.",
+    shots: [
+      { key: "hoy", src: "/images/captura-hoy-escritorio.webp", label: "Hoy", line: "Lo que requiere tu atención, cada mañana", alt: "Pantalla «Hoy» de RESTORA: tarjetas de lo que requiere atención (platos por encima de su objetivo de food cost, una subida de precio de la lubina y productos bajo mínimo) y la lista de primeros pasos" },
+      { key: "compras", src: "/images/captura-compras-escritorio.webp", label: "Compras", line: "Albaranes y facturas, con los precios al día", alt: "Pantalla «Compras» de RESTORA: indicadores de gasto en 30 días, lista de albaranes guardados por proveedor y gráficos de la evolución del precio de los artículos que más se compran" },
+      { key: "escandallos", src: "/images/captura-escandallos-escritorio.webp", label: "Escandallos", line: "El coste real de cada plato, ingrediente a ingrediente", alt: "Pantalla «Escandallos» de RESTORA: food cost de la carta frente al objetivo, filtros por familia y la tabla de platos con coste, precio de venta, food cost, margen y estado" },
+      { key: "proveedores", src: "/images/captura-proveedores-escritorio.webp", label: "Proveedores", line: "El mismo producto, comparado entre quienes te lo sirven", alt: "Pantalla «Proveedores» de RESTORA: el mismo producto comparado entre dos proveedores, con el mejor precio marcado y el ahorro posible al año, y la ficha de cada proveedor" },
+    ],
+  },
   closing: {
     eyebrow: "Todo conectado",
     title: "Un dato entra una vez y llega a todas partes.",
@@ -328,6 +339,17 @@ const ca: FuncionalidadesCopy = {
       },
     },
   ],
+  real: {
+    eyebrow: "L'app, de debò",
+    title: "Les mateixes pantalles que veuràs en entrar.",
+    sub: "Captures reals de RESTORA amb un restaurant d'exemple. Res retocat.",
+    shots: [
+      { key: "hoy", src: "/images/captura-hoy-escritorio.webp", label: "Hoy", line: "El que requereix la teva atenció, cada matí", alt: "Pantalla «Hoy» de RESTORA: targetes del que requereix atenció (plats per sobre del seu objectiu de food cost, una pujada de preu del llobarro i productes sota mínim) i la llista de primers passos" },
+      { key: "compras", src: "/images/captura-compras-escritorio.webp", label: "Compras", line: "Albarans i factures, amb els preus al dia", alt: "Pantalla «Compras» de RESTORA: indicadors de despesa en 30 dies, llista d'albarans desats per proveïdor i gràfics de l'evolució del preu dels articles que més es compren" },
+      { key: "escandallos", src: "/images/captura-escandallos-escritorio.webp", label: "Escandallos", line: "El cost real de cada plat, ingredient a ingredient", alt: "Pantalla «Escandallos» de RESTORA: food cost de la carta davant de l'objectiu, filtres per família i la taula de plats amb cost, preu de venda, food cost, marge i estat" },
+      { key: "proveedores", src: "/images/captura-proveedores-escritorio.webp", label: "Proveedores", line: "El mateix producte, comparat entre qui te'l serveix", alt: "Pantalla «Proveedores» de RESTORA: el mateix producte comparat entre dos proveïdors, amb el millor preu marcat i l'estalvi possible a l'any, i la fitxa de cada proveïdor" },
+    ],
+  },
   closing: {
     eyebrow: "Tot connectat",
     title: "Una dada entra un cop i arriba a tot arreu.",

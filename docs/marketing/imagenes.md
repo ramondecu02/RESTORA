@@ -54,6 +54,18 @@ explorar-funcionalidades  pgj1uz…  --recorte=0.0236,0,0.8727,1
 explorar-precios          2sad4e…  --recorte=0.19,0.15,0.611,0.70
 ```
 
+## Capturas reales del producto
+
+Las pantallas de la app que enseña la web (la sección «De los datos a las decisiones» de la home y «La app, de verdad» de Funcionalidades) **no se dibujan ni se retocan**: salen de la app con un restaurante de ejemplo.
+
+| Archivo (`public/images/`) | Pantalla | Dónde |
+|---|---|---|
+| `captura-avisos-escritorio.webp` (1600×1000) | Avisos | Home, sección de inteligencia |
+| `captura-hoy-movil.webp` (780×1688) | Hoy, en el móvil | Home, sobre la anterior |
+| `captura-hoy-escritorio.webp`, `captura-compras-escritorio.webp`, `captura-escandallos-escritorio.webp`, `captura-proveedores-escritorio.webp` (1600×1000) | Hoy, Compras, Escandallos y Proveedores | Funcionalidades, «La app, de verdad» |
+
+Se regeneran con `npm run capturas` (`scripts/capturas.mjs`) cuando cambie la interfaz: necesita la app en marcha en local (`E2E_BASE`, por defecto `http://localhost:3100`, con `ALLOW_DEV_MAILBOX=1`), su base de datos y Chromium; crea el negocio de ejemplo con el mismo alta que usa la prueba e2e y guarda cada pantalla al doble de resolución. Revisa siempre el resultado a ojo antes de subirlo (que no salga ningún dato real, ningún aviso a medias ni un recorrido guiado abierto). Los textos alternativos y los pies están en `lib/site-copy.ts` (`images`, `demo`) y `lib/copy/funcionalidades.ts` (`real`), en castellano y catalán.
+
 ## Para cambiar una imagen o añadir otra
 
 1. Guardar el original generado (png, jpg, jfif o webp).

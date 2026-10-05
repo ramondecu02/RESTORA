@@ -39,7 +39,7 @@
 | «Única vez que tecleas», «se mantiene solo», «se construye solo» | Se montan los escandallos (plantillas y sugerencias) y todo se actualiza al confirmar cada albarán | Textos de Cómo funciona |
 | «El fin de semana pesa el 40 % de las ventas», «Alerta antes de la rotura» | Cobertura en días y aviso «bajo mínimo»; no hay previsión | Funcionalidades: aviso cuando un producto baja de su mínimo |
 | PDF: «para que estas doce casillas se marquen solas» | Cubre varias, no se marca nada solo | Checklist regenerada: «…para que varias de estas casillas las tengas ya calculadas» |
-| Panel de ejemplo con «Costes», «Informes», «Configuración» y «Distribución de costes» | Menú real: Hoy, Avisos, Compras… | Panel con el menú real y «Gasto por proveedor» |
+| Panel de ejemplo con «Costes», «Informes», «Configuración» y «Distribución de costes» | Menú real: Hoy, Avisos, Compras… | Se retira el panel dibujado: la home enseña la pantalla real de Avisos (y la de Hoy en el móvil) y Funcionalidades una galería con Hoy, Compras, Escandallos y Proveedores (`npm run capturas`) |
 | «Lubina a la brasa» con costes distintos en la home y en Funcionalidades | — | Los mismos números en las dos |
 | «Al terminar te suscribes por meses» | Con Stripe apagado la suscripción se activa a mano | «Si quieres seguir, activamos tu suscripción mensual» (se revierte cuando se encienda Stripe) |
 | «Los datos no se comparten con terceros» | La foto del albarán se envía al proveedor de IA que la lee | «No se venden ni se ceden a otros restaurantes ni a proveedores» |

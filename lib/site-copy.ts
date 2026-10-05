@@ -137,8 +137,6 @@ const es = {
     title: "La información que necesitas, cuando la necesitas.",
     sub: "RESTORA convierte tus datos operativos en insights reales para que tomes mejores decisiones y aumentes la rentabilidad de tu restaurante.",
     steps: ["Datos", "Análisis", "Insight", "Acción"],
-    insight: "El precio del tomate ha subido un 12% frente a tu compra anterior.",
-    insightAction: "Revisa proveedores alternativos",
   },
   pricing: {
     trialLabel: "Prueba gratuita",
@@ -242,6 +240,7 @@ const es = {
   },
   demo: {
     label: "Datos de ejemplo",
+    shot: "Captura real de la app, con un restaurante de ejemplo.",
   },
   floating: {
     whatsapp: "Escribirnos por WhatsApp",
@@ -271,6 +270,8 @@ const es = {
     preguntas: "Sala de restaurante",
     sobreNosotros: "Mesa de trabajo de una cocina profesional: flores comestibles, cremas y bizcochos preparados para emplatar y, al fondo, el fuego de los fogones",
     salaServicio: "Sala de un restaurante en pleno servicio, con comensales en las mesas y personal de sala atendiendo",
+    productoAvisos: "Pantalla «Avisos» de RESTORA: la lubina sube un 9 %, con el coste extra al mes, el food cost de la carta antes y después, el proveedor alternativo más barato y las acciones para valorarlo o darlo por resuelto",
+    productoMovil: "RESTORA en el móvil: la pantalla «Hoy» con lo que requiere atención y el food cost del mes frente al objetivo",
   },
   footer: {
     tagline: "La capa de inteligencia de negocio para restaurantes profesionalizados.",
@@ -432,8 +433,6 @@ const ca: SiteCopy = {
     title: "La informació que necessites, quan la necessites.",
     sub: "RESTORA converteix les teves dades operatives en insights reals perquè prenguis millors decisions i augmentis la rendibilitat del teu restaurant.",
     steps: ["Dades", "Anàlisi", "Insight", "Acció"],
-    insight: "El preu del tomàquet ha pujat un 12% respecte a la teva compra anterior.",
-    insightAction: "Revisa proveïdors alternatius",
   },
   pricing: {
     trialLabel: "Prova gratuïta",
@@ -537,6 +536,7 @@ const ca: SiteCopy = {
   },
   demo: {
     label: "Dades d'exemple",
+    shot: "Captura real de l'app, amb un restaurant d'exemple.",
   },
   floating: {
     whatsapp: "Escriure'ns per WhatsApp",
@@ -565,6 +565,8 @@ const ca: SiteCopy = {
     preguntas: "Sala de restaurant",
     sobreNosotros: "Taula de treball d'una cuina professional: flors comestibles, cremes i bescuits preparats per emplatar i, al fons, el foc dels fogons",
     salaServicio: "Sala d'un restaurant en ple servei, amb comensals a les taules i personal de sala atenent",
+    productoAvisos: "Pantalla «Avisos» de RESTORA: el llobarro puja un 9 %, amb el cost extra al mes, el food cost de la carta abans i després, el proveïdor alternatiu més barat i les accions per valorar-ho o donar-ho per resolt",
+    productoMovil: "RESTORA al mòbil: la pantalla «Hoy» amb el que requereix atenció i el food cost del mes davant de l'objectiu",
   },
   footer: {
     tagline: "La capa d'intel·ligència de negoci per a restaurants professionalitzats.",
