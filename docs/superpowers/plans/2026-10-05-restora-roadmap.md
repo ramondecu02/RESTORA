@@ -303,7 +303,8 @@ Reglas duras:
 > la medición de visitas la activa el propietario en Cloudflare) · Task 31 ✓ (datos estructurados `WebSite`, `SoftwareApplication` y `FAQPage`; canonical, hreflang y sitemap con prueba) · Task 31b ⏸ (falta el número nuevo) ·
 > Task 31c ✓ (kit de marca) · Task 31d ✓ (7 imágenes del carrusel colocadas con texto alternativo ES/CA y nota de transparencia en el pie; `docs/marketing/imagenes.md`) · Task 32 ⏸ (publicar requiere la orden del propietario: `actualizar-restora.bat`, opción P).
 > Además, la web ya no enseña los `[PENDIENTE]` de la biografía de «Sobre nosotros» (`ABOUT_BIO_READY`), y Lighthouse móvil sale en 93-98 con accesibilidad, buenas prácticas y SEO a 100 tras corregir cómo se mide el LCP.
-> Pruebas del área: `npm run test:web` (19).
+> Contraste: `npm run qa:web` recorre las 22 páginas × 3 anchos × tema claro y oscuro sin una sola violación de axe y mide con píxeles reales los textos sobre foto (4,5:1 como mínimo); para lograrlo, el texto de estado verde/rojo usa `--up-ink`/`--down-ink`, los paneles con texto blanco usan `--brand-deep` (en oscuro `--brand` es verde claro) y las bandas de foto llevan un velo (`.scrim`).
+> Pruebas del área: `npm run test:web` (19) y `npm run qa:web`.
 
 ### Task 26: [D1] Eliminar el lenguaje de fundadores y beta
 
@@ -380,6 +381,8 @@ Reglas duras:
 ## ÁREA E — Promoción y publicidad (SOLO PLAN: NO ACTIVAR)
 
 > **Directriz vigente (05/10): sin publicidad hasta tener el MVP terminado.** Esta área prepara el terreno. No se crea ninguna campaña, no se gasta nada, no se publica en redes de pago.
+>
+> **Estado a 5 de octubre de 2026:** Tasks 33, 34, 35 y 36 redactadas como **plan, no activado**, solo documentos, a la espera de la revisión del propietario: `docs/marketing/salida-a-mercado.md` (E1), `medicion.md` (E2: convención de UTM, consultas del embudo probadas contra el esquema real y tres cambios propuestos que **no** se han escrito), `materiales/` (E3: correos de la prueba, página comercial, plantilla de caso de cliente y guion del vídeo, sin precios ni nombres de plan hasta D1) y `condiciones-de-activacion.md` (E4: ninguna condición se cumple hoy). Las decisiones que necesita del propietario están en `salida-a-mercado.md`, apartado 9.
 
 ### Task 33: [E1] Estrategia de salida a mercado
 
