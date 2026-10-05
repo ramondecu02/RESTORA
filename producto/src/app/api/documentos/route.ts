@@ -4,7 +4,7 @@ import { randomToken } from "@/server/crypto";
 import { getAppCtx } from "@/server/ctx";
 import { one, withTenant } from "@/server/db";
 import { can } from "@/server/rbac";
-import { rateLimit } from "@/server/ratelimit";
+import { rateLimit, topeDeLecturas } from "@/server/ratelimit";
 import { deleteFile, extFor, putFile, sniffMime } from "@/server/storage";
 import { processDocumento } from "@/server/domain/compras";
 import { MAX_SUBIDA_BYTES, MENSAJE_PESADO } from "@/lib/limits";
@@ -17,6 +17,9 @@ export async function POST(req: NextRequest) {
   if (!ctx) return NextResponse.json({ error: "Tu sesión ha caducado. Vuelve a entrar." }, { status: 401 });
   if (!can(ctx.role, "compras")) return NextResponse.json({ error: "Tu rol no permite subir documentos." }, { status: 403 });
   if (bloqueado(ctx.org)) return NextResponse.json({ error: "Tu prueba gratuita ha terminado. Suscríbete para seguir subiendo documentos." }, { status: 402 });
+  // Cada lectura con IA cuesta dinero: primero el tope del mes (MAX_LECTURAS_MES), antes de gastar nada de los límites por hora; apuntar a mano no pasa por aquí
+  const tope = await topeDeLecturas(ctx.tenantId);
+  if (tope.agotado) return NextResponse.json({ error: tope.mensaje, codigo: "tope_lecturas" }, { status: 429 });
   // Cada lectura con IA cuesta dinero: tope por hora y por día para cada negocio (la clave de la API tiene además su límite mensual)
   if (!(await rateLimit(`upload:${ctx.tenantId}`, 40, 3600)) || !(await rateLimit(`upload-dia:${ctx.tenantId}`, 150, 86400))) return NextResponse.json({ error: "Has subido muchos documentos en poco tiempo. Espera un rato y vuelve a intentarlo." }, { status: 429 });
   let form: FormData;

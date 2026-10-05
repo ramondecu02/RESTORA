@@ -7,6 +7,8 @@ const PUBLIC = [/^\/entrar/, /^\/registro/, /^\/recuperar/, /^\/restablecer/, /^
 
 export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
+  // Con la sesión abierta, una ruta con un «%» mal formado (/compras/%zz) hace que Next responda 500 sin dejar rastro: se corta aquí con un 400
+  try { decodeURIComponent(pathname); } catch { return new NextResponse("Solicitud no válida", { status: 400 }); }
   if (PUBLIC.some((r) => r.test(pathname))) return NextResponse.next();
   const has = req.cookies.has("__Host-rs_sess") || req.cookies.has("rs_sess");
   if (!has) {

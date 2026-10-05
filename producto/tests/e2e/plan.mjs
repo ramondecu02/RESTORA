@@ -1,5 +1,5 @@
 // Prueba gratuita y bloqueo: 14 días de prueba; al terminar (o con la suscripción cancelada) la app manda a /bloqueado
-// y solo quedan la cuenta, la facturación y salir. Se comprueba en la interfaz y en la API de subida.
+// y solo quedan la cuenta, la facturación y salir. Se comprueba en la interfaz y en la API de subida. Al final, el tope mensual de lecturas con IA.
 import { BASE, SHOTS, launch, signup, sql, watch } from "./lib.mjs";
 
 const email = `plan+${Date.now()}@example.com`;
@@ -100,6 +100,62 @@ try {
     if (ruta() !== "/hoy") throw new Error("ha ido a " + ruta());
   });
 
+  // ── Tope mensual de lecturas con IA (MAX_LECTURAS_MES, 1.500 por defecto): se llena el mes con lecturas de mentira ──
+  const [{ local }] = await sql("select id as local from locales where tenant_id = $1 limit 1", [id]);
+  const MARCA = "prueba-tope";
+  await sql(`insert into documentos (tenant_id, local_id, kind, status, source, ocr_model, pages) select $1, $2, 'albaran', 'guardado', 'ocr', $3, 1 from generate_series(1, 1500)`, [id, local, MARCA]);
+  const MENSAJE = /Has llegado al máximo de lecturas automáticas de este mes \(1\.500\)\. Puedes seguir apuntando a mano tus albaranes y tus platos; si necesitas leer más, escribe a hola@restoraapp\.com/;
+  await step("con el tope de lecturas alcanzado, la pantalla de subida lo explica, enseña el correo y ofrece apuntar a mano", async () => {
+    await page.goto(BASE + "/compras/subir");
+    await page.getByText(MENSAJE).waitFor();
+    if (await page.locator("#f-any").count()) throw new Error("sigue el formulario de subida");
+    if ((await page.getByRole("link", { name: "hola@restoraapp.com" }).getAttribute("href"))?.startsWith("mailto:hola@restoraapp.com") !== true) throw new Error("el correo no es un enlace");
+    await page.screenshot({ path: `${SHOTS}plan-tope-lecturas.png` });
+    await page.getByRole("link", { name: "Apuntar una compra a mano" }).click();
+    await page.waitForURL("**/compras/nueva");
+  });
+  await step("con el tope alcanzado, apuntar a mano sigue funcionando", async () => {
+    await page.goto(BASE + "/compras/nueva");
+    await page.getByRole("button", { name: "Empezar" }).click();
+    await page.waitForURL(/\/compras\/[0-9a-f-]{36}$/, { timeout: 15000 });
+    const [d] = await sql("select source, status from documentos where id = $1", [page.url().match(/compras\/([0-9a-f-]{36})/)[1]]);
+    if (d.source !== "manual" || d.status !== "revisar") throw new Error(`documento ${d.source}/${d.status}`);
+  });
+  await step("con el tope alcanzado, la carta también lo explica y deja crear platos a mano", async () => {
+    await page.goto(BASE + "/carta/subir");
+    await page.getByText(MENSAJE).waitFor();
+    await page.getByRole("link", { name: "Crear un plato a mano" }).waitFor();
+  });
+  await step("con el tope alcanzado, la API de subida responde 429 con el mismo mensaje y no crea nada", async () => {
+    const antes = (await sql("select count(*)::int as n from documentos where tenant_id = $1", [id]))[0].n;
+    const r = await subir();
+    if (r.status() !== 429) throw new Error("estado " + r.status());
+    const j = await r.json();
+    if (j.codigo !== "tope_lecturas" || !MENSAJE.test(j.error)) throw new Error("respuesta " + JSON.stringify(j));
+    if ((await sql("select count(*)::int as n from documentos where tenant_id = $1", [id]))[0].n !== antes) throw new Error("se ha creado un documento");
+  });
+  await step("con el tope alcanzado, «Volver a leer» una lectura fallida también se rechaza (y «Meterlo a mano» no)", async () => {
+    const [err] = await sql("insert into documentos (tenant_id, local_id, kind, status, source, pages, ocr_error) values ($1, $2, 'albaran', 'error', 'ocr', 1, 'La lectura ha fallado.') returning id", [id, local]);
+    await sql("insert into documento_archivos (tenant_id, documento_id, idx, storage_key, mime, bytes) values ($1, $2, 0, $3, 'image/jpeg', 10)", [id, err.id, `t/${id}/docs/${err.id}/0-prueba.jpg`]);
+    await page.goto(BASE + "/compras/" + err.id);
+    await page.getByRole("button", { name: /Volver a leer/ }).click();
+    await page.getByText(MENSAJE).waitFor();
+    const [d] = await sql("select status from documentos where id = $1", [err.id]);
+    if (d.status !== "error") throw new Error("el documento ha pasado a " + d.status);
+    if ((await sql("select 1 from audit_log where entity = 'documento' and entity_id = $1 and action = 'reintentar'", [err.id])).length) throw new Error("el reintento rechazado ha dejado huella");
+    await page.getByRole("button", { name: /Meterlo a mano/ }).click();
+    await page.getByRole("heading", { name: "Apunta la compra" }).waitFor({ timeout: 15000 });
+  });
+  await sql("delete from documentos where tenant_id = $1 and ocr_model = $2 and id in (select id from documentos where tenant_id = $1 and ocr_model = $2 limit 10)", [id, MARCA]);
+  await step("al quedar por debajo del tope, la pantalla de subida vuelve a ofrecer subir y la API acepta", async () => {
+    await page.goto(BASE + "/compras/subir");
+    await page.locator("#f-any").waitFor({ state: "attached" });
+    if (await page.getByText(/Has llegado al máximo de lecturas/).count()) throw new Error("sigue el aviso del tope");
+    const r = await subir();
+    if (r.status() !== 200) throw new Error("estado " + r.status());
+  });
+  await sql("delete from documentos where tenant_id = $1 and ocr_model = $2", [id, MARCA]);
+
   await sql("update organizations set plan_status = 'canceled', trial_ends_at = now() + interval '5 days' where id = $1", [id]);
   await step("con la suscripción cancelada, bloqueado aunque quedaran días de prueba", async () => {
     await page.goto(BASE + "/hoy");
@@ -113,7 +169,7 @@ try {
 } finally {
   await b.close();
 }
-const reales = errors.filter((e) => !/402|Payment Required/.test(e));
+const reales = errors.filter((e) => !/402|429|Payment Required|Too Many Requests/.test(e));
 if (reales.length) { console.log("✗ errores en la consola:\n  " + reales.join("\n  ")); fallos++; }
 console.log(fallos ? `✗ ${fallos} comprobaciones con fallos` : "✓ prueba gratuita y bloqueo correctos");
 process.exit(fallos ? 1 : 0);

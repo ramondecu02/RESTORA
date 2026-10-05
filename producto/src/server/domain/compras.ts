@@ -7,7 +7,7 @@ import { hmac } from "../crypto";
 import { audit } from "../audit";
 import { UserError, type AppCtx } from "../ctx";
 import { getCatalog } from "../queries/catalog";
-import { loadCostContext, recomputeCosts } from "./costs";
+import { bloquearCostesDeVentas, loadCostContext, recomputeCosts } from "./costs";
 import { aliasDe, aprenderAlias, articuloDesdeCatalogo, crearArticulo, rebuildArticulo } from "./articulos";
 import { buildDraft, draftCheck, matchProveedor, pendientes, prettyName, type ArtRef, type CatRef, type PackMemory, type ProvRef } from "@/lib/draft";
 import { lineaCoste } from "@/lib/pmp";
@@ -317,6 +317,9 @@ export async function borrarDocumento(ctx: AppCtx, docId: string, opts: BorrarOp
   let hecho: { impacto: ImpactoBorrado; keys: string[] };
   try {
     hecho = await withTenant(ctx.tenantId, async (c) => {
+      // Se espera a que acabe cualquier importación de ventas de este local: si no, este borrado no vería una importación aún sin confirmar
+      // y no pediría elegir qué hacer con ella, aunque ya haya congelado su coste con los precios de este albarán (la vista previa no espera)
+      if (!opts.simular) await bloquearCostesDeVentas(c, ctx.local.id);
       const doc = await one<{ id: string; status: string; kind: string; local_id: string; aprendido: Aprendido | null; numero: string | null; fecha: string | null; total: number | null; saved_at: Date | null; proveedor: string | null }>(c,
         `select d.id, d.status, d.kind, d.local_id, d.aprendido, d.numero, d.fecha, d.total, d.saved_at, p.name as proveedor
          from documentos d left join proveedores p on p.id = d.proveedor_id where d.id = $1 for update of d`, [docId]);

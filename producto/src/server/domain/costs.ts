@@ -74,3 +74,15 @@ export async function recomputeCosts(c: Db, localId: string): Promise<Map<string
   }
   return out;
 }
+
+/**
+ * Pone en fila, por local, lo que decide qué coste se congela en las ventas importadas y si alguien se entera de que un albarán
+ * deja de existir: importar ventas y borrar un albarán (o descartar un documento). Es un bloqueo de transacción: se suelta solo al
+ * confirmar o deshacer, y hay que pedirlo antes que ningún otro bloqueo de fila para que dos transacciones no se crucen.
+ *
+ * Sin él, un borrado que empieza mientras otra persona importa ventas no ve esa importación (aún sin confirmar) y no pide elegir qué
+ * hacer con ella, y la importación ya ha congelado el coste de sus líneas con los precios del albarán que se acaba de borrar.
+ */
+export async function bloquearCostesDeVentas(c: Db, localId: string) {
+  await c.query("select pg_advisory_xact_lock(hashtextextended($1::text, 0))", [`costes-ventas:${localId}`]);
+}
