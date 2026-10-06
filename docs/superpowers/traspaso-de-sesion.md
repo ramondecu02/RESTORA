@@ -15,6 +15,8 @@
 
 ## 1. Reglas fijas
 
+- **Título de cada conversación:** empieza por «(RESTORA)» y sigue con la función o tarea de ese chat, por ejemplo «(RESTORA) Auditoría de aislamiento contra Neon». Quien abra la conversación lo pone; la sesión puede renombrarse a sí misma con `set_session_title`.
+- **Traspaso:** cuando el contexto pase de la mitad (`get_session` → `context_usage`: usados frente a máximo), dejar este documento al día, subirlo y avisar al propietario de que abra una conversación nueva, diciéndole el título que ponerle y qué pegar como primer mensaje.
 - **Idioma:** el propietario escribe en español: contestar en español. Sin suponer el género de nadie (usar «tú» y formas neutras).
 - **Rama:** trabajar solo en `claude/new-session-c92ohx`. No abrir pull request salvo que lo pida. No empujar a ninguna otra rama. Cada `git add` con rutas explícitas, nunca `-A`.
 - **Commits:** mensaje en español, estilo «Web: …», «Área B: …». Terminan con las dos líneas de atribución que indique el entorno (`Co-Authored-By` y `Claude-Session`). No poner identificadores de modelo en nada que se suba (código, docs, commits, PR).
@@ -102,3 +104,9 @@ Antes de dar por buena una tarea de `producto/`: `npx tsc --noEmit`, `npx eslint
 - Un elemento que anima desde `opacity: 0` no cuenta para el LCP hasta que se repinta: las animaciones de la primera pantalla empiezan en `0.01` (ver `app/globals.css`).
 - Con una consola o máquina reiniciada, Postgres local no arranca solo y las e2e fallan con `ECONNREFUSED 127.0.0.1:5432`: `service postgresql start`.
 - Nada de crear cuentas ni lanzar e2e contra una base compartida mientras otro la usa.
+
+## 8. Siguiente conversación
+
+- **Título:** «(RESTORA) Auditoría de aislamiento contra Neon».
+- **Primer mensaje a pegar:** «Lee docs/superpowers/traspaso-de-sesion.md y empieza por lo urgente de la sección 0. Aquí va el informe del build de Vercel: …» (con las líneas con ✗ o «FALLA» de «Auditoría de aislamiento entre negocios»).
+- Las siguientes, según lo que decida el propietario (sección 4): «(RESTORA) Planes y precios (D1)», «(RESTORA) Varios locales (D2)», «(RESTORA) Coste y calidad de la lectura de albaranes», «(RESTORA) Publicar la web».
