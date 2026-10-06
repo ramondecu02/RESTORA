@@ -1,6 +1,6 @@
 # QA transversal (Task 10 del plan) — informe del 5 de octubre de 2026
 
-> Qué se ha medido en toda la app (no solo en las pantallas nuevas), cómo, qué salió y qué se corrigió. Todo se repite con `node tests/e2e/run.mjs` (13 bloques);
+> Qué se ha medido en toda la app (no solo en las pantallas nuevas), cómo, qué salió y qué se corrigió. Todo se repite con `node tests/e2e/run.mjs` (15 bloques desde la fusión del Área B);
 > los tres bloques de este informe son `matriz.mjs`, `a11y.mjs` y `coherencia.mjs`. Cifras locales: build de producción en el equipo de desarrollo con los datos de ejemplo.
 
 ## 1. Matriz de anchos — `matriz.mjs`

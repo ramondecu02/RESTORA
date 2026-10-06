@@ -23,7 +23,7 @@ Aquí «publicidad» es cualquier gasto para conseguir visitas o altas: anuncios
 
 **Cómo se comprueba**
 
-1. P1 y P2, en `producto/`: `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` y `node tests/e2e/run.mjs` (13 bloques), todo en verde.
+1. P1 y P2, en `producto/`: `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` y `node tests/e2e/run.mjs` (15 bloques), todo en verde.
 2. P3 y P4: `matriz.mjs` y `a11y.mjs` dentro de `run.mjs`, más una prueba con un lector de pantalla real (VoiceOver, TalkBack o NVDA).
 3. P7: `npm run eval:lectura` sobre 30 albaranes reales de al menos 5 proveedores (`producto/tests/eval/README.md`).
 4. P8: Lighthouse móvil y Vercel Speed Insights sobre el dominio real.
@@ -33,7 +33,7 @@ Aquí «publicidad» es cualquier gasto para conseguir visitas o altas: anuncios
 
 **Estado hoy**
 
-- Hecho: P1, P2, P3 (156/156), P5, P6 (6/6) y S1 (161 comprobaciones de aislamiento entre negocios). P4, en automático (0 violaciones).
+- Hecho: P1, P2, P3 (156/156), P5, P6 (6/6) y S1 (169 comprobaciones de RLS, 678 de fugas entre negocios y la auditoría de aislamiento en cada build). P4, en automático (0 violaciones).
 - Parcial: P8 (medido en local; falta producción) y P10 (Facturación espera a D1).
 - Pendiente: P4 con lector de pantalla, P7 (faltan los albaranes reales y aprobar el gasto de API), P9, S2, S3, S4 y V1 a V4.
 - El documento está sin firmar.

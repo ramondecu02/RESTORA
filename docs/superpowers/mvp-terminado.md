@@ -14,8 +14,8 @@
 
 | # | Criterio | Cómo se mide | Hoy |
 |---|---|---|---|
-| P1 | Nada se rompe al cambiar el código | `tsc`, `eslint` y las 320 pruebas unitarias sin errores | ✓ |
-| P2 | Los flujos reales funcionan de punta a punta | `node tests/e2e/run.mjs`: 13 bloques en verde (alta y primer albarán, recorrido de 52 pantallas, flujos con base de datos, aislamiento entre negocios, prueba y bloqueo, calidad de lectura, borrado de albaranes, corregir y borrar, Hoy, pantallas renovadas, coherencia entre pantallas, matriz de anchos y accesibilidad) | ✓ |
+| P1 | Nada se rompe al cambiar el código | `tsc`, `eslint` y las 409 pruebas unitarias (con las de base de datos temporal, `REQUIRE_DB_TESTS=1`) sin errores | ✓ |
+| P2 | Los flujos reales funcionan de punta a punta | `node tests/e2e/run.mjs`: 15 bloques en verde (alta y primer albarán, recorrido de 52 pantallas, flujos con base de datos, aislamiento entre negocios, fugas entre negocios, prueba y bloqueo (con el tope mensual de lecturas), calidad de lectura, borrado de albaranes, corregir y borrar, Hoy, pantallas renovadas, Mi local y Más, coherencia entre pantallas, matriz de anchos y accesibilidad) | ✓ |
 | P3 | La interfaz no se rompe en ningún ancho | `matriz.mjs`: 26 pantallas × 360 · 390 · 768 · 1093 · 1280 · 1440 px sin desbordes, sin controles tapados, sin textos cortados y sin errores de consola | ✓ 156/156 |
 | P4 | Accesible (WCAG 2.2 AA) | `a11y.mjs` (axe-core): 0 violaciones serias o críticas en 29 pantallas, en claro y oscuro, móvil y escritorio (116 análisis); el foco se ve y no queda tapado al tabular; «Saltar al contenido» en toda pantalla con menú. Falta una prueba con un lector de pantalla real | ✓ automática · ✗ lector de pantalla |
 | P5 | Todo lo que se introduce se puede corregir o borrar, con aviso de lo que afecta | `borrado.mjs` (albaranes, con el impacto en precio medio, stock y ventas), `correcciones.mjs` (proveedor, artículo, plato, elaboración en uso, línea de inventario, importación de ventas con su stock, documento por revisar, cotización, invitación y miembro del equipo) y `flujos.mjs` (datos de ejemplo y negocio entero). Lo que está en uso se niega y dice dónde | ✓ |
@@ -29,8 +29,8 @@
 
 | # | Criterio | Cómo se mide | Hoy |
 |---|---|---|---|
-| S1 | Un negocio no puede ver datos de otro | `rls.mjs`: 161 comprobaciones sobre 17 tablas con dos negocios reales; toda tabla con `tenant_id` con RLS activada y forzada | ✓ |
-| S2 | Se puede recuperar la base de datos | Restaurar una copia de Neon (punto en el tiempo) en una rama y comprobar que arranca la app | ✗ Pendiente (Área B) |
+| S1 | Un negocio no puede ver datos de otro | `rls.mjs` (169 comprobaciones sobre las tablas de negocio con dos negocios reales), `fugas.mjs` (678: rutas, archivos, búsqueda, exportaciones, 49 acciones de servidor, invitaciones y cambio de negocio con los ids del otro negocio) y la auditoría de `npm run build` (`audit-tenancy.mjs`: RLS activada y forzada con políticas en toda tabla de negocio, los 56 usos de `sys()` clasificados) | ✓ |
+| S2 | Se puede recuperar la base de datos | Restaurar una copia de Neon (punto en el tiempo) en una rama y comprobar que arranca la app | ◐ Documentado (`producto/docs/COPIAS-Y-RESTAURACION.md`, lista del ensayo en `producto/scripts/restore-drill.md`); falta ensayarlo con la cuenta de Neon y anotar los tiempos reales |
 | S3 | Sin secretos en el repositorio | Búsqueda de secretos sobre todo el historial; claves solo en las variables de entorno de Vercel | ✗ Pendiente de pasar la búsqueda completa (Área B) |
 | S4 | Los correos de la app llegan | Alta, verificación y recuperación probadas con el dominio de envío real (Resend) | ✗ Pendiente de comprobar con un buzón real |
 
