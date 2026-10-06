@@ -193,7 +193,7 @@ Reglas duras:
 ## ÁREA B — Base de datos multi-restaurante (verificar de verdad)
 
 > **Estado a 5 de octubre de 2026 (hecho por un subagente en su rama y fusionado tras repetir todas las pruebas):** Task 12 (B1) ✓ — `npm run build` ejecuta `scripts/audit-tenancy.mjs` tras las migraciones y falla el despliegue si una tabla de negocio no tiene RLS activada y forzada con políticas,
-> si una tabla global no está justificada o si un `sys()` toca una tabla de negocio (salida de emergencia ruidosa: `SKIP_TENANCY_AUDIT=1`); los 56 `sys()` revisados a mano en `producto/docs/DECISIONES.md`, apartado 9 ·
+> si una tabla global no está justificada o si un `sys()` toca una tabla de negocio (salida de emergencia ruidosa: `SKIP_TENANCY_AUDIT=1`; **arranca en modo aviso**: estricta, falló el despliegue en Vercel y no se ha leído el informe contra Neon, ver `producto/docs/DESPLIEGUE.md`); los 56 `sys()` revisados a mano en `producto/docs/DECISIONES.md`, apartado 9 ·
 > Task 13 (B2) ✓ — `tests/e2e/fugas.mjs`, 678 comprobaciones; arregló una carrera entre borrar un albarán e importar ventas y dos errores 500 · Task 14 (B3) ◐ — copias y restauración **documentadas pero sin ensayar** (hace falta la cuenta de Neon:
 > `producto/docs/COPIAS-Y-RESTAURACION.md`, `producto/scripts/restore-drill.md`) y tope mensual de lecturas con IA por negocio (`MAX_LECTURAS_MES`, 1.500 por defecto, 0 apaga la lectura; es un freno de emergencia, no un límite de plan) ·
 > Tasks 15–17 (B4–B6) ⏸ esperan a D2 (varios locales) · Task 18 (B7) ✓ — medido con 50 y 200 negocios sintéticos (`producto/docs/RENDIMIENTO.md`): migración `0010` con once índices (dar de baja un negocio: de 10,6 s a 0,25 s) y dos consultas de ventas más rápidas. El plan reserva `0011` y `0012` al Área C.

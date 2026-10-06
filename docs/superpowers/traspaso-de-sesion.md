@@ -5,10 +5,12 @@
 
 ## 0. Primeros pasos en la sesión nueva, en este orden
 
+**URGENTE, antes que nada: la auditoría de aislamiento falla contra Neon y se ha dejado en modo aviso.** El despliegue de la fusión del Área B (`bf3954d`) falló en Vercel (22 s); el siguiente (`fc77726`), idéntico salvo `--aviso` en el script `build` de `producto/package.json`, pasó. Así que contra la base real la auditoría da algún problema, o no puede conectar, y desde aquí no se ve el registro (vercel.com está bloqueado). Pídele al propietario que abra Vercel → proyecto → Deployments → el último → **Build Logs**, busque «Auditoría de aislamiento entre negocios» y pegue las líneas con ✗ o «FALLA» (o «no se pudo auditar la base»). Con eso: si es una tabla global que falta en `GLOBALES`, añadirla con su motivo; si es un privilegio o una política real de la base, migración nueva (`0011` y `0012` son del Área C: usar el siguiente libre); y entonces **quitar `--aviso`** del script `build` y comprobar que Vercel pasa. Hasta entonces, producción funciona con el código de la fusión pero **sin esa garantía comprobada**. (En local pasa limpia, también con un propietario sin superusuario, como Neon: la diferencia está en los datos o permisos reales de la base de producción.)
+
 1. `git fetch origin claude/new-session-c92ohx && git checkout claude/new-session-c92ohx && git pull --ff-only origin claude/new-session-c92ohx`, y `git log --oneline -8`. Tiene que estar el commit «Área B … (fusión de claude/roadmap-b)» y, encima, el que añade este traspaso.
 2. Mirar si Vercel desplegó bien el último commit: `gh api repos/ramondecu02/RESTORA/commits/<sha>/status` (el estado debe ser `success`). Si el build falla con la auditoría de aislamiento, leer el registro: dice qué tabla le falta qué (ver `producto/docs/DECISIONES.md`, apartado 9).
 3. Si hace falta Postgres local y está parado (pasa al reiniciarse la máquina): `service postgresql start` y `pg_lsclusters` (debe decir `online`).
-4. Hacer la limpieza de la sección 6.
+4. Mirar lo que queda de la limpieza (sección 6).
 5. Solo entonces, lo de la sección 4 según lo que responda el propietario.
 
 ## 1. Reglas fijas
@@ -86,11 +88,11 @@ Antes de dar por buena una tarea de `producto/`: `npx tsc --noEmit`, `npx eslint
 - Una tabla nueva con `tenant_id` necesita RLS activada y forzada con política `tenant_isolation`, o el build falla; una tabla sin `tenant_id` hay que justificarla en `GLOBALES` de `scripts/audit-tenancy.mjs`.
 - Los nombres de migración siguen el orden (`0010` es la última); `0011` y `0012` son del Área C.
 
-## 6. Limpieza del entorno (de la sesión anterior)
+## 6. Limpieza del entorno
 
-- Bases locales que sobran: `PGPASSWORD=restora psql -h localhost -U restora -d postgres -c "drop database restora_a9"` y lo mismo con `restora_carga` (1,2 GB; se rehace con `npm run carga:sembrar`). Dejar `restora`, `restora_dev` y `restora_test`.
-- Servidores: el de `3101` (`fuser -k 3101/tcp`) y, si sigue vivo, el viejo de `3100` (compilación anterior contra `restora_dev`).
-- La rama `claude/roadmap-b` ya está fusionada: quitar su copia de trabajo (`git worktree list`; `git worktree remove --force <ruta>`) y la rama local (`git branch -D claude/roadmap-b`). No se empujó nunca al remoto.
+**Hecha al cerrar la sesión anterior:** bases `restora_a9` y `restora_carga` borradas (quedan `restora`, `restora_dev` y `restora_test`), servidores de los puertos 3100 y 3101 parados, y copia de trabajo y rama local `claude/roadmap-b` (ya fusionada) eliminadas. La rama nunca se empujó al remoto.
+
+**Queda:** copias de trabajo antiguas de ramas `fix/*` en la carpeta temporal (`git worktree list`): quitar con `git worktree remove --force <ruta>` las que ya estén fusionadas (`git branch --merged claude/new-session-c92ohx`).
 
 ## 7. Trampas conocidas
 
