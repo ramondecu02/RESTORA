@@ -48,6 +48,7 @@ export const GLOBALES = {
   schema_migrations: { motivo: "versiones de migración aplicadas", app: "ninguno" },
   catalog_categories: { motivo: "catálogo base del sector, compartido y sin datos de clientes", app: "catalogo" },
   catalog_items: { motivo: "catálogo base del sector, compartido y sin datos de clientes", app: "catalogo" },
+  playing_with_neon: { motivo: "tabla de ejemplo (name, value) que crea la guía de inicio de Neon en la base de producción: no es de RESTORA, la app no la usa y no guarda datos de ningún negocio", app: "ninguno" },
   bench_price_obs: { motivo: "capa anónima de precios: sin tenant_id a propósito (k-anonimato; el contribuyente es un HMAC no reversible)", app: "capa" },
 };
 
