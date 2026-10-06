@@ -4,7 +4,8 @@ import { Icon } from "@/components/icons";
 import { requireApp, hasPerm } from "@/server/ctx";
 import { stripeOn } from "@/server/billing";
 import { diasDeGracia } from "@/server/plan";
-import { fecha } from "@/lib/format";
+import { env } from "@/server/env";
+import { fecha, num } from "@/lib/format";
 import { CONTACTO_EMAIL, CONTACTO_TEL, CONTACTO_WHATSAPP } from "@/lib/contacto";
 import { Pagar } from "./pagar";
 
@@ -20,6 +21,8 @@ export default async function Facturacion({ searchParams }: { searchParams: Prom
   const dias = diasHasta(ctx.org.trialEndsAt);
   const gracia = diasDeGracia(ctx.org);
   const [label, cls] = ESTADO[st] ?? [st, "tag"];
+  // Lo que de verdad se aplica: el tope mensual de lecturas con IA (MAX_LECTURAS_MES). Los límites por plan llegarán con los planes (D1)
+  const tope = env.maxLecturasMes;
   return (
     <Screen title="Facturación" sub="Tu plan y tus pagos" back="/cuenta">
       {sp.ok ? <div className="note note-ok"><Icon name="check" /><p>¡Gracias! Tu suscripción está en marcha. Puede tardar unos segundos en aparecer como activa.</p></div> : null}
@@ -35,7 +38,7 @@ export default async function Facturacion({ searchParams }: { searchParams: Prom
       <section className="card">
         <div className="card-h"><h2 className="h3">Qué incluye</h2></div>
         <ul className="stack-sm small">
-          <li className="row"><Icon name="check" size={18} /> Lectura automática de albaranes y facturas, sin límite razonable de uso</li>
+          <li className="row"><Icon name="check" size={18} /> {tope > 0 ? `Lectura automática de albaranes y facturas, hasta ${num(tope, 0)} al mes` : "Lectura automática de albaranes y facturas: ahora mismo desactivada"}</li>
           <li className="row"><Icon name="check" size={18} /> Escandallos, carta, inventario, ventas y avisos</li>
           <li className="row"><Icon name="check" size={18} /> Todo el equipo del local, con sus roles</li>
           <li className="row"><Icon name="check" size={18} /> Tus datos se pueden exportar y borrar cuando quieras</li>
