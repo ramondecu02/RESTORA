@@ -353,10 +353,15 @@ async function main(argv) {
   }
   const i = argv.indexOf("--src");
   const src = i >= 0 ? path.resolve(argv[i + 1]) : path.join(AQUI, "src");
+  // Modo aviso (--aviso o TENANCY_AUDIT_MODE=aviso): saca el mismo informe pero no bloquea el despliegue. Es la puesta en marcha en el entorno real
+  // (Neon), donde la auditoría aún no se ha visto pasar: se mira el informe del build y, con él limpio, se quita --aviso del script build.
+  const aviso = argv.includes("--aviso") || process.env.TENANCY_AUDIT_MODE === "aviso";
+  const AVISO = "[audit-tenancy] ⚠ MODO AVISO: el despliegue NO se bloquea aunque la auditoría falle. Mira el informe, arregla lo que diga y quita --aviso del script «build» de package.json para que vuelva a bloquear.";
   let r;
-  try { r = await auditar({ url, src }); } catch (e) { console.error("[audit-tenancy] no se pudo auditar la base:", e.message); return 2; }
+  try { r = await auditar({ url, src }); } catch (e) { console.error("[audit-tenancy] no se pudo auditar la base:", e.message); if (aviso) { console.warn(AVISO); return 0; } return 2; }
   if (argv.includes("--json")) console.log(JSON.stringify({ ...r, conTenant: undefined, sinTenant: undefined, vistas: undefined }, null, 2));
   else console.log(informe(r));
+  if (r.problemas.length && aviso) { console.warn(AVISO); return 0; }
   return r.problemas.length ? 1 : 0;
 }
 

@@ -310,6 +310,21 @@ export const e = (email: string) => sys((c) => one(c, "select id from users wher
     expect(mod.informe(await auditar())).toMatch(/Aislamiento correcto/);
   });
 
+  it("--aviso saca el mismo informe pero no bloquea el despliegue; sin él, sí", async () => {
+    await sql("create table para_aviso (id int, tenant_id uuid)");
+    const estricta = cli();
+    expect(estricta.status).toBe(1);
+    expect(estricta.stdout).toMatch(/para_aviso: la seguridad por filas \(RLS\) no está activada/);
+    const blanda = cli({}, ["--aviso"]);
+    expect(blanda.status).toBe(0);
+    expect(blanda.stdout).toMatch(/para_aviso: la seguridad por filas \(RLS\) no está activada/);
+    expect(blanda.stderr).toMatch(/MODO AVISO/);
+    await sql("drop table para_aviso");
+    const limpia = cli({}, ["--aviso"]);
+    expect(limpia.status).toBe(0);
+    expect(limpia.stderr).not.toMatch(/MODO AVISO/);
+  });
+
   it("SKIP_TENANCY_AUDIT=1 es una salida de emergencia ruidosa", () => {
     const r = cli({ SKIP_TENANCY_AUDIT: "1" });
     expect(r.status).toBe(0);
