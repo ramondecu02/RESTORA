@@ -128,14 +128,21 @@ export function ListaArticulos({ filas, iva, fcObjetivo, canPrecios, inicial }: 
       <div className="toolbar">
         <div className="searchbox">
           <Icon name="search" size={18} />
-          <input className="inp" type="search" value={q} onChange={(e) => cambiaQ(e.target.value)} placeholder="Buscar por nombre, tipo o proveedor" aria-label="Buscar artículo" enterKeyHint="search" />
+          <input className="inp" type="search" value={q} onChange={(e) => cambiaQ(e.target.value)} placeholder="Buscar artículo" aria-label="Buscar artículo" enterKeyHint="search" />
         </div>
-        <select className="inp" value={orden} onChange={(e) => cambiaOrden(e.target.value as Orden)} aria-label="Ordenar" style={{ flex: "0 1 190px" }}>
-          <option value="nombre">Por tipo y nombre</option><option value="gasto">Más compra (90 días)</option><option value="subida">Subidas de precio</option>
+        {cats.length > 1 ? (
+          <select className="inp al-sel" value={cat} onChange={(e) => cambiaCat(e.target.value)} aria-label="Tipo de artículo">
+            <option value="">Todos los tipos</option>
+            {cats.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.n})</option>)}
+          </select>
+        ) : null}
+        <select className="inp al-sel" value={orden} onChange={(e) => cambiaOrden(e.target.value as Orden)} aria-label="Ordenar">
+          <option value="nombre">Por tipo</option><option value="gasto">Más compra (90 días)</option><option value="subida">Subidas de precio</option>
           <option value="precio">Más caros</option><option value="margen">Menos margen primero</option>
         </select>
       </div>
 
+      <div className="al-bar">
       <div className="seg al-kinds" role="tablist" aria-label="Qué artículos ver">
         {KINDS.filter((k) => k.k === "todos" || porTipo.get(k.k)).map((k) => (
           <button key={k.k} type="button" role="tab" aria-selected={kind === k.k} className={kind === k.k ? "is-on" : ""} onClick={() => cambiaKind(k.k)}>
@@ -143,19 +150,12 @@ export function ListaArticulos({ filas, iva, fcObjetivo, canPrecios, inicial }: 
           </button>
         ))}
       </div>
-
-      {cats.length > 1 ? (
-        <div className="chips" role="list" aria-label="Tipo de artículo">
-          <button type="button" role="listitem" className={`chip ${!cat ? "is-on" : ""}`} onClick={() => cambiaCat("")}>Todos <span className="cnt">{enTipo.length}</span></button>
-          {cats.map((c) => <button type="button" role="listitem" key={c.id} className={`chip ${cat === c.id ? "is-on" : ""}`} onClick={() => cambiaCat(cat === c.id ? "" : c.id)}>{c.name} <span className="cnt">{c.n}</span></button>)}
-        </div>
-      ) : null}
-
       <div className="al-tools">
         {nSinPrecio ? <button type="button" className={`chip chip-sm ${solo === "sinPrecio" ? "is-on" : ""}`} aria-pressed={solo === "sinPrecio"} onClick={() => setSolo(solo === "sinPrecio" ? null : "sinPrecio")}>Sin precio <span className="cnt">{nSinPrecio}</span></button> : null}
         {nSubidas ? <button type="button" className={`chip chip-sm ${solo === "subidas" ? "is-on" : ""}`} aria-pressed={solo === "subidas"} onClick={() => setSolo(solo === "subidas" ? null : "subidas")}>Con subida <span className="cnt">{nSubidas}</span></button> : null}
         {revs.length && canPrecios && nSinPvp ? <button type="button" className={`chip chip-sm ${solo === "sinPvp" ? "is-on" : ""}`} aria-pressed={solo === "sinPvp"} onClick={() => setSolo(solo === "sinPvp" ? null : "sinPvp")}>Sin precio de venta <span className="cnt">{nSinPvp}</span></button> : null}
         <span className="muted small al-count" aria-live="polite">{hayFiltro ? `${lista.length} de ${enTipo.length}` : plural(lista.length, "artículo", "artículos")}</span>
+      </div>
       </div>
 
       {revs.length ? (

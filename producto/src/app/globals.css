@@ -1400,3 +1400,13 @@ button.chip { cursor: pointer; font-family: inherit; }
   .al-kinds { max-width: none; }
 }
 @media (prefers-reduced-motion: reduce) { .al-gh .ic, .al-venta .al-chev { transition: none; } }
+
+/* Artículos: una sola fila de controles (buscar, tipo, orden) y otra con pestañas y filtros rápidos */
+.al .toolbar { flex-wrap: nowrap; }
+.al .toolbar .searchbox { flex: 1 1 140px; }
+.al .al-sel { flex: 0 1 190px; min-width: 0; padding-right: 30px; text-overflow: ellipsis; }
+.al-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.al-bar .al-kinds { flex: 0 0 auto; max-width: none; width: auto; }
+.al-bar .al-kinds > button { flex: none; padding: 0 14px; }
+.al-bar .al-tools { flex: 1 1 auto; min-width: 0; }
+@media (max-width: 640px) { .al .toolbar { flex-wrap: wrap; } .al .toolbar .searchbox { flex: 1 1 100%; } .al .al-sel { flex: 1 1 140px; } .al-bar .al-kinds { width: 100%; } .al-bar .al-kinds > button { flex: 1; } }
