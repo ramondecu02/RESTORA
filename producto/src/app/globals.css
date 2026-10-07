@@ -1410,3 +1410,8 @@ button.chip { cursor: pointer; font-family: inherit; }
 .al-bar .al-kinds > button { flex: none; padding: 0 14px; }
 .al-bar .al-tools { flex: 1 1 auto; min-width: 0; }
 @media (max-width: 640px) { .al .toolbar { flex-wrap: wrap; } .al .toolbar .searchbox { flex: 1 1 100%; } .al .al-sel { flex: 1 1 140px; } .al-bar .al-kinds { width: 100%; } .al-bar .al-kinds > button { flex: 1; } }
+/* Pestañas de Artículos: nunca recortan su texto; si no caben en una pantalla muy estrecha, se desplazan */
+.al-kinds { overflow-x: auto; scrollbar-width: none; }
+.al-kinds::-webkit-scrollbar { display: none; }
+.al-kinds > button { flex: none; overflow: visible; text-overflow: clip; padding: 0 12px; }
+@media (max-width: 640px) { .al-bar .al-kinds > button { flex: 1 0 auto; padding: 0 10px; } .al-kinds .cnt { margin-left: 3px; } }
