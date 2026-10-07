@@ -91,7 +91,9 @@ describe.skipIf(!hayDb)("auditoría de aislamiento contra una base temporal", ()
     expect(r.tablas.map((t) => t.tabla)).toEqual(expect.arrayContaining(["documentos", "compra_lineas", "avisos_estado", "audit_log"]));
     // Las tablas globales son las de la lista, cada una con su motivo
     expect(r.globales.every((g) => g.motivo)).toBe(true);
-    expect(r.globales.map((g) => g.tabla).sort()).toEqual(Object.keys(mod.GLOBALES).sort());
+    // playing_with_neon la crea la guía de inicio de Neon en producción: está declarada, pero no sale de las migraciones
+    const ajenas = new Set(["playing_with_neon"]);
+    expect(r.globales.map((g) => g.tabla).sort()).toEqual(Object.keys(mod.GLOBALES).filter((k) => !ajenas.has(k)).sort());
     expect(cli().status).toBe(0);
   });
 

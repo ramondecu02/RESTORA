@@ -305,6 +305,7 @@ else {
     ["(app)/articulos/actions.ts#cambiarProveedor", (a) => `/articulos/${a.art}`, (x) => [x.art, x.prov], err(/No hay precio de ese proveedor/)],
     ["(app)/articulos/actions.ts#guardarCotizacion", (a) => `/articulos/${a.art}`, (x) => [x.art, { proveedorId: x.prov, proveedorNuevo: "", precio: 1.11, unidad: "kg", nota: "hack" }], err(/Artículo no encontrado/)],
     ["(app)/articulos/actions.ts#quitarCotizacion", (a) => `/articulos/${a.art}`, (x) => [x.art, x.prov], "ok"],
+    ["(app)/articulos/actions.ts#fijarVentaArticulo", (a) => `/articulos/${a.art}`, (x) => [x.art, { pvp: 9.99, cantidad: 1, unidad: "ud", porUnidad: 1 }], err(/Artículo no encontrado/)],
     ["(app)/carta/actions.ts#importarCarta", (a) => `/carta/subir/${a.carta}`, (x) => [x.carta, []], err(/Documento no encontrado/)],
     ["(app)/compras/actions.ts#guardarBorrador", (a) => `/compras/${a.doc}`, (x) => [x.doc, { lineas: [] }], "ok"],
     ["(app)/compras/actions.ts#confirmar", (a) => `/compras/${a.doc}`, (x, a) => [x.doc, draft(a.art), {}], err(/Documento no encontrado/)],

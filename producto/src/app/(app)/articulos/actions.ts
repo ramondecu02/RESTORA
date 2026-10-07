@@ -11,7 +11,9 @@ import { crearArticulo, ivaCategoria, rebuildArticulo } from "@/server/domain/ar
 import { getCatalog } from "@/server/queries/catalog";
 import { parseNum } from "@/lib/format";
 import { numValido } from "@/lib/inventory";
-import type { BaseUnit } from "@/lib/units";
+import { compatible, type BaseUnit, type LineUnit } from "@/lib/units";
+import { margenDesdePvp } from "@/lib/receta-edit";
+import { cantidadPorVenta, familiaReventa, ventasPorUnidad, type Servido } from "@/lib/venta-articulo";
 
 const UNITS: BaseUnit[] = ["kg", "L", "ud"];
 const IVAS = [0, 4, 5, 10, 21];
@@ -217,3 +219,68 @@ export async function precioRapido(articuloId: string, valor: string): Promise<R
 }
 
 export async function ivaDeCategoria(categoryId: string): Promise<number> { return ivaCategoria(categoryId); }
+
+const LINE_UNITS: LineUnit[] = ["g", "kg", "ml", "L", "ud"];
+
+/**
+ * Precio de venta de un artículo que se vende tal cual (vino, cerveza, agua…). Crea, o actualiza, el producto de reventa enlazado a él:
+ * así el margen sale del precio de compra del propio artículo y aparece también en Ventas y en la carta, sin dar de alta nada dos veces.
+ * Lo que se sirve en cada venta: en artículos que se miden en «ud» (cajas, barriles), `porUnidad` = cuántas ventas salen de cada unidad
+ * comprada (una caja de 24 → 24); en kg o L, `cantidad` + `unidad` (330 ml). Si no vienen, se mantiene lo que ya había.
+ */
+export async function fijarVentaArticulo(id: string, v: { pvp: number | null; cantidad?: number | null; unidad?: LineUnit | null; porUnidad?: number | null }): Promise<Result<{ recetaId: string }>> {
+  return run(async () => {
+    const ctx = await requireApp();
+    requirePerm(ctx, "escandallos");
+    requirePerm(ctx, "carta:precios");
+    if (!isUuid(id)) throw new UserError("Artículo no válido.");
+    if (!v || typeof v !== "object") throw new UserError("Datos no válidos.");
+    const pvp = v.pvp == null ? null : v.pvp;
+    if (pvp != null && !(typeof pvp === "number" && Number.isFinite(pvp) && pvp > 0 && pvp < 100000)) throw new UserError("Precio de venta no válido.");
+    const cant = v.cantidad ?? null;
+    if (cant != null && !(typeof cant === "number" && Number.isFinite(cant) && cant > 0 && cant < 1e6)) throw new UserError("Revisa cuánto se sirve en cada venta.");
+    const por = v.porUnidad ?? null;
+    if (por != null && !(typeof por === "number" && Number.isFinite(por) && por >= 0.01 && por <= 10000)) throw new UserError("Revisa cuántas ventas salen de cada unidad: de 0,01 a 10.000.");
+    if (v.unidad != null && !LINE_UNITS.includes(v.unidad)) throw new UserError("Unidad no válida.");
+    const recetaId = await withTenant(ctx.tenantId, async (c) => {
+      const a = await one<{ name: string; unit: BaseUnit; category_id: string }>(c, "select name, unit, category_id from articulos where id = $1 and local_id = $2 and not archived for update", [id, ctx.local.id]);
+      if (!a) throw new UserError("Artículo no encontrado.");
+      const ya = await one<{ id: string; raciones: number; cantidad: number; unidad: LineUnit }>(c, `select r.id, r.raciones::float as raciones, l.cantidad::float as cantidad, l.unidad from recetas r join receta_lineas l on l.receta_id = r.id
+        where l.articulo_id = $1 and r.local_id = $2 and r.reventa and r.tipo = 'plato' and not r.archived
+          and (select count(*) from receta_lineas x where x.receta_id = r.id) = 1 order by r.updated_at desc limit 1 for update of r`, [id, ctx.local.id]);
+      let serv: Servido;
+      if (a.unit === "ud") {
+        // Una unidad comprada (caja, barril, botella) y las ventas que salen de ella: el coste de cada venta es exacto, sin decimales de más
+        const n = por ?? (ya ? ventasPorUnidad(ya) : 1);
+        serv = { cantidad: 1, unidad: "ud", raciones: Math.round(n * 1000) / 1000 };
+      } else {
+        const unidad = v.unidad ?? (a.unit === "L" ? "ml" : "g");
+        const base = cant != null ? { cantidad: cant, unidad } : ya ? { cantidad: cantidadPorVenta(ya), unidad: ya.unidad } : null;
+        if (!base) throw new UserError(`Indica cuánto ${a.unit === "L" ? "(en cl o ml) " : ""}se sirve en cada venta: ${a.name} se mide en ${a.unit}.`);
+        serv = { ...base, raciones: 1 };
+      }
+      if (!compatible(a.unit, serv.unidad)) throw new UserError("Esa unidad no encaja con el artículo (peso, volumen o unidades).");
+      if (!ya && pvp == null) throw new UserError("Pon el precio de venta.");
+      let rid = ya?.id;
+      if (!rid) {
+        const r = await one<{ id: string }>(c, `insert into recetas (tenant_id, local_id, tipo, name, familia, raciones, rinde, rinde_unit, pvp, reventa, estado, en_carta)
+          values ($1,$2,'plato',$3,$4,$5,1,'kg',$6,true,'activo',true) returning id`, [ctx.tenantId, ctx.local.id, a.name.slice(0, 100), familiaReventa(a.category_id), serv.raciones, pvp]);
+        rid = r!.id;
+        await c.query("insert into receta_lineas (tenant_id, receta_id, idx, articulo_id, cantidad, unidad) values ($1,$2,0,$3,$4,$5)", [ctx.tenantId, rid, id, serv.cantidad, serv.unidad]);
+      } else {
+        const igual = Math.abs(serv.cantidad - ya!.cantidad) < 1e-9 && serv.unidad === ya!.unidad && Math.abs(serv.raciones - ya!.raciones) < 1e-9;
+        if (!igual) await c.query("update receta_lineas set cantidad = $2, unidad = $3 where receta_id = $1", [rid, serv.cantidad, serv.unidad]);
+        await c.query("update recetas set pvp = $2, raciones = $3, updated_at = now() where id = $1", [rid, pvp, serv.raciones]);
+      }
+      const costes = await recomputeCosts(c, ctx.local.id);
+      // Mismo criterio que el resto de la reventa: el margen objetivo es el real con ese PVP, redondeado hacia abajo
+      const coste = costes.get(rid);
+      const margen = pvp != null && coste != null && coste > 0 ? margenDesdePvp(coste, pvp, ctx.local.iva_venta) : null;
+      await c.query("update recetas set margen_objetivo = $2 where id = $1", [rid, margen]);
+      await audit(c, ctx.tenantId, ctx.userId, ya ? "guardar" : "crear", "receta", rid, { articulo: id, venta: true });
+      return rid;
+    });
+    refresh();
+    return { ok: true, data: { recetaId } };
+  });
+}

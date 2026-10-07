@@ -1356,3 +1356,47 @@ a, button, summary, label, select, input, textarea, [role="button"], [role="radi
 .av-cerrado .av-h-fijo { padding-bottom: 12px; grid-template-columns: auto minmax(0, 1fr) auto; }
 .av-cerrado .av-t b { color: var(--ink-2); }
 .av-cierre { border-top: 1px dashed var(--line); padding-top: 10px; margin-top: 4px; }
+
+/* Artículos: listado interactivo, grupos por tipo y margen de los productos que se venden tal cual */
+.al-kinds { max-width: 440px; }
+.al-kinds .cnt { font-weight: 500; font-size: 12.5px; margin-left: 4px; }
+.al-kinds > button { min-height: 38px; }
+.al-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.al-tools .al-count { margin-left: auto; }
+.chip-sm { min-height: 30px; padding: 0 10px; font-size: 13px; }
+button.chip { cursor: pointer; font-family: inherit; }
+.al-resumen { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; background: var(--ok-soft); color: var(--ink); font-size: 14px; line-height: 1.45; }
+.al-resumen .ic { flex: none; color: var(--ok); margin-top: 2px; }
+.al-card { padding: 4px 16px 12px; gap: 0; }
+.al-grupo + .al-grupo { margin-top: 4px; }
+.al-gh { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 8px 0; background: var(--surface); border: 0; border-bottom: 1px solid var(--line); color: var(--ink-2); font: inherit; font-size: 13.5px; cursor: pointer; text-align: left; }
+.al-gh b { font-weight: 700; letter-spacing: .01em; }
+.al-gh .al-rot { transform: rotate(-90deg); }
+.al-gh .ic { transition: transform .15s ease; color: var(--muted); }
+.al-fila .li { border-top: 1px solid var(--line); }
+.al-grupo .al-fila:first-child .li { border-top: 0; }
+.al-fila.is-open { background: color-mix(in srgb, var(--sunk) 55%, transparent); margin: 0 -16px; padding: 0 16px 10px; }
+.al-venta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: calc(100% - 52px); margin: -2px 0 10px 52px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; text-align: left; min-height: 44px; }
+.al-venta:hover { border-color: var(--muted); }
+.al-venta-vacio { border-style: dashed; color: var(--ink-2); }
+.al-venta-k { color: var(--muted); font-size: 13px; }
+.al-venta b { font-variant-numeric: tabular-nums; }
+.al-venta .al-chev { margin-left: auto; color: var(--muted); transition: transform .15s ease; }
+.al-venta .al-rot { transform: rotate(180deg); }
+.al-ed { margin: 0 0 4px 52px; padding: 12px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--surface); display: flex; flex-direction: column; gap: 8px; }
+.al-ed-fila { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.al-ed .fld label { font-size: 12.5px; }
+.al-serv { display: grid; grid-template-columns: minmax(0, 1fr) 76px; gap: 6px; }
+.al-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.al-ed-nota { margin: 0; line-height: 1.5; }
+.al-mas { align-self: center; margin-top: 10px; }
+@media (max-width: 640px) {
+  .al-card { padding-inline: 12px; }
+  .al-fila.is-open { margin: 0 -12px; padding: 0 12px 10px; }
+  .al-venta, .al-ed { margin-left: 0; width: 100%; }
+  .al-ed { width: auto; }
+  .al-ed-fila { grid-template-columns: 1fr 1fr; }
+  .al-ed-fila > .fld:first-child { grid-column: 1 / -1; }
+  .al-kinds { max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) { .al-gh .ic, .al-venta .al-chev { transition: none; } }

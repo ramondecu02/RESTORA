@@ -119,6 +119,15 @@ Respuestas a las decisiones D1–D6 del plan (`docs/superpowers/plans/2026-10-05
 - **El cálculo de avisos de precio** (`efectoCambio()`, en Hoy) recalcula todas las recetas dos veces por cada aviso abierto: con un negocio diez veces mayor que el normal Hoy tarda 275 ms, de los que unos 190 son procesador de Node, no base de datos. Para el negocio normal no importa (unos 7 ms).
 - **Medir en Neon**, con la cuenta del propietario (apartado 8 de `docs/RENDIMIENTO.md`).
 
+## 12. Margen de los productos que se venden tal cual (7 de octubre de 2026)
+
+Vinos, cervezas, licores, aguas y refrescos (categorías `vino`, `cerveza`, `licor`, `bebida`, `refresco`) no se transforman: se compran y se sirven. Su margen sale del propio artículo, sin duplicar datos:
+
+- **Un artículo con precio de venta = un producto de reventa enlazado.** Desde Artículos, al poner el PVP se crea (o se actualiza) una receta `reventa` con una sola línea al artículo (`fijarVentaArticulo`). No hay columna nueva ni migración: Ventas, Carta y el food cost ya leen esas recetas.
+- **Coste de una venta** = precio neto del artículo × cantidad servida ÷ raciones. En artículos medidos en `kg`/`L` se indica lo que se sirve (750 ml, 330 ml…); en los medidos en `ud` (cajas, barriles) se indica cuántas ventas salen de cada unidad (`raciones`), así el coste por venta es exacto aunque salgan 150 cañas de un barril.
+- **Margen** sobre la venta neta, con el IVA de venta del local (`iva_venta`), igual que el resto de la reventa. Limitación conocida: el local tiene un solo IVA de venta; en hostelería las bebidas alcohólicas llevan 21 % y las demás 10 %, así que el margen de vinos y cervezas sale algo alto si el local tiene el 10 %. Pendiente de decisión (IVA por producto de reventa).
+- **Permisos:** solo quien tiene `escandallos` y `carta:precios` (propietario y costes).
+
 ## Fuera de alcance en esta versión
 
 - Integración directa con TPV (se importan ventas en CSV, que exportan casi todos).
