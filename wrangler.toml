@@ -8,7 +8,7 @@ pages_build_output_dir = "out"
 [[d1_databases]]
 binding = "DB"
 database_name = "restora-leads"
-database_id = "db98235c-819f-4f27-9230-f9ca4e5d2993"
+database_id = "c957c4ed-9ef4-4b8c-9fde-16b56b9319fd"
 
 # Non-secret variables (optional). Set the sender once you verify a domain
 # in Resend; otherwise the function falls back to onboarding@resend.dev.
