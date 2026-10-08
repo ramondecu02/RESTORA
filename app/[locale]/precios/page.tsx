@@ -81,6 +81,7 @@ export default async function PreciosPage(props: {
                     <span className="display-serif" style={{ fontSize: "clamp(40px, 4.4vw, 52px)", letterSpacing: "-0.02em" }}>{pl.price}</span>
                     <span style={{ fontSize: 15, color: "var(--muted)" }}>{p.perMonth} {p.vatNote}</span>
                   </div>
+                  <p style={{ fontSize: 13.5, color: "var(--muted)", margin: "6px 0 0" }}>{p.annualLabel.replace("{price}", pl.annual)}</p>
                   <div className="hairline" style={{ margin: "20px 0" }} />
                   <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: 1 }}>
                     {pl.perks.map((f) => (

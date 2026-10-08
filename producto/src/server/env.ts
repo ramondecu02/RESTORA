@@ -44,7 +44,8 @@ export const env = {
     return this.resendKey ? "resend" : "dev";
   },
   get stripeKey() { return v("STRIPE_SECRET_KEY"); },
-  get stripePrice() { return v("STRIPE_PRICE_ID"); },
+  /** Precio de Stripe de cada plan y periodo: STRIPE_PRICE_PREMIUM_MONTH, STRIPE_PRICE_PREMIUM_YEAR, STRIPE_PRICE_PRO_MONTH… Si solo existe el antiguo STRIPE_PRICE_ID, vale como Premium mensual. */
+  stripePriceFor(tier: string, intervalo: string) { return v(`STRIPE_PRICE_${tier.toUpperCase()}_${intervalo === "year" ? "YEAR" : "MONTH"}`) || (tier === "premium" && intervalo !== "year" ? v("STRIPE_PRICE_ID") : ""); },
   get stripeWebhookSecret() { return v("STRIPE_WEBHOOK_SECRET"); },
   /** Tope mensual de lecturas con IA por negocio (1.500 si no se indica; 0 apaga la lectura). Ver «Tope mensual de lecturas» en docs/DESPLIEGUE.md. */
   get maxLecturasMes() { return maxLecturasMes(process.env.MAX_LECTURAS_MES); },

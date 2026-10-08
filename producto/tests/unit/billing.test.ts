@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Stripe y la base de datos de mentira: el webhook debe decidir con lo que hay ahora en Stripe, no con lo que trae el evento
-const subs: Record<string, { id: string; status: string; created: number }[]> = {};
+const subs: Record<string, { id: string; status: string; created: number; items?: { data: { price: { id: string } }[] } }[]> = {};
 const llamadas: string[] = [];
+let ultimoPago: { line_items: { price: string }[]; subscription_data: { metadata: Record<string, string> } } | null = null;
 let nCliente = 0;
 vi.mock("stripe", () => ({
   default: class {
@@ -19,11 +20,11 @@ vi.mock("stripe", () => ({
     checkout = { sessions: {
       list: async () => ({ data: [{ id: "cs_abierta" }] }),
       expire: async (id: string) => { llamadas.push(`expire ${id}`); return { id }; },
-      create: async (p: { customer: string }) => { llamadas.push(`checkout ${p.customer}`); return { url: `https://pago.example/${p.customer}` }; },
+      create: async (p: { customer: string; line_items: { price: string }[]; subscription_data: { metadata: Record<string, string> } }) => { ultimoPago = p; llamadas.push(`checkout ${p.customer}`); return { url: `https://pago.example/${p.customer}` }; },
     } };
   },
 }));
-type Org = { id: string; stripe_customer_id: string | null; plan_status: string; stripe_subscription_id: string | null; trial_ends_at?: Date | null };
+type Org = { id: string; stripe_customer_id: string | null; plan_status: string; stripe_subscription_id: string | null; trial_ends_at?: Date | null; plan_tier?: string | null; plan_interval?: string | null };
 let orgs: Org[] = [];
 const events = new Set<string>();
 vi.mock("@/server/db", async (orig) => {
@@ -34,7 +35,12 @@ vi.mock("@/server/db", async (orig) => {
     if (sql.includes("where stripe_customer_id = $1 for update")) return { rows: orgs.filter((x) => x.stripe_customer_id === p[0]) };
     if (sql.includes("where id = $1 and stripe_customer_id is null for update")) return { rows: orgs.filter((x) => x.id === p[0] && !x.stripe_customer_id) };
     if (sql === "update organizations set stripe_customer_id = $2 where id = $1" && (m = orgs.find((x) => x.id === p[0]))) m.stripe_customer_id = p[1] as string;
-    if (sql.startsWith("update organizations set plan_status = $2") && (m = orgs.find((x) => x.id === p[0] && (p[3] === undefined || x.stripe_customer_id === p[3])))) Object.assign(m, { plan_status: p[1], stripe_subscription_id: p[2] });
+    // checkoutUrl filtra además por cliente ($4, con plan en $5 y $6); el webhook lleva el plan en $4 y $5
+    const conCliente = sql.includes("stripe_customer_id = $4");
+    if (sql.startsWith("update organizations set plan_status = $2") && (m = orgs.find((x) => x.id === p[0] && (!conCliente || x.stripe_customer_id === p[3])))) {
+      const [tier, interval] = conCliente ? [p[4], p[5]] : [p[3], p[4]];
+      Object.assign(m, { plan_status: p[1], stripe_subscription_id: p[2], plan_tier: tier ?? m.plan_tier ?? null, plan_interval: interval ?? m.plan_interval ?? null });
+    }
     if (sql.includes("where id = $1 and stripe_customer_id is null returning id")) {
       m = orgs.find((x) => x.id === p[0] && !x.stripe_customer_id);
       if (m) m.stripe_customer_id = p[1] as string;
@@ -46,7 +52,10 @@ vi.mock("@/server/db", async (orig) => {
   return { ...o, sys: (fn: (c: unknown) => Promise<unknown>) => fn({ query }) };
 });
 process.env.STRIPE_SECRET_KEY = "sk_test_x";
-process.env.STRIPE_PRICE_ID = "price_x";
+process.env.STRIPE_PRICE_PREMIUM_MONTH = "price_pm";
+process.env.STRIPE_PRICE_PREMIUM_YEAR = "price_py";
+process.env.STRIPE_PRICE_PRO_MONTH = "price_prm";
+process.env.STRIPE_PRICE_MAX_YEAR = "price_my"; // Pro anual y Max mensual sin configurar a propósito
 
 const ORG = "11111111-1111-4111-8111-111111111111", OTRA = "22222222-2222-4222-8222-222222222222";
 let n = 0;
@@ -125,18 +134,18 @@ describe("contratar y dar de baja", async () => {
   });
   it("con una suscripción ya en marcha no abre otro pago y deja el plan al día", async () => {
     subs.cus_1 = [{ id: "sub_1", status: "trialing", created: 10 }];
-    expect(await checkoutUrl(ORG, "a@b.es", "Casa")).toBeNull();
+    expect(await checkoutUrl(ORG, "a@b.es", "Casa", "premium", "month")).toBeNull();
     expect(orgs[0]).toMatchObject({ plan_status: "active", stripe_subscription_id: "sub_1" });
     expect(llamadas.filter((l) => l.startsWith("checkout"))).toEqual([]);
   });
   it("sin suscripción abre el pago y cierra los que quedaran abiertos", async () => {
     subs.cus_1 = [{ id: "sub_0", status: "canceled", created: 10 }];
-    expect(await checkoutUrl(ORG, "a@b.es", "Casa")).toBe("https://pago.example/cus_1");
+    expect(await checkoutUrl(ORG, "a@b.es", "Casa", "premium", "month")).toBe("https://pago.example/cus_1");
     expect(llamadas).toEqual(["expire cs_abierta", "checkout cus_1"]);
   });
   it("dos pagos a la vez crean un solo cliente", async () => {
     orgs[0].stripe_customer_id = null;
-    const [a, b] = await Promise.all([checkoutUrl(ORG, "a@b.es", "Casa"), checkoutUrl(ORG, "a@b.es", "Casa")]);
+    const [a, b] = await Promise.all([checkoutUrl(ORG, "a@b.es", "Casa", "premium", "month"), checkoutUrl(ORG, "a@b.es", "Casa", "premium", "month")]);
     expect(a).toBe(b);
     expect(a).toBe(`https://pago.example/${orgs[0].stripe_customer_id}`);
     expect(llamadas.filter((l) => l.startsWith("del"))).toHaveLength(1);
@@ -146,5 +155,43 @@ describe("contratar y dar de baja", async () => {
     subs.cus_1 = [{ id: "sub_1", status: "active", created: 10 }, { id: "sub_0", status: "canceled", created: 5 }, { id: "sub_2", status: "past_due", created: 8 }];
     await cancelarCobros(ORG);
     expect(llamadas).toEqual(["retrieve sub_viejo", "cancel sub_1", "cancel sub_2", "del cus_1"]);
+  });
+});
+
+describe("planes: Premium, Pro y Max", async () => {
+  const { handleWebhook, checkoutUrl, planDePrecio, preciosConfigurados } = await import("@/server/billing");
+  beforeEach(() => {
+    orgs = [{ id: ORG, stripe_customer_id: "cus_1", plan_status: "trial", stripe_subscription_id: null, trial_ends_at: null }];
+    for (const k of Object.keys(subs)) delete subs[k];
+    llamadas.length = 0; ultimoPago = null;
+  });
+  it("solo se pueden contratar las combinaciones con precio en Stripe", () => {
+    expect(preciosConfigurados()).toEqual([
+      { tier: "premium", intervalo: "month" }, { tier: "premium", intervalo: "year" }, { tier: "pro", intervalo: "month" }, { tier: "max", intervalo: "year" },
+    ]);
+    expect(planDePrecio("price_prm")).toEqual({ tier: "pro", intervalo: "month" });
+    expect(planDePrecio("price_otro")).toBeNull();
+    expect(planDePrecio(undefined)).toBeNull();
+  });
+  it("el pago usa el precio del plan elegido y deja el plan en los metadatos", async () => {
+    subs.cus_1 = [];
+    expect(await checkoutUrl(ORG, "a@b.es", "Casa", "pro", "month")).toBe("https://pago.example/cus_1");
+    expect(ultimoPago!.line_items).toEqual([{ price: "price_prm", quantity: 1 }]);
+    expect(ultimoPago!.subscription_data.metadata).toMatchObject({ org_id: ORG, plan: "pro", intervalo: "month" });
+  });
+  it("un plan sin precio configurado no abre ningún pago", async () => {
+    await expect(checkoutUrl(ORG, "a@b.es", "Casa", "max", "month")).rejects.toThrow(/no está disponible/);
+    expect(llamadas.filter((l) => l.startsWith("checkout"))).toEqual([]);
+  });
+  it("el aviso de Stripe guarda el plan que se cobra, y un precio desconocido no borra el que había", async () => {
+    subs.cus_1 = [{ id: "sub_1", status: "active", created: 10, items: { data: [{ price: { id: "price_py" } }] } }];
+    await handleWebhook(ev("customer.subscription.created", { customer: "cus_1", metadata: { org_id: ORG } }), "");
+    expect(orgs[0]).toMatchObject({ plan_status: "active", plan_tier: "premium", plan_interval: "year" });
+    subs.cus_1 = [{ id: "sub_1", status: "active", created: 10, items: { data: [{ price: { id: "price_viejo" } }] } }];
+    await handleWebhook(ev("customer.subscription.updated", { customer: "cus_1", metadata: { org_id: ORG } }), "");
+    expect(orgs[0]).toMatchObject({ plan_tier: "premium", plan_interval: "year" });
+    subs.cus_1 = [{ id: "sub_1", status: "active", created: 10, items: { data: [{ price: { id: "price_prm" } }] } }];
+    await handleWebhook(ev("customer.subscription.updated", { customer: "cus_1", metadata: { org_id: ORG } }), "");
+    expect(orgs[0]).toMatchObject({ plan_tier: "pro", plan_interval: "month" });
   });
 });

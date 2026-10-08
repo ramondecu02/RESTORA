@@ -5,7 +5,7 @@
 export const SESION = `select s.id, s.org_id, s.last_seen_at, u.id as user_id, u.name, u.email, u.email_verified_at, u.prefs, u.created_at
           from sessions s join users u on u.id = s.user_id
           where s.token_hash = $1 and s.expires_at > now()`;
-export const ORG = `select o.id, o.name, m.role, o.briefing, o.onboarding_done_at, o.plan_status, o.trial_ends_at, o.past_due_since, o.stripe_customer_id
+export const ORG = `select o.id, o.name, m.role, o.briefing, o.onboarding_done_at, o.plan_status, o.trial_ends_at, o.past_due_since, o.stripe_customer_id, o.plan_tier, o.plan_interval
          from memberships m join organizations o on o.id = m.org_id
          where m.user_id = $1 order by (o.id = $2) desc, m.created_at asc limit 1`;
 /** Dónde está cada consulta (para la prueba que vigila las copias). */

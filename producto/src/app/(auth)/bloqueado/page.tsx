@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { hasPerm, requireApp } from "@/server/ctx";
-import { stripeOn } from "@/server/billing";
+import { preciosConfigurados, stripeOn } from "@/server/billing";
+import { planDe } from "@/lib/planes";
 import { bloqueado, DIAS_DE_GRACIA } from "@/server/plan";
 import { CONTACTO_EMAIL, CONTACTO_TEL, CONTACTO_WHATSAPP } from "@/lib/contacto";
 import { Pagar } from "../../(app)/cuenta/facturacion/pagar";
@@ -28,7 +29,7 @@ export default async function Bloqueado() {
       {!hasPerm(ctx, "facturacion") ? (
         <div className="note"><Icon name="info" /><p>Avisa a quien lleva la cuenta de {ctx.org.name} para que active la suscripción.</p></div>
       ) : stripeOn() ? (
-        <Pagar activo={impago} tieneCliente={!!ctx.org.stripeCustomerId} />
+        <Pagar activo={impago} tieneCliente={!!ctx.org.stripeCustomerId} disponibles={preciosConfigurados()} actual={planDe(ctx.org)?.tier ?? null} intervaloActual={ctx.org.planInterval} />
       ) : (
         <div className="stack-sm">
           <p className="muted small">{impago ? "Para actualizar el pago, escríbenos y lo resolvemos en el día." : "Para activar tu suscripción, escríbenos y la dejamos lista en el día."}</p>

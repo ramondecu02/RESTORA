@@ -5,11 +5,13 @@ import { all, one, sys, withTenant } from "./db";
 import { getSession, type SessionData } from "./session";
 import { can, type Perm, type Role } from "./rbac";
 import { bloqueado } from "./plan";
+import type { Intervalo, Tier } from "@/lib/planes";
 
 export type Briefing = { rol?: string; objetivo?: string; compras?: string; albaranes?: string; tipo?: string };
 export type OrgInfo = {
   id: string; name: string; role: Role; briefing: Briefing; onboardingDone: boolean;
   planStatus: "trial" | "active" | "past_due" | "canceled"; trialEndsAt: string | null; pastDueSince: string | null; stripeCustomerId: string | null;
+  planTier: Tier | null; planInterval: Intervalo | null;
 };
 export type Local = {
   id: string; name: string; address: string; postal_code: string; ciudad: string; lema: string;
@@ -24,8 +26,8 @@ export const getOrg = cache(async (): Promise<{ s: SessionData; org: OrgInfo | n
   if (!s) return null;
   const row = await sys((c) => one<{
     id: string; name: string; role: Role; briefing: Briefing; onboarding_done_at: Date | null; plan_status: OrgInfo["planStatus"];
-    trial_ends_at: Date | null; past_due_since: Date | null; stripe_customer_id: string | null;
-  }>(c, `select o.id, o.name, m.role, o.briefing, o.onboarding_done_at, o.plan_status, o.trial_ends_at, o.past_due_since, o.stripe_customer_id
+    trial_ends_at: Date | null; past_due_since: Date | null; stripe_customer_id: string | null; plan_tier: Tier | null; plan_interval: Intervalo | null;
+  }>(c, `select o.id, o.name, m.role, o.briefing, o.onboarding_done_at, o.plan_status, o.trial_ends_at, o.past_due_since, o.stripe_customer_id, o.plan_tier, o.plan_interval
          from memberships m join organizations o on o.id = m.org_id
          where m.user_id = $1 order by (o.id = $2) desc, m.created_at asc limit 1`, [s.userId, s.orgId]));
   if (!row) return { s, org: null };
@@ -35,7 +37,7 @@ export const getOrg = cache(async (): Promise<{ s: SessionData; org: OrgInfo | n
       id: row.id, name: row.name, role: row.role, briefing: row.briefing || {}, onboardingDone: !!row.onboarding_done_at,
       planStatus: row.plan_status, trialEndsAt: row.trial_ends_at ? new Date(row.trial_ends_at).toISOString() : null,
       pastDueSince: row.past_due_since ? new Date(row.past_due_since).toISOString() : null,
-      stripeCustomerId: row.stripe_customer_id,
+      stripeCustomerId: row.stripe_customer_id, planTier: row.plan_tier, planInterval: row.plan_interval,
     },
   };
 });

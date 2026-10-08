@@ -117,6 +117,22 @@ describe.skipIf(!bd.disponible)("contador de lecturas del mes contra una base te
     expect(t).toMatchObject({ max: 0, agotado: true });
     expect(t.mensaje).toBe(mensajeTopeLecturas(0));
   });
+  it("el cupo del plan manda sobre el valor por defecto: Premium 80, Pro 250, prueba 100; el freno de emergencia, si es más bajo", async () => {
+    delete process.env.MAX_LECTURAS_MES;
+    expect(await modulo.topeDeLecturas(A.org, { planStatus: "trial" })).toMatchObject({ usadas: 8, max: 100, porPlan: true, agotado: false, casi: false });
+    expect(await modulo.topeDeLecturas(A.org, { planStatus: "active", planTier: "premium" })).toMatchObject({ max: 80, porPlan: true });
+    expect(await modulo.topeDeLecturas(A.org, { planStatus: "active", planTier: "pro" })).toMatchObject({ max: 250 });
+    // Con 8 lecturas y un cupo de 10 se está al 80 %: se avisa, pero aún se puede leer
+    process.env.MAX_LECTURAS_MES = "1500";
+    const justo = await modulo.topeDeLecturas(A.org, { planStatus: "active", planTier: "premium" });
+    expect(justo.casi).toBe(false); // 8 de 80
+    process.env.MAX_LECTURAS_MES = "10";
+    expect(await modulo.topeDeLecturas(A.org, { planStatus: "active", planTier: "max" })).toMatchObject({ max: 10, porPlan: false, casi: true, agotado: false });
+    process.env.MAX_LECTURAS_MES = "8";
+    const t = await modulo.topeDeLecturas(A.org, { planStatus: "active", planTier: "max" });
+    expect(t).toMatchObject({ max: 8, agotado: true, casi: false });
+    expect(t.mensaje).toBe(mensajeTopeLecturas(8));
+  });
   it("el mensaje que recibe el negocio es el del tope", async () => {
     process.env.MAX_LECTURAS_MES = "8";
     expect((await modulo.topeDeLecturas(A.org)).mensaje).toBe(mensajeTopeLecturas(8));

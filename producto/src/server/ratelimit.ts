@@ -1,4 +1,5 @@
 import { mensajeTopeLecturas } from "@/lib/limits";
+import { AVISO_CUPO, cupoLecturas, mensajeCupoPlan, type OrgPlan } from "@/lib/planes";
 import { one, sys, withTenant } from "./db";
 import { env } from "./env";
 
@@ -29,10 +30,20 @@ export async function lecturasDelMes(tenantId: string): Promise<number> {
   });
 }
 
-export type TopeLecturas = { usadas: number; max: number; restantes: number; agotado: boolean; mensaje: string };
-/** Cuántas lecturas con IA lleva el negocio este mes, cuántas le permite MAX_LECTURAS_MES y el mensaje para cuando se acaban. */
-export async function topeDeLecturas(tenantId: string): Promise<TopeLecturas> {
-  const max = env.maxLecturasMes;
+export type TopeLecturas = { usadas: number; max: number; restantes: number; agotado: boolean; mensaje: string; /** Ya se ha usado el 80 % del cupo (y aún queda alguna). */ casi: boolean; /** El límite que manda es el del plan, no el freno de emergencia. */ porPlan: boolean };
+/**
+ * Cuántas lecturas con IA lleva el negocio este mes y cuántas le quedan. El límite es el cupo de su plan (Premium 80, Pro 250, Max 450,
+ * prueba 100); MAX_LECTURAS_MES sigue ahí como freno de emergencia y, si es más bajo, manda él. Sin `plan` solo cuenta el freno.
+ */
+export async function topeDeLecturas(tenantId: string, plan?: OrgPlan | null): Promise<TopeLecturas> {
+  const freno = env.maxLecturasMes;
+  const cupo = plan ? cupoLecturas(plan) : Infinity;
+  const porPlan = plan != null && cupo < freno;
+  const max = Math.min(freno, cupo);
   const usadas = await lecturasDelMes(tenantId);
-  return { usadas, max, restantes: Math.max(0, max - usadas), agotado: usadas >= max, mensaje: mensajeTopeLecturas(max) };
+  const agotado = usadas >= max;
+  return {
+    usadas, max, restantes: Math.max(0, max - usadas), agotado, porPlan, casi: !agotado && max > 0 && usadas >= Math.ceil(max * AVISO_CUPO),
+    mensaje: porPlan && plan ? mensajeCupoPlan(plan, max) : mensajeTopeLecturas(max),
+  };
 }

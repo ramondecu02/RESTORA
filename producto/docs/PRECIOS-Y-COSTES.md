@@ -144,6 +144,8 @@ al principio: ~70–100 €/mes en total, que pesa hasta unos 30 locales).
 
 ## 6. Planes elegidos por el propietario (8 de octubre de 2026)
 
+> **Actualización del mismo día:** el propietario confirmó que los precios son **sin IVA** (el IVA se cobra aparte) y fijó los límites: **Premium 80, Pro 250 y Max 450 lecturas con IA al mes** (aviso al 80 %); **locales: Premium 1, Pro 2 y Max 5**; y **plan anual: Premium 490,90 €, Pro 839,90 € y Max 1.390,90 €** (2,2 / 2,7 / 2,7 meses gratis). Con Pro a 2 locales y 250 lecturas el margen con el cupo lleno mejora respecto a la tabla de abajo (que suponía 3). Ya está en la app: `src/lib/planes.ts`, cupo en `topeDeLecturas()`, planes en Facturación y precios en Stripe (`DESPLIEGUE.md`, sección 8). Pendiente: varios locales (B4–B6).
+
 Decisión del propietario: tres planes, **Premium 49,90 €/mes** (un solo local), **Pro 89,90 €/mes** (más funcionalidades y posibilidad de más de un local) y
 **Max 149,90 €/mes** (grupos más grandes, todas las funcionalidades). Esto resuelve D1 en lo esencial y, de hecho, **da por buena la idea de varios locales (D2)**
 en Pro y Max. Lo que sigue son **propuestas para cerrar los límites**; los precios no cambian.

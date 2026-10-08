@@ -2,9 +2,22 @@
 import Stripe from "stripe";
 import { isUuid, one, sys, type Db } from "./db";
 import { env } from "./env";
+import { TIERS, type Intervalo, type Tier } from "@/lib/planes";
 
 let client: Stripe | null = null;
-export const stripeOn = () => !!(env.stripeKey && env.stripePrice);
+const INTERVALOS: Intervalo[] = ["month", "year"];
+/** Combinaciones de plan y periodo que tienen precio en Stripe (las únicas que se pueden contratar). */
+export const preciosConfigurados = (): { tier: Tier; intervalo: Intervalo }[] =>
+  TIERS.flatMap((tier) => INTERVALOS.filter((intervalo) => env.stripePriceFor(tier, intervalo)).map((intervalo) => ({ tier, intervalo })));
+export const stripeOn = () => !!env.stripeKey && preciosConfigurados().length > 0;
+/** Plan y periodo de un precio de Stripe; null si no es de ninguno de los configurados. */
+export function planDePrecio(priceId: string | null | undefined): { tier: Tier; intervalo: Intervalo } | null {
+  if (!priceId) return null;
+  return preciosConfigurados().find((p) => env.stripePriceFor(p.tier, p.intervalo) === priceId) ?? null;
+}
+type ConItems = { items?: { data?: { price?: { id?: string } | null }[] } };
+/** Plan que cobra una suscripción de Stripe, leído de su primer precio. */
+export const planDeSub = (s: ConItems | null) => planDePrecio(s?.items?.data?.[0]?.price?.id);
 const stripe = () => (client ??= new Stripe(env.stripeKey));
 
 type Plan = "trial" | "active" | "past_due" | "canceled";
@@ -47,11 +60,14 @@ async function clienteDe(orgId: string, email: string, orgName: string): Promise
 }
 
 /** Enlace de pago. Devuelve null si el cliente ya tiene una suscripción en marcha (y la deja reflejada en el negocio). */
-export async function checkoutUrl(orgId: string, email: string, orgName: string): Promise<string | null> {
+export async function checkoutUrl(orgId: string, email: string, orgName: string, tier: Tier, intervalo: Intervalo): Promise<string | null> {
+  const price = env.stripePriceFor(tier, intervalo);
+  if (!price) throw new Error("Ese plan todavía no está disponible para contratar");
   const customer = await clienteDe(orgId, email, orgName);
   const vig = suscripcionVigente(await subsDe(customer));
   if (vig && suscripcionViva(vig)) {
-    await sys((c) => c.query("update organizations set plan_status = $2, stripe_subscription_id = $3, past_due_since = case when $2 = 'past_due' then coalesce(past_due_since, now()) else null end where id = $1 and stripe_customer_id = $4", [orgId, planDeSuscripcion(vig.status), vig.id, customer]));
+    const pl = planDeSub(vig as ConItems);
+    await sys((c) => c.query("update organizations set plan_status = $2, stripe_subscription_id = $3, plan_tier = coalesce($5, plan_tier), plan_interval = coalesce($6, plan_interval), past_due_since = case when $2 = 'past_due' then coalesce(past_due_since, now()) else null end where id = $1 and stripe_customer_id = $4", [orgId, planDeSuscripcion(vig.status), vig.id, customer, pl?.tier ?? null, pl?.intervalo ?? null]));
     return null;
   }
   // Solo un pago abierto por cliente: si se pagara en dos pestañas habría dos suscripciones
@@ -62,8 +78,8 @@ export async function checkoutUrl(orgId: string, email: string, orgName: string)
     mode: "subscription",
     customer,
     client_reference_id: orgId,
-    line_items: [{ price: env.stripePrice, quantity: 1 }],
-    subscription_data: { metadata: { org_id: orgId }, ...(trialEnd && trialEnd > Date.now() / 1000 + 3600 * 48 ? { trial_end: trialEnd } : {}) },
+    line_items: [{ price, quantity: 1 }],
+    subscription_data: { metadata: { org_id: orgId, plan: tier, intervalo }, ...(trialEnd && trialEnd > Date.now() / 1000 + 3600 * 48 ? { trial_end: trialEnd } : {}) },
     locale: "es",
     allow_promotion_codes: true,
     success_url: `${env.appUrl}/cuenta/facturacion?ok=1`,
@@ -126,7 +142,11 @@ async function sincronizar(c: Db, customer: string, orgHint: string | null) {
   }
   if (!org) return;
   const vig = suscripcionVigente(await subsDe(customer));
-  if (vig) await c.query("update organizations set plan_status = $2, stripe_subscription_id = $3, past_due_since = case when $2 = 'past_due' then coalesce(past_due_since, now()) else null end where id = $1", [org.id, planDeSuscripcion(vig.status), vig.id]);
+  if (vig) {
+    const pl = planDeSub(vig as ConItems);
+    await c.query("update organizations set plan_status = $2, stripe_subscription_id = $3, plan_tier = coalesce($4, plan_tier), plan_interval = coalesce($5, plan_interval), past_due_since = case when $2 = 'past_due' then coalesce(past_due_since, now()) else null end where id = $1",
+      [org.id, planDeSuscripcion(vig.status), vig.id, pl?.tier ?? null, pl?.intervalo ?? null]);
+  }
 }
 
 export async function handleWebhook(raw: string, sig: string): Promise<{ ok: boolean; status: number; msg?: string }> {

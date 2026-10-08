@@ -32,7 +32,7 @@ Falta configurarlo (sección 8 de `DESPLIEGUE.md`):
 2. Producto «RESTORA» con **precio mensual recurrente** (89 €/mes). Decidir si el precio lleva el IVA incluido
    (Stripe Tax o un 21 % fijo) y si la oferta de socio fundador va como cupón.
 3. Aviso (webhook) a `https://app.restoraapp.app/api/stripe/webhook` y portal de cliente activado.
-4. Variables en Vercel: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET` → *Redeploy*.
+4. Variables en Vercel: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` y los seis `STRIPE_PRICE_<PLAN>_<MONTH|YEAR>` (ver `DESPLIEGUE.md`, sección 8) → *Redeploy*.
 5. Pago de prueba con la tarjeta `4242 4242 4242 4242` y, después, el paso a modo real.
 6. Vercel **Pro** en cuanto se cobra a clientes (uso comercial).
 7. Facturas con NIF del cliente: revisarlo con tu asesor (Stripe puede emitirlas).

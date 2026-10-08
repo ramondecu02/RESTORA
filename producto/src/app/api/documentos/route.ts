@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (!can(ctx.role, "compras")) return NextResponse.json({ error: "Tu rol no permite subir documentos." }, { status: 403 });
   if (bloqueado(ctx.org)) return NextResponse.json({ error: "Tu prueba gratuita ha terminado. Suscríbete para seguir subiendo documentos." }, { status: 402 });
   // Cada lectura con IA cuesta dinero: primero el tope del mes (MAX_LECTURAS_MES), antes de gastar nada de los límites por hora; apuntar a mano no pasa por aquí
-  const tope = await topeDeLecturas(ctx.tenantId);
+  const tope = await topeDeLecturas(ctx.tenantId, ctx.org);
   if (tope.agotado) return NextResponse.json({ error: tope.mensaje, codigo: "tope_lecturas" }, { status: 429 });
   // Cada lectura con IA cuesta dinero: tope por hora y por día para cada negocio (la clave de la API tiene además su límite mensual)
   if (!(await rateLimit(`upload:${ctx.tenantId}`, 40, 3600)) || !(await rateLimit(`upload-dia:${ctx.tenantId}`, 150, 86400))) return NextResponse.json({ error: "Has subido muchos documentos en poco tiempo. Espera un rato y vuelve a intentarlo." }, { status: 429 });

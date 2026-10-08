@@ -95,7 +95,7 @@ export async function reintentar(docId: string): Promise<Result> {
     // Si la subida se cortó a medias, leer solo parte de las páginas daría una compra incompleta
     if (!doc.archivos || doc.archivos < doc.pages) throw new UserError("Faltan páginas de este documento. Descártalo y súbelo otra vez.");
     // Cada lectura cuesta: cuenta en el tope del mes y en el mismo límite que las subidas
-    const tope = await topeDeLecturas(ctx.tenantId);
+    const tope = await topeDeLecturas(ctx.tenantId, ctx.org);
     if (tope.agotado) throw new UserError(tope.mensaje);
     if (!(await rateLimit(`upload:${ctx.tenantId}`, 80, 3600))) throw new UserError("Has leído muchos documentos en poco tiempo. Espera unos minutos.");
     const ok = await withTenant(ctx.tenantId, async (c) => {

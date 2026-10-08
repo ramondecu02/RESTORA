@@ -13,7 +13,8 @@ import { rateLimit } from "@/server/ratelimit";
 import { deleteTenantFiles } from "@/server/storage";
 import { isRole, ROLE_LABEL, type Role } from "@/server/rbac";
 import { cargarDemo, quitarDemo } from "@/server/demo/seed";
-import { cancelarCobros, checkoutUrl, portalUrl, stripeOn } from "@/server/billing";
+import { cancelarCobros, checkoutUrl, portalUrl, preciosConfigurados, stripeOn } from "@/server/billing";
+import { esIntervalo, esTier } from "@/lib/planes";
 
 export async function guardarLocal(input: { name: string; address: string; postal_code: string; ciudad: string; lema: string; iva_venta: number; fc_objetivo: number; comensales_dia: number | null }): Promise<Result> {
   return run(async () => {
@@ -171,12 +172,14 @@ export async function quitarMiembro(userId: string): Promise<Result> {
 }
 
 // ---- Facturación ----
-export async function irAPagar(): Promise<Result<string>> {
+export async function irAPagar(tier: string, intervalo: string): Promise<Result<string>> {
   const r = await run(async () => {
     const ctx = await requireApp({ permitirBloqueo: true });
     requirePerm(ctx, "facturacion");
     if (!stripeOn()) throw new UserError("Los pagos aún no están configurados en esta instalación.");
-    const url = await checkoutUrl(ctx.tenantId, ctx.email, ctx.org.name);
+    if (!esTier(tier) || !esIntervalo(intervalo)) throw new UserError("Elige un plan.");
+    if (!preciosConfigurados().some((p) => p.tier === tier && p.intervalo === intervalo)) throw new UserError("Ese plan todavía no está disponible para contratar.");
+    const url = await checkoutUrl(ctx.tenantId, ctx.email, ctx.org.name, tier, intervalo);
     // Ya hay una suscripción en marcha (p. ej. aún no había llegado el aviso de Stripe): no se abre otra
     if (!url) { refresh(); throw new UserError("Ya tienes una suscripción en marcha. Para cambiarla o cancelarla, entra en «Gestionar pagos y facturas»."); }
     return { ok: true as const, data: url };

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CONTACTO_EMAIL } from "@/lib/contacto";
 import { Icon } from "./icons";
 
-export function TopeLecturas({ mensaje, alternativa }: { mensaje: string; alternativa: { href: string; texto: string } }) {
+export function TopeLecturas({ mensaje, alternativa, cambiarPlan = false }: { mensaje: string; alternativa: { href: string; texto: string }; cambiarPlan?: boolean }) {
   // El correo del mensaje se convierte en enlace
   const [antes, despues] = mensaje.split(CONTACTO_EMAIL);
   return (
@@ -14,6 +14,7 @@ export function TopeLecturas({ mensaje, alternativa }: { mensaje: string; altern
         <p>{antes}{despues === undefined ? null : <><a className="link" href={`mailto:${CONTACTO_EMAIL}?subject=${encodeURIComponent("Lecturas de documentos")}`}>{CONTACTO_EMAIL}</a>{despues}</>}</p>
       </div>
       <Link className="btn btn-block" href={alternativa.href}>{alternativa.texto}</Link>
+      {cambiarPlan ? <Link className="btn btn-2 btn-block" href="/cuenta/facturacion">Ver planes y ampliar</Link> : null}
     </div>
   );
 }

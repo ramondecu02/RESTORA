@@ -105,12 +105,20 @@ La lista completa, comentada, está en `producto/.env.example`.
 
 **Hazlo antes de que terminen las primeras pruebas (14 días).** Al terminar la prueba sin suscripción la app se bloquea; mientras no haya Stripe, la pantalla de bloqueo y Facturación dan el WhatsApp y el email para activar la suscripción a mano (ver `docs/HOJA-DE-RUTA.md`).
 
-1. dashboard.stripe.com → **Products → Add product** «RESTORA» con un precio recurrente mensual. Copia el `price_…`.
+1. dashboard.stripe.com → **Products → Add product**: crea **tres productos** («RESTORA Premium», «RESTORA Pro» y «RESTORA Max») y a cada uno **dos precios recurrentes, sin IVA**, en euros:
+
+   | Producto | Mensual | Anual |
+   |---|---:|---:|
+   | Premium | 49,90 € | 490,90 € |
+   | Pro | 89,90 € | 839,90 € |
+   | Max | 149,90 € | 1.390,90 € |
+
+   Copia los seis `price_…`. Pon **«Impuesto: no incluido» (exclusive)** en los seis: el IVA se añade aparte al cobrar (con Stripe Tax o con un tipo fijo del 21 %; lo decide el gestor).
 2. **Developers → API keys**: la clave secreta (`sk_live_…`; empieza con la de pruebas `sk_test_…`).
 3. **Developers → Webhooks → Add endpoint**: `https://app.restoraapp.app/api/stripe/webhook`, eventos `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`. Copia el secreto de firma `whsec_…`.
-4. **Settings → Billing → Customer portal**: actívalo (cambiar tarjeta, facturas, cancelar).
-5. Variables: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`. Redespliega.
-6. Prueba en modo test con la tarjeta `4242 4242 4242 4242`: Cuenta → Facturación → Suscribirme; al volver, el plan debe verse «Suscripción activa».
+4. **Settings → Billing → Customer portal**: actívalo (cambiar tarjeta, facturas, cancelar) y permite **cambiar de plan** entre los seis precios (así se sube o baja de Premium a Pro o Max sin programar nada más).
+5. Variables en Vercel: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` y los seis precios: `STRIPE_PRICE_PREMIUM_MONTH`, `STRIPE_PRICE_PREMIUM_YEAR`, `STRIPE_PRICE_PRO_MONTH`, `STRIPE_PRICE_PRO_YEAR`, `STRIPE_PRICE_MAX_MONTH`, `STRIPE_PRICE_MAX_YEAR`. Solo se ofrecen en Facturación los que tengan variable. Redespliega. (El antiguo `STRIPE_PRICE_ID` sigue valiendo como Premium mensual.) **Comprueba también tus tarifas reales** en *Settings → Pricing*: `PRECIOS-Y-COSTES.md` usa las de la tarifa estándar.
+6. Prueba en modo test con la tarjeta `4242 4242 4242 4242`: Cuenta → Facturación → elige un plan; al volver, debe verse «Suscripción activa» con el nombre del plan, y el cupo de lecturas del mes cambia al del plan (Premium 80, Pro 250, Max 450). Prueba también un cambio de plan desde el portal y una tarjeta que falle (`4000 0000 0000 0341`).
 
 El webhook es idempotente (cada evento se aplica una sola vez) y atómico (si algo falla, Stripe lo reintenta). Cuando termina la prueba sin suscripción la app se bloquea; si falla un cobro, solo avisa mientras Stripe reintenta. Ver `docs/DECISIONES.md`.
 
