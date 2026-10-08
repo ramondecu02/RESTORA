@@ -4,11 +4,13 @@ import { useState, useTransition } from "react";
 import { Icon } from "@/components/icons";
 import { toastError } from "@/components/ui/toast";
 import { eur, num } from "@/lib/format";
+import { whatsappCon } from "@/lib/contacto";
 import { ahorroAnual, PLANES, precioDe, TIERS, type Intervalo, type Tier } from "@/lib/planes";
 import { irAPagar, irAPortal } from "../actions";
 
-export function Pagar({ activo, tieneCliente, disponibles, actual, intervaloActual }: {
+export function Pagar({ activo, tieneCliente, disponibles, actual, intervaloActual, manual = false, negocio = "" }: {
   activo: boolean; tieneCliente: boolean; disponibles: { tier: Tier; intervalo: Intervalo }[]; actual: Tier | null; intervaloActual: Intervalo | null;
+  /** Sin pagos con Stripe: cada plan lleva a WhatsApp con el mensaje escrito y se activa a mano. */ manual?: boolean; negocio?: string;
 }) {
   const [pending, start] = useTransition();
   const [intervalo, setIntervalo] = useState<Intervalo>(intervaloActual ?? (disponibles.some((d) => d.intervalo === "year") ? "year" : "month"));
@@ -37,14 +39,18 @@ export function Pagar({ activo, tieneCliente, disponibles, actual, intervaloActu
                     <li><Icon name="check" size={16} /> {p.locales === 1 ? "1 local" : `Hasta ${p.locales} locales`}{p.locales > 1 ? " (próximamente)" : ""}</li>
                     <li><Icon name="check" size={16} /> {num(p.albaranes, 0)} lecturas de albaranes al mes</li>
                   </ul>
-                  <button type="button" className="btn btn-sm btn-block" disabled={pending || !puede(t)} onClick={() => start(async () => { const r = await irAPagar(t, intervalo); if (r && !r.ok) toastError(r.error); })}>
-                    {pending ? <span className="spin" /> : null}{puede(t) ? `Elegir ${p.nombre}` : "No disponible"}
-                  </button>
+                  {manual ? (
+                    <a className="btn btn-sm btn-block" href={whatsappCon(`Hola, quiero el plan ${p.nombre} (${intervalo === "year" ? "anual" : "mensual"}) de RESTORA${negocio ? ` para ${negocio}` : ""}`)} target="_blank" rel="noopener">Pedir {p.nombre}</a>
+                  ) : (
+                    <button type="button" className="btn btn-sm btn-block" disabled={pending || !puede(t)} onClick={() => start(async () => { const r = await irAPagar(t, intervalo); if (r && !r.ok) toastError(r.error); })}>
+                      {pending ? <span className="spin" /> : null}{puede(t) ? `Elegir ${p.nombre}` : "No disponible"}
+                    </button>
+                  )}
                 </div>
               );
             })}
           </div>
-          <p className="muted small">Los precios no incluyen IVA: se añade aparte al pagar. Sin permanencia: puedes cancelar cuando quieras.</p>
+          <p className="muted small">Los precios no incluyen IVA: se añade aparte al pagar. Sin permanencia: puedes cancelar cuando quieras.{manual ? " Te lo activamos en el día." : ""}</p>
         </>
       ) : <p className="muted small">Para cambiar de plan o de periodo, o cancelar, entra en «Gestionar pagos y facturas».</p>}
       {tieneCliente ? <div className="row-wrap"><button type="button" className="btn btn-2 btn-sm" disabled={pending} onClick={portal}>Gestionar pagos y facturas</button></div> : null}

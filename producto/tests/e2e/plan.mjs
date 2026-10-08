@@ -100,16 +100,17 @@ try {
     if (ruta() !== "/hoy") throw new Error("ha ido a " + ruta());
   });
 
-  // ── Tope mensual de lecturas con IA (MAX_LECTURAS_MES, 1.500 por defecto): se llena el mes con lecturas de mentira ──
+  // ── Cupo mensual de lecturas con IA del plan (el negocio está activo sin plan guardado: cuenta como Premium, 80): se llena el mes con lecturas de mentira ──
   const [{ local }] = await sql("select id as local from locales where tenant_id = $1 limit 1", [id]);
   const MARCA = "prueba-tope";
-  await sql(`insert into documentos (tenant_id, local_id, kind, status, source, ocr_model, pages) select $1, $2, 'albaran', 'guardado', 'ocr', $3, 1 from generate_series(1, 1500)`, [id, local, MARCA]);
-  const MENSAJE = /Has llegado al máximo de lecturas automáticas de este mes \(1\.500\)\. Puedes seguir apuntando a mano tus albaranes y tus platos; si necesitas leer más, escribe a hola@restoraapp\.com/;
+  await sql(`insert into documentos (tenant_id, local_id, kind, status, source, ocr_model, pages) select $1, $2, 'albaran', 'guardado', 'ocr', $3, 1 from generate_series(1, 80)`, [id, local, MARCA]);
+  const MENSAJE = /Has llegado al cupo de lecturas automáticas de tu plan Premium \(80\)\. Puedes seguir apuntando a mano tus albaranes y tus platos\. Cambia de plan en Facturación para tener más lecturas, o escribe a hola@restoraapp\.com/;
   await step("con el tope de lecturas alcanzado, la pantalla de subida lo explica, enseña el correo y ofrece apuntar a mano", async () => {
     await page.goto(BASE + "/compras/subir");
     await page.getByText(MENSAJE).waitFor();
     if (await page.locator("#f-any").count()) throw new Error("sigue el formulario de subida");
     if ((await page.getByRole("link", { name: "hola@restoraapp.com" }).getAttribute("href"))?.startsWith("mailto:hola@restoraapp.com") !== true) throw new Error("el correo no es un enlace");
+    if (!(await page.getByRole("link", { name: "Ver planes y ampliar" }).getAttribute("href"))?.endsWith("/cuenta/facturacion")) throw new Error("no ofrece ver los planes");
     await page.screenshot({ path: `${SHOTS}plan-tope-lecturas.png` });
     await page.getByRole("link", { name: "Apuntar una compra a mano" }).click();
     await page.waitForURL("**/compras/nueva");

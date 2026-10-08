@@ -4,7 +4,7 @@ import { Icon } from "@/components/icons";
 import { requireApp, hasPerm } from "@/server/ctx";
 import { preciosConfigurados, stripeOn } from "@/server/billing";
 import { topeDeLecturas } from "@/server/ratelimit";
-import { avisoCupo, localesDe, nombrePlan, planDe } from "@/lib/planes";
+import { avisoCupo, localesDe, nombrePlan, planDe, TIERS } from "@/lib/planes";
 import { diasDeGracia } from "@/server/plan";
 import { fecha, num } from "@/lib/format";
 import { CONTACTO_EMAIL, CONTACTO_TEL, CONTACTO_WHATSAPP } from "@/lib/contacto";
@@ -35,7 +35,10 @@ export default async function Facturacion({ searchParams }: { searchParams: Prom
         {st === "past_due" ? <p>No hemos podido cobrar el último recibo. {gracia != null && gracia > 0 ? `Tienes ${gracia} ${gracia === 1 ? "día" : "días"} para actualizar la tarjeta antes de que se bloquee el acceso.` : "Actualiza la tarjeta para no perder el acceso."}</p> : null}
         {st === "canceled" ? <p>Tu suscripción está cancelada. Tus datos siguen aquí: suscríbete de nuevo cuando quieras.</p> : null}
         {stripeOn() ? <Pagar activo={st === "active" || st === "past_due"} tieneCliente={!!ctx.org.stripeCustomerId} disponibles={preciosConfigurados()} actual={plan?.tier ?? null} intervaloActual={ctx.org.planInterval} />
-          : <div className="note"><Icon name="info" /><p>Para activar tu suscripción, escríbenos por <a className="link" href={CONTACTO_WHATSAPP} target="_blank" rel="noopener">WhatsApp al {CONTACTO_TEL}</a> o a <a className="link" href={`mailto:${CONTACTO_EMAIL}`}>{CONTACTO_EMAIL}</a> y la dejamos lista en el día.</p></div>}
+          : <div className="stack">
+            {st !== "active" ? <Pagar manual activo={false} tieneCliente={false} negocio={ctx.org.name} actual={plan?.tier ?? null} intervaloActual={ctx.org.planInterval}
+              disponibles={TIERS.flatMap((tier) => (["month", "year"] as const).map((intervalo) => ({ tier, intervalo })))} /> : null}
+            <div className="note"><Icon name="info" /><p>Para activar tu suscripción, escríbenos por <a className="link" href={CONTACTO_WHATSAPP} target="_blank" rel="noopener">WhatsApp al {CONTACTO_TEL}</a> o a <a className="link" href={`mailto:${CONTACTO_EMAIL}`}>{CONTACTO_EMAIL}</a> y la dejamos lista en el día.</p></div></div>}
       </section>
       {uso.max > 0 ? (
         <section className="card" aria-labelledby="h-uso">

@@ -122,6 +122,17 @@ La lista completa, comentada, está en `producto/.env.example`.
 
 El webhook es idempotente (cada evento se aplica una sola vez) y atómico (si algo falla, Stripe lo reintenta). Cuando termina la prueba sin suscripción la app se bloquea; si falla un cobro, solo avisa mientras Stripe reintenta. Ver `docs/DECISIONES.md`.
 
+### Activar un plan a mano (mientras no haya Stripe)
+
+Facturación enseña los tres planes y cada botón abre WhatsApp con el mensaje escrito. Cuando el cliente pague por otra vía, en la consola SQL de Neon:
+
+```sql
+update organizations set plan_status = 'active', plan_tier = 'pro', plan_interval = 'month' where id = '<id del negocio>';
+-- plan_tier: premium | pro | max · plan_interval: month | year · para quitarlo: plan_status = 'canceled'
+```
+
+El cupo de lecturas pasa al del plan al momento. Un negocio activado a mano sin `plan_tier` se trata como Premium (80 lecturas).
+
 ## 9. Comprobación después del primer despliegue
 
 - [ ] `https://app.restoraapp.app/registro`: crea tu cuenta, llega el código por correo, completas el alta.
