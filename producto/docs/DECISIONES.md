@@ -125,7 +125,7 @@ Vinos, cervezas, licores, aguas y refrescos (categorías `vino`, `cerveza`, `lic
 
 - **Un artículo con precio de venta = un producto de reventa enlazado.** Desde Artículos, al poner el PVP se crea (o se actualiza) una receta `reventa` con una sola línea al artículo (`fijarVentaArticulo`). No hay columna nueva ni migración: Ventas, Carta y el food cost ya leen esas recetas.
 - **Coste de una venta** = precio neto del artículo × cantidad servida ÷ raciones. En artículos medidos en `kg`/`L` se indica lo que se sirve (750 ml, 330 ml…); en los medidos en `ud` (cajas, barriles) se indica cuántas ventas salen de cada unidad (`raciones`), así el coste por venta es exacto aunque salgan 150 cañas de un barril.
-- **Margen** sobre la venta neta, con el IVA de venta del local (`iva_venta`), igual que el resto de la reventa. Limitación conocida: el local tiene un solo IVA de venta; en hostelería las bebidas alcohólicas llevan 21 % y las demás 10 %, así que el margen de vinos y cervezas sale algo alto si el local tiene el 10 %. Pendiente de decisión (IVA por producto de reventa).
+- **Margen** siempre sobre la **base imponible**: ni el coste (precio de compra sin IVA) ni la venta llevan IVA. En Artículos el precio se escribe y se ve sin IVA; lo que se guarda en la receta es el PVP con IVA del local (`iva_venta`) solo porque así lo leen Carta y Ventas, y el margen sale igual con cualquier IVA. Si el IVA real del producto es otro (21 % en alcohol), la base y el margen son correctos; solo el PVP con IVA que se muestra en carta es aproximado.
 - **Permisos:** solo quien tiene `escandallos` y `carta:precios` (propietario y costes).
 
 ## Fuera de alcance en esta versión

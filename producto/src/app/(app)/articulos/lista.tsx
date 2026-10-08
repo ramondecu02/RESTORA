@@ -9,7 +9,7 @@ import { toast, toastError } from "@/components/ui/toast";
 import { estadoFC } from "@/lib/costing";
 import { eur, pct, pctN, plural, qty } from "@/lib/format";
 import { lineUnitsFor, type BaseUnit, type LineUnit } from "@/lib/units";
-import { cantidadPorVenta, costeDeVenta, margenVenta, pistasPorEnvase, SERVIDOS_ML, servidoPorDefecto, ventasPorUnidad, type Servido } from "@/lib/venta-articulo";
+import { baseDePvp, cantidadPorVenta, costeDeVenta, margenVenta, pistasPorEnvase, pvpDeBase, SERVIDOS_ML, servidoPorDefecto, ventasPorUnidad, type Servido } from "@/lib/venta-articulo";
 import { editarReventa } from "../ventas/reventa";
 import { fijarVentaArticulo } from "./actions";
 
@@ -215,7 +215,7 @@ function Fila({ a, v, iva, fcObjetivo, canPrecios, abierto, onAbrir, onCambia }:
       {a.reventa ? (
         <button type="button" className={`al-venta ${m ? "" : "al-venta-vacio"}`} aria-expanded={abierto} onClick={onAbrir}
           aria-label={m ? `Margen de ${a.name}: ${pctN(m.margen, 0)}. Editar precio de venta` : `Poner precio de venta a ${a.name}`}>
-          {m && v?.pvp ? <><span className="al-venta-k">Vendes a</span> <b>{eur(v.pvp)}</b> <span className={`tag ${tono}`}>Margen {pctN(m.margen, 0)}</span> <span className="muted small">{eur(m.beneficio)} por venta</span></>
+          {m && v?.pvp ? <><span className="al-venta-k">Vendes a</span> <b>{eur(baseDePvp(v.pvp, iva))}</b> <span className="al-venta-k">sin IVA</span> <span className={`tag ${tono}`}>Margen {pctN(m.margen, 0)}</span> <span className="muted small">{eur(m.beneficio)} por venta</span></>
             : <><Icon name="euro" size={16} /> <span>{v?.pvp ? "Sin coste para calcular el margen" : "Poner precio de venta y ver margen"}</span></>}
           <Icon name="chevD" size={16} className={abierto ? "ic al-rot al-chev" : "ic al-chev"} />
         </button>
@@ -270,8 +270,8 @@ function Editor({ a, v, iva, coste, canPrecios, onCambia }: { a: ArtFila; v: Ven
           </div>
         )}
         <div className="fld">
-          <label htmlFor={`${id}-p`}>Precio de venta (con IVA)</label>
-          <NumInput id={`${id}-p`} className="inp inp-xs inp-num" decimals={2} value={v?.pvp ?? null} disabled={!canPrecios || !s} onValue={(n) => edita({ pvp: n })} placeholder="0,00" />
+          <label htmlFor={`${id}-p`}>Precio de venta sin IVA</label>
+          <NumInput id={`${id}-p`} className="inp inp-xs inp-num" decimals={2} value={v?.pvp ? baseDePvp(v.pvp, iva) : null} disabled={!canPrecios || !s} onValue={(n) => edita({ pvp: n != null && n > 0 ? pvpDeBase(n, iva) : null })} placeholder="0,00" />
         </div>
         <div className="fld">
           <label htmlFor={`${id}-m`}>Margen %</label>
@@ -282,7 +282,7 @@ function Editor({ a, v, iva, coste, canPrecios, onCambia }: { a: ArtFila; v: Ven
         {coste != null ? <>Te cuesta <b>{eur(coste)}</b> cada venta (compra {a.precio != null ? `${eur(a.precio)}/${a.unit}` : "—"}{enUd && s && ventasPorUnidad(s) !== 1 ? `, entre ${qty(ventasPorUnidad(s), 2)} ventas` : ""}{a.costeNeto != null && a.precio != null && a.costeNeto > a.precio + 1e-9 ? ", con merma" : ""}).{" "}</>
           : a.precio == null ? <>Este artículo aún no tiene precio de compra: súbelo con un albarán o ponlo en su ficha.</> : !s ? <>Indica cuánto se sirve en cada venta (por ejemplo 75 cl una botella) para calcular el coste.</> : null}
         {enUd && s && ventasPorUnidad(s) === 1 && pistas.length ? <b>¿Vendes la unidad entera? Si es una caja o un barril, indica cuántas ventas salen de ella.{" "}</b> : null}
-        {m ? <>{m.beneficio >= 0 ? "Ganas" : "Pierdes"} <b>{eur(Math.abs(m.beneficio))}</b> por venta, sin IVA.{" "}</> : null}
+        {m ? <>{m.beneficio >= 0 ? "Ganas" : "Pierdes"} <b>{eur(Math.abs(m.beneficio))}</b> por venta. El margen se calcula sobre la base imponible: ni la compra ni la venta llevan IVA. En carta saldrá a <b>{eur(v!.pvp)}</b> con el {iva} % de IVA de tu local.{" "}</> : null}
         {canPrecios ? <>Se guarda solo y también sale en <Link className="link" href="/ventas">Ventas</Link> y en la carta.</> : <>Tu rol no cambia precios de venta.</>}
       </p>
     </div>

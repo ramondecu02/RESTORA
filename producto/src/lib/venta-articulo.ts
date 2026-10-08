@@ -38,6 +38,11 @@ export function pistasPorEnvase(nombre: string): { n: number; t: string }[] {
   return out;
 }
 
+/** Base imponible (precio de venta sin IVA) de un PVP con IVA, al céntimo. El margen se trabaja siempre sobre ella. */
+export const baseDePvp = (pvp: number, iva: number) => Math.round(neto(pvp, iva) * 100) / 100;
+/** PVP con IVA (el que se guarda y sale en la carta) de una base imponible, al céntimo. */
+export const pvpDeBase = (base: number, iva: number) => Math.round(base * (1 + iva / 100) * 100) / 100;
+
 /**
  * Margen de un producto final sobre la venta neta (sin IVA): (neto − coste) / neto.
  * coste: lo que cuesta una venta (precio neto del artículo × cantidad por venta ÷ raciones). null si no hay PVP o coste.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cantidadPorVenta, costeDeVenta, esReventa, familiaReventa, margenVenta, pistasPorEnvase, servidoPorDefecto, ventasPorUnidad } from "@/lib/venta-articulo";
+import { baseDePvp, cantidadPorVenta, costeDeVenta, esReventa, familiaReventa, margenVenta, pistasPorEnvase, pvpDeBase, servidoPorDefecto, ventasPorUnidad } from "@/lib/venta-articulo";
 
 describe("Artículos que se venden tal cual", () => {
   it("solo vinos, cervezas, licores y bebidas son producto final; el café y la cocina no", () => {
@@ -52,5 +52,12 @@ describe("Artículos que se venden tal cual", () => {
     expect(pistasPorEnvase("Cerveza barril 30 L").map((p) => p.n)).toEqual([150, 90, 60]); // caña 20 cl, tercio 33 cl, pinta 50 cl
     expect(pistasPorEnvase("Coca-Cola")).toEqual([]);
     expect(pistasPorEnvase("Vino tinto 75 cl")).toEqual([]);
+  });
+  it("la base imponible y el PVP con IVA se convierten sin perder el margen", () => {
+    expect(pvpDeBase(1.5, 10)).toBe(1.65);
+    expect(baseDePvp(1.65, 10)).toBe(1.5);
+    expect(pvpDeBase(15, 21)).toBe(18.15);
+    // El margen sobre la base no depende del IVA del local: 1,50 € de base y 0,45 € de coste = 70 % con cualquier IVA
+    for (const iva of [4, 10, 21]) expect(margenVenta(0.45, pvpDeBase(1.5, iva), iva)!.margen).toBeCloseTo(70, 0);
   });
 });
