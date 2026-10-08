@@ -32,7 +32,7 @@ const es = {
       title: "Precio y acceso",
       items: [
         { q: "¿Ya puedo usar RESTORA?", a: "Sí. Crea tu cuenta y pruébalo gratis 14 días, sin tarjeta. Al terminar, si quieres seguir, nos escribes y activamos tu suscripción mensual, sin permanencia." },
-        { q: "¿Cuánto cuesta?", a: "Pruébalo gratis 14 días, sin tarjeta. Al terminar, si quieres seguir, activamos tu suscripción mensual, sin permanencia. Publicaremos el precio en la página de Precios; si necesitas saberlo antes de empezar, escríbenos." },
+        { q: "¿Cuánto cuesta?", a: "Pruébalo gratis 14 días, sin tarjeta. Al terminar, si quieres seguir, activamos tu suscripción mensual, sin permanencia. Hay tres planes: Premium (49,90 €/mes), Pro (89,90 €/mes) y Max (149,90 €/mes), todos sin IVA; el IVA se añade aparte. Los detalles están en la página de Precios." },
         { q: "¿Y si cambio de opinión?", a: "No hay permanencia ni penalización. Puedes darte de baja cuando quieras, puedes descargar tus datos y no se cobra nada más. Y para empezar no hace falta tarjeta: la prueba son 14 días." },
         { q: "¿Desde cuándo puedo usarlo?", a: "Desde hoy: crea tu cuenta y empieza con una foto de un albarán." },
       ],
@@ -87,7 +87,7 @@ const ca: PreguntasCopy = {
       title: "Preu i accés",
       items: [
         { q: "Ja puc fer servir RESTORA?", a: "Sí. Crea el teu compte i prova-ho gratis 14 dies, sense targeta. En acabar, si vols continuar, ens escrius i activem la teva subscripció mensual, sense permanència." },
-        { q: "Quant costa?", a: "Prova-ho gratis 14 dies, sense targeta. En acabar, si vols continuar, activem la teva subscripció mensual, sense permanència. Publicarem el preu a la pàgina de Preus; si necessites saber-lo abans de començar, escriu-nos." },
+        { q: "Quant costa?", a: "Prova-ho gratis 14 dies, sense targeta. En acabar, si vols continuar, activem la teva subscripció mensual, sense permanència. Hi ha tres plans: Premium (49,90 €/mes), Pro (89,90 €/mes) i Max (149,90 €/mes), tots sense IVA; l'IVA s'afegeix a part. Els detalls són a la pàgina de Preus." },
         { q: "I si canvio d'opinió?", a: "No hi ha permanència ni penalització. Pots donar-te de baixa quan vulguis, pots descarregar les teves dades i no es cobra res més. I per començar no cal targeta: la prova són 14 dies." },
         { q: "Des de quan el puc fer servir?", a: "Des d'avui: crea el teu compte i comença amb una foto d'un albarà." },
       ],

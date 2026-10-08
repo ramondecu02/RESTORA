@@ -1,5 +1,5 @@
 // El encargo del propietario (5/10/2026): la web ya no habla de «socios fundadores» ni de «beta / estamos empezando», y no da por vigentes
-// los precios de septiembre (89 / 149 / 179 €) hasta que él confirme los planes (decisión D1). Esta prueba falla si algo de eso reaparece.
+// los precios de septiembre (89 / 149 / 179 €): el 8/10/2026 fijó otros (49,90 / 89,90 / 149,90 €, ver precios.test.ts). Esta prueba falla si algo de eso reaparece.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";

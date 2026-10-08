@@ -1,5 +1,5 @@
-// Framing copy for the Precios page. The pricing block lives in lib/site-copy.ts; no price or
-// plan name is published until the owner confirms them (decision D1) — nothing here invents plans or conditions.
+// Framing copy for the Precios page. The pricing block lives in lib/site-copy.ts. Plan names and prices (Premium 49,90 / Pro 89,90 / Max 149,90 €, sin IVA)
+// were set by the owner on 8/10/2026; nothing here invents limits or conditions beyond what he confirmed.
 
 const es = {
   hero: {
@@ -35,7 +35,7 @@ const es = {
     eyebrow: "Antes de decidir",
     title: "Lo que suelen preguntarnos del precio.",
     items: [
-      { q: "¿Cuánto cuesta?", a: "Pruébalo 14 días sin tarjeta. Publicaremos el precio de la suscripción en esta página; si necesitas saberlo antes de empezar, escríbenos." },
+      { q: "¿Cuánto cuesta?", a: "Pruébalo 14 días sin tarjeta. Después, tres planes mensuales: Premium 49,90 €, Pro 89,90 € y Max 149,90 €, sin IVA (el IVA se añade aparte)." },
       { q: "¿Hay permanencia?", a: "No. La suscripción es mensual y puedes dejarla cuando quieras." },
       { q: "¿Hay coste de puesta en marcha?", a: "No cobramos alta. Te ayudamos a cargar tus recetas y proveedores durante la primera semana." },
     ],
@@ -79,7 +79,7 @@ const ca: PreciosCopy = {
     eyebrow: "Abans de decidir",
     title: "El que solen preguntar-nos del preu.",
     items: [
-      { q: "Quant costa?", a: "Prova-ho 14 dies sense targeta. Publicarem el preu de la subscripció en aquesta pàgina; si necessites saber-lo abans de començar, escriu-nos." },
+      { q: "Quant costa?", a: "Prova-ho 14 dies sense targeta. Després, tres plans mensuals: Premium 49,90 €, Pro 89,90 € i Max 149,90 €, sense IVA (l'IVA s'afegeix a part)." },
       { q: "Hi ha permanència?", a: "No. La subscripció és mensual i pots deixar-la quan vulguis." },
       { q: "Hi ha cost de posada en marxa?", a: "No cobrem alta. T'ajudem a carregar les teves receptes i proveïdors durant la primera setmana." },
     ],

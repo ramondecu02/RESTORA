@@ -33,7 +33,7 @@ export default async function PreciosPage(props: {
       <main>
         <PageHead eyebrow={c.hero.eyebrow} title={c.hero.title} sub={c.hero.sub} note={p.previewNote} />
 
-        {/* Free trial + where the plans will be published (no price until the owner confirms it) */}
+        {/* Free trial and the three plans (prices without VAT, set by the owner on 8/10/2026) */}
         <section style={{ padding: "clamp(44px, 5.5vw, 76px) 28px" }}>
           <div
             className="reveal-group mx-auto grid max-w-[1080px]"
@@ -59,29 +59,51 @@ export default async function PreciosPage(props: {
               </a>
             </div>
 
-            <div
-              className="hover-lift"
-              style={{ position: "relative", overflow: "hidden", background: "var(--brand-deep)", color: "#fff", border: "1px solid var(--brand-deep)", borderRadius: 20, padding: "clamp(26px, 3vw, 38px)", display: "flex", flexDirection: "column", boxShadow: "0 40px 84px -46px rgba(30,61,47,0.5)" }}
-            >
-              <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 22px)", pointerEvents: "none" }} />
-              <div style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 8, alignSelf: "flex-start", background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 999, padding: "6px 13px", fontSize: 12, fontWeight: 600 }}>
+          </div>
+        </section>
+
+        <section style={{ padding: "0 28px clamp(44px, 5.5vw, 76px)" }}>
+          <div className="mx-auto max-w-[1080px]">
+            <div className="reveal" style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, alignSelf: "flex-start", fontSize: 12.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--brand)" }}>
                 <Tag size={14} strokeWidth={2} />
                 {p.plansBadge}
               </div>
-              <h2 className="display-serif" style={{ position: "relative", fontSize: "clamp(26px, 3vw, 34px)", marginTop: 18, color: "#fff" }}>{p.plansTitle}</h2>
-              <p style={{ position: "relative", fontSize: 15, color: "rgba(255,255,255,0.85)", margin: "12px 0 0", lineHeight: 1.6 }}>{p.plansBody}</p>
-              <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 12, marginTop: 22, flex: 1 }}>
-                {p.plansPerks.map((perk) => (
-                  <div key={perk} style={{ display: "flex", gap: 11, alignItems: "flex-start", fontSize: 15 }}>
-                    <Check size={18} strokeWidth={2.6} color="#fff" style={{ flexShrink: 0, marginTop: 1 }} />
-                    <span>{perk}</span>
-                  </div>
-                ))}
-              </div>
-              <Link href={`/${locale}/contacto`} className="btn" style={{ position: "relative", marginTop: 28, padding: 14, fontSize: 15.5, justifyContent: "center", background: "#fff", color: "#12211a", border: "1px solid #fff" }}>
-                {p.plansCta} →
-              </Link>
+              <h2 className="display-serif" style={{ fontSize: "clamp(28px, 3.4vw, 42px)", margin: 0 }}>{p.plansTitle}</h2>
+              <p style={{ fontSize: 16, color: "var(--muted)", margin: 0, maxWidth: "60ch", lineHeight: 1.6 }}>{p.plansBody}</p>
             </div>
+            <div className="reveal-group" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(262px, 1fr))", gap: 18, alignItems: "stretch" }}>
+              {p.plans.map((pl) => (
+                <div key={pl.name} className="card hover-lift" style={{ padding: "clamp(24px, 2.6vw, 34px)", display: "flex", flexDirection: "column" }}>
+                  <div className="display-serif" style={{ fontSize: 26 }}>{pl.name}</div>
+                  <p style={{ fontSize: 14.5, color: "var(--muted)", margin: "6px 0 0" }}>{pl.tagline}</p>
+                  <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "2px 8px", marginTop: 18 }}>
+                    <span className="display-serif" style={{ fontSize: "clamp(40px, 4.4vw, 52px)", letterSpacing: "-0.02em" }}>{pl.price}</span>
+                    <span style={{ fontSize: 15, color: "var(--muted)" }}>{p.perMonth} {p.vatNote}</span>
+                  </div>
+                  <div className="hairline" style={{ margin: "20px 0" }} />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: 1 }}>
+                    {pl.perks.map((f) => (
+                      <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 15 }}>
+                        <Check size={18} strokeWidth={2.4} color="var(--brand)" style={{ flexShrink: 0, marginTop: 1 }} />
+                        <span>{f}</span>
+                      </div>
+                    ))}
+                    {pl.soon.map((f) => (
+                      <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 15, color: "var(--muted)" }}>
+                        <span aria-hidden="true" style={{ width: 18, flexShrink: 0, textAlign: "center", marginTop: 1 }}>·</span>
+                        <span>{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <a href={APP_SIGNUP_URL} className="btn btn-outline" style={{ marginTop: 26, padding: 14, fontSize: 15.5, justifyContent: "center" }}>{copy.pricing.cta}</a>
+                </div>
+              ))}
+            </div>
+            <p className="reveal" style={{ fontSize: 15, color: "var(--muted)", margin: "22px 0 0", maxWidth: "62ch" }}>
+              {p.plansNote}{" "}
+              <Link href={`/${locale}/contacto`} style={{ color: "var(--brand)", fontWeight: 600 }}>{p.plansCta} →</Link>
+            </p>
           </div>
         </section>
 
