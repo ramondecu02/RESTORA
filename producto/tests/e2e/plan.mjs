@@ -151,7 +151,7 @@ try {
   await step("al quedar por debajo del tope, la pantalla de subida vuelve a ofrecer subir y la API acepta", async () => {
     await page.goto(BASE + "/compras/subir");
     await page.locator("#f-any").waitFor({ state: "attached" });
-    if (await page.getByText(/Has llegado al máximo de lecturas/).count()) throw new Error("sigue el aviso del tope");
+    if (await page.getByText(/Has llegado al cupo de lecturas/).count()) throw new Error("sigue el aviso del tope");
     const r = await subir();
     if (r.status() !== 200) throw new Error("estado " + r.status());
   });
