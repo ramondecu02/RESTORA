@@ -128,6 +128,10 @@ Vinos, cervezas, licores, aguas y refrescos (categorías `vino`, `cerveza`, `lic
 - **Margen** siempre sobre la **base imponible**: ni el coste (precio de compra sin IVA) ni la venta llevan IVA. En Artículos el precio se escribe y se ve sin IVA; lo que se guarda en la receta es el PVP con IVA del local (`iva_venta`) solo porque así lo leen Carta y Ventas, y el margen sale igual con cualquier IVA. Si el IVA real del producto es otro (21 % en alcohol), la base y el margen son correctos; solo el PVP con IVA que se muestra en carta es aproximado.
 - **Permisos:** solo quien tiene `escandallos` y `carta:precios` (propietario y costes).
 
+## 13. Planes y precios (8 de octubre de 2026)
+
+El propietario decide tres planes: **Premium 49,90 €/mes** (un local), **Pro 89,90 €/mes** (más funcionalidades y más de un local) y **Max 149,90 €/mes** (grupos más grandes, todas las funcionalidades). Sustituye a los 89/149/179 € de antes, que nunca se dieron por válidos. Queda por confirmar si los precios son sin IVA (se asume que sí), los límites de cada plan (propuesta en `PRECIOS-Y-COSTES.md`, apartado 6) y las funcionalidades de Pro y Max. Con esto, **varios locales (D2) deja de ser «sin decidir»** para Pro y Max. La web no enseña cifras hasta que el propietario lo ordene.
+
 ## Fuera de alcance en esta versión
 
 - Integración directa con TPV (se importan ventas en CSV, que exportan casi todos).

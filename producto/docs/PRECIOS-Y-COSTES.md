@@ -141,3 +141,54 @@ al principio: ~70–100 €/mes en total, que pesa hasta unos 30 locales).
 - Las tarifas de Stripe no se han podido contrastar en su web (bloqueada desde este entorno): hay que confirmarlas en el panel antes de fijar precios.
 - Los tokens de salida («pensamiento» del modelo) son una estimación; la primera semana con usuarios reales se calibra con la consulta SQL de arriba.
 - Cambios de precio de Anthropic o del tipo de cambio mueven los resultados; el script se vuelve a ejecutar en segundos.
+
+## 6. Planes elegidos por el propietario (8 de octubre de 2026)
+
+Decisión del propietario: tres planes, **Premium 49,90 €/mes** (un solo local), **Pro 89,90 €/mes** (más funcionalidades y posibilidad de más de un local) y
+**Max 149,90 €/mes** (grupos más grandes, todas las funcionalidades). Esto resuelve D1 en lo esencial y, de hecho, **da por buena la idea de varios locales (D2)**
+en Pro y Max. Lo que sigue son **propuestas para cerrar los límites**; los precios no cambian.
+
+**Supuesto a confirmar: los precios son sin IVA** (lo normal al vender a empresas). Si fueran con IVA incluido, la base sería 41,24 € / 74,30 € / 123,88 € y el margen bajaría 8,7 € / 15,6 € / 26,0 € por cliente.
+
+**Comisión de Stripe y margen de un local típico** (calculado con `node scripts/economia-por-local.mjs 49.9 89.9 149.9`; tarjeta de empresa, 1 € de infraestructura por local):
+
+| Plan | Precio | Stripe tarjeta empresa | Con SEPA | Margen con IA típica (5,41 €) | con IA alta (19,67 €) |
+|---|---:|---:|---:|---:|---:|
+| Premium | 49,90 € | 1,82 € (3,6 %) | 0,91 € | 41,67 € (84 %) | 27,41 € (55 %) |
+| Pro | 89,90 € | 3,08 € (3,4 %) | 1,63 € | 80,41 € (89 %) | 66,15 € (74 %) |
+| Max | 149,90 € | 4,97 € (3,3 %) | 2,72 € | 138,53 € (92 %) | 124,26 € (83 %) |
+
+**El riesgo no es el precio, es el volumen de albaranes en los planes con varios locales.** Si Pro o Max contaran albaranes ilimitados por local, un grupo con 3 o 10 locales
+grandes se comería el margen (Max con 10 locales a 600 albaranes y coste alto: 33 %). Por eso se propone un **cupo mensual de albaranes leídos, compartido por todos los locales del plan**
+(≈ 0,08 € por albarán, hasta 0,14 € en los grandes), con aviso al llegar al 80 % y opción de ampliar, nunca corte sin avisar:
+
+| Plan | Locales | Albaranes leídos/mes (compartidos) | Margen con el cupo lleno, coste típico / alto | Margen con uso normal (60 por local) |
+|---|---:|---:|---:|---:|
+| Premium | 1 | 80 | 82 % / 72 % | 84 % |
+| Pro | hasta 3 | 250 | 72 % / 54 % | 77 % |
+| Max | hasta 5 (+ locales extra a precio por local) | 450 | 70 % / 51 % | ≈ 70 % |
+
+- **Local adicional** en Max (y, si se quiere, en Pro): entre 19,90 € y 24,90 € al mes con 80 albaranes más incluidos cubre su coste (≈ 6–11 € de IA + 1 € de infraestructura + comisión) con ≥ 50 % de margen.
+- **Paquete extra de albaranes:** cuesta 8–14 € por cada 100 leídos. Ofrecerlo a 19 € cada 100 deja ≥ 25 % incluso en el peor caso.
+- **Lo que no cambia con el plan** (coste casi cero): escandallos, carta, inventario, ventas, avisos, exportaciones. Se diferencian por **valor**, no por coste.
+- **SEPA y plan anual** recortan la comisión a la mitad y mejoran la retención: ofrecer 2 meses gratis en el anual (Premium 499 €, Pro 899 €, Max 1.499 €) no compromete ningún margen de la tabla.
+- **El plan gratuito de prueba (14 días)** cuesta, como mucho, 0,3–0,6 € de IA por negocio si lee unos 5 albaranes al día.
+
+**Funcionalidades que diferencian los planes** (a elegir por el propietario; solo lo marcado «existe» está hoy en la app):
+
+| Funcionalidad | Premium | Pro | Max |
+|---|:---:|:---:|:---:|
+| Lectura de albaranes y facturas con IA (existe) | 80/mes | 250/mes | 450/mes |
+| Artículos, precios, avisos de subida, proveedores (existe) | ✓ | ✓ | ✓ |
+| Escandallos, elaboraciones, carta y margen de bebidas (existe) | ✓ | ✓ | ✓ |
+| Inventario y pedidos, ventas y rentabilidad (existe) | ✓ | ✓ | ✓ |
+| Usuarios y roles (existe) | hasta 3 | hasta 10 | sin límite |
+| Más de un local con panel conjunto (por construir, D2) | — | hasta 3 | hasta 5 + extra |
+| Comparar proveedores y proponer pedido (ampliar lo que existe) | — | ✓ | ✓ |
+| Informe mensual en PDF para el propietario o la gestoría (por construir) | — | ✓ | ✓ |
+| Previsión de compras y de stock con ventas importadas (por construir) | — | ✓ | ✓ |
+| Compras y proveedores comunes entre locales, roles por local (por construir) | — | — | ✓ |
+| Exportación para contabilidad y acceso por API (por construir) | — | — | ✓ |
+| Soporte: estándar / prioritario / con alta guiada | email | prioritario | alta guiada |
+
+**Orden de construcción propuesto:** 1) cupo de albaranes y límites por plan en la app (lo que sostiene el margen); 2) Stripe con los tres precios (mensual y anual); 3) varios locales (B4–B6); 4) informe mensual y comparador de proveedores; 5) previsión de compras; 6) exportación contable y API.
