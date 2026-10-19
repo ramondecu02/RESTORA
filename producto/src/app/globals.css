@@ -1453,3 +1453,10 @@ button.chip { cursor: pointer; font-family: inherit; }
   .toolbar > .searchbox { flex: 1 1 0; }
   .al .toolbar > .searchbox { flex: 1 1 0; }
 }
+
+/* Primeros pasos: se pliega solo cuando queda un último paso, para que Hoy empiece por lo que pide atención */
+.ck-det > summary { list-style: none; cursor: pointer; }
+.ck-det > summary::-webkit-details-marker { display: none; }
+.ck-det > summary .ic { margin-left: 8px; transition: transform .2s var(--ease-out); color: var(--muted); }
+.ck-det[open] > summary .ic { transform: rotate(180deg); }
+.ck-det > summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; border-radius: 8px; }

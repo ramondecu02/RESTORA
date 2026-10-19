@@ -50,7 +50,7 @@ export default async function Articulos({ searchParams }: { searchParams: Promis
   });
 
   return (
-    <Screen title="Artículos" sub={`${plural(data.arts.length, "artículo", "artículos")} con su precio de compra`} fab
+    <Screen title="Artículos" sinBuscar sub={`${plural(data.arts.length, "artículo", "artículos")} con su precio de compra`} fab
       actions={<Link className="btn btn-2 btn-sm only-wide" href="/articulos/nuevo"><Icon name="plus" size={18} /> Nuevo artículo</Link>}>
       <ComprasNav cur="articulos" />
       <div className="list-grid">

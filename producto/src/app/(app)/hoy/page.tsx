@@ -187,14 +187,14 @@ async function HoyContenido({ ctx, tour }: { ctx: Awaited<ReturnType<typeof requ
 
         <div className="hoy-col">
           {pendientes && !ctx.prefs.hideChecklist ? (
-            <section className="card" aria-labelledby="h-ck">
-              <div className="card-h"><h2 className="h3" id="h-ck">Primeros pasos</h2><span className="tag">{checklist.length - pendientes} de {checklist.length}</span></div>
+            <details className="card ck-det" aria-labelledby="h-ck" open={pendientes > 1 || undefined}>
+              <summary className="card-h"><h2 className="h3" id="h-ck">Primeros pasos</h2><span className="tag">{checklist.length - pendientes} de {checklist.length}</span><Icon name="chevD" size={18} /></summary>
               <div className="bar"><i style={{ width: `${((checklist.length - pendientes) / checklist.length) * 100}%` }} /></div>
               <div className="ck">{checklist.map((x) => (
                 <Link key={x.t} className={`ck-i ${x.done ? "done" : ""}`} href={x.href}>
                   <span className="ck-dot">{x.done ? <Icon name="check" size={14} sw={3} /> : null}</span><span className="ck-l">{x.t}</span><Icon name="chevR" size={18} />
                 </Link>))}</div>
-            </section>
+            </details>
           ) : null}
           <section className="card" aria-labelledby="h-stock">
             <div className="card-h"><h2 className="h3" id="h-stock">Stock que pide atención</h2><Link className="linkbtn" href="/inventario">Inventario <Icon name="arrowR" size={16} /></Link></div>

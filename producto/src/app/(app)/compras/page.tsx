@@ -28,7 +28,7 @@ export default async function Compras({ searchParams }: { searchParams: Promise<
   const sp = await searchParams;
   const canUpload = hasPerm(ctx, "compras");
   return (
-    <Screen title="Compras" sub="Albaranes y facturas, con los precios al día" fab
+    <Screen title="Compras" sinBuscar sub="Albaranes y facturas, con los precios al día" fab
       actions={canUpload ? <Link className="btn btn-sm only-wide" href="/compras/subir"><Icon name="camera" size={18} /> Subir albarán</Link> : undefined}>
       <ComprasNav cur="albaranes" />
       <Suspense fallback={<Esqueleto kpis={4} filtros filas={7} lateral texto="Cargando tus albaranes…" />}><ComprasContenido ctx={ctx} sp={sp} canUpload={canUpload} /></Suspense>

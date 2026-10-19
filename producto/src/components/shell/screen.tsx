@@ -7,8 +7,9 @@ import { initials } from "@/lib/format";
 import { AddButton } from "./add";
 import { TopSearch } from "./search";
 
-export async function Screen({ title, sub, back, actions, task, fab, foot, children, wide }: {
+export async function Screen({ title, sub, back, actions, task, fab, foot, children, wide, sinBuscar }: {
   title: ReactNode; sub?: ReactNode; back?: string; actions?: ReactNode; task?: boolean; fab?: boolean; foot?: ReactNode; children: ReactNode; wide?: boolean;
+  /** La pantalla ya trae su propio buscador: no se repite el de la cabecera. */ sinBuscar?: boolean;
 }) {
   const ctx = await getAppCtx();
   return (
@@ -20,7 +21,7 @@ export async function Screen({ title, sub, back, actions, task, fab, foot, child
         <div className="top-title"><h1>{title}</h1>{sub ? <p className="top-sub">{sub}</p> : null}</div>
         <div className="top-actions">
           {actions}
-          {!task ? <TopSearch /> : null}
+          {!task && !sinBuscar ? <TopSearch /> : null}
           {!task ? <AddButton /> : null}
           {ctx ? <Link className={`avatar ${back || task ? "only-wide" : ""}`} href="/cuenta" aria-label={`Tu cuenta (${initials(ctx.name)})`}>{initials(ctx.name)}</Link> : null}
         </div>
