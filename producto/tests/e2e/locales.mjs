@@ -93,6 +93,24 @@ try {
     if (l.name !== "Casa Pujol Reus Centro") throw new Error("el local no se renombró: " + l.name);
   });
 
+  await step("desde un local no se abre ni se toca lo del otro, ni por la dirección ni con acciones", async () => {
+    const [{ id: local2 }] = await sql("select id from locales where tenant_id = $1 order by created_at desc limit 1", [org]);
+    if ((await cookieLocal()) !== local2) throw new Error("no se pasó al segundo local");
+    const uno = async (t, extra = "") => (await sql(`select id from ${t} where local_id = $1 ${extra} limit 1`, [local1]))[0].id;
+    const ajenos = { articulos: await uno("articulos", "and not archived"), proveedores: await uno("proveedores", "and not archived"), escandallos: await uno("recetas", "and not archived"), compras: await uno("documentos") };
+    for (const [r, id] of Object.entries(ajenos)) {
+      const resp = await page.goto(`${BASE}/${r}/${id}`, { waitUntil: "networkidle" });
+      if (resp.status() !== 404) throw new Error(`/${r}/${id} del otro local abre con ${resp.status()}`);
+    }
+    const acciones = accionesDelServidor();
+    if (!acciones) return;
+    const [antes] = await sql("select name, archived from articulos where id = $1", [ajenos.articulos]);
+    const g = await llamarAccion(page.request, acciones.get("(app)/articulos/actions.ts#guardarArticulo"), [ajenos.articulos, { name: "HACK local" }], `/articulos`);
+    const a = await llamarAccion(page.request, acciones.get("(app)/articulos/actions.ts#archivarArticulo"), [ajenos.articulos], `/articulos`);
+    const [despues] = await sql("select name, archived from articulos where id = $1", [ajenos.articulos]);
+    if (despues.name !== antes.name || despues.archived !== antes.archived) throw new Error(`una acción desde el otro local cambió el artículo: ${JSON.stringify(despues)} (${g.status}/${a.status})`);
+  });
+
   await step("con Pro no hay un tercer local: el formulario desaparece y la acción lo rechaza", async () => {
     await ir("/cuenta");
     if (await page.locator("#nl-n").count()) throw new Error("sigue el formulario con 2 de 2");
