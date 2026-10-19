@@ -26,7 +26,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <AppFrame>
       <a className="skip" href="#content">Saltar al contenido</a>
       <div className="scr appx">
-        <SideNav items={items} local={ctx.local.name} user={ctx.name} roleLabel={ROLE_LABEL[ctx.role]} initials={initials(ctx.name)} />
+        <SideNav items={items} local={ctx.local.name} locales={ctx.locales} localId={ctx.local.id} user={ctx.name} roleLabel={ROLE_LABEL[ctx.role]} initials={initials(ctx.name)} />
         <div className="main">
           {aviso ? (
             <div className="planbar" role="status">

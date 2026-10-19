@@ -354,7 +354,7 @@ else {
   ];
   // Acciones que no reciben ningún id de un negocio (o que se prueban en otro apartado): el resto de las del manifiesto, sin clasificar, falla
   const SIN_IDS = [
-    "(app)/articulos/actions.ts#crearArticuloAction", "(app)/cuenta/actions.ts#guardarLocal", "(app)/cuenta/actions.ts#guardarPerfil", "(app)/cuenta/actions.ts#cambiarPassword",
+    "(app)/articulos/actions.ts#crearArticuloAction", "(app)/cuenta/actions.ts#guardarLocal", "(app)/cuenta/actions.ts#crearLocal", "(app)/cuenta/actions.ts#cambiarLocal", "(app)/cuenta/actions.ts#guardarPerfil", "(app)/cuenta/actions.ts#cambiarPassword",
     "(app)/cuenta/actions.ts#cerrarOtrasSesiones", "(app)/cuenta/actions.ts#demo", "(app)/cuenta/actions.ts#invitar", "(app)/cuenta/actions.ts#irAPagar", "(app)/cuenta/actions.ts#irAPortal",
     "(app)/escandallos/actions.ts#crearReceta", "(app)/escandallos/actions.ts#sugerirIngredientes", "(app)/prefs-actions.ts#cambiarTema", "(app)/prefs-actions.ts#marcarTour",
     "(onb)/actions.ts#altaProveedor", "(onb)/actions.ts#guardarBriefing", "(onb)/actions.ts#guardarLocal", "(onb)/actions.ts#terminarAlta",

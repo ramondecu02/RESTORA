@@ -9,6 +9,7 @@ import { initials } from "@/lib/format";
 import { navBadges } from "@/server/queries/badges";
 import { salir } from "../../(auth)/actions";
 import { Negocios } from "../negocios";
+import { Locales } from "../locales";
 import { ThemeQuick } from "./theme";
 
 export const metadata = { title: "Más" };
@@ -41,6 +42,7 @@ export default async function Mas() {
           </section>
         ));
       })()}
+      <Locales ctx={ctx} />
       <Negocios userId={ctx.userId} actual={ctx.org.id} />
       <section className="card"><p className="eyebrow">Apariencia</p><ThemeQuick actual={ctx.prefs.theme ?? "system"} /></section>
       <form action={salir}><button className="btn btn-2 btn-block" type="submit"><Icon name="logout" size={18} /> Salir</button></form>

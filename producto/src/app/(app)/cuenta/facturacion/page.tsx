@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Screen } from "@/components/shell/screen";
 import { Icon } from "@/components/icons";
@@ -45,7 +46,7 @@ export default async function Facturacion({ searchParams }: { searchParams: Prom
           <div className="card-h"><h2 className="h3" id="h-uso">Uso de este mes</h2><span className="muted small">Se reinicia el día 1</span></div>
           <div className="meter" role="img" aria-label={`${num(uso.usadas, 0)} de ${num(uso.max, 0)} lecturas automáticas`}><span style={{ width: `${Math.min(100, Math.round((uso.usadas / uso.max) * 100))}%` }} className={uso.agotado ? "bad" : uso.casi ? "warn" : ""} /></div>
           <p className="small"><b>{num(uso.usadas, 0)}</b> de {num(uso.max, 0)} lecturas automáticas de documentos{uso.agotado ? ". Has llegado al cupo: puedes seguir apuntando a mano." : uso.casi ? `. ${avisoCupo(uso.usadas, uso.max)}` : "."}</p>
-          <p className="muted small">Locales incluidos en tu plan: {localesDe(ctx.org)}{plan && plan.locales > 1 ? " (la gestión de varios locales llegará pronto)" : ""}.</p>
+          <p className="muted small">Locales: {ctx.locales.length} de {localesDe(ctx.org)} incluidos en tu plan{ctx.locales.length < localesDe(ctx.org) && hasPerm(ctx, "local:editar") ? <>. <Link className="link" href="/cuenta#locales">Añadir un local</Link></> : null}.</p>
         </section>
       ) : null}
       <section className="card">

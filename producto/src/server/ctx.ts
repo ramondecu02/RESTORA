@@ -1,10 +1,12 @@
 // Contexto de la petición: sesión → negocio → local. Con guardas que redirigen.
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { all, one, sys, withTenant } from "./db";
 import { getSession, type SessionData } from "./session";
 import { can, type Perm, type Role } from "./rbac";
 import { bloqueado } from "./plan";
+import { localCookieName } from "./session-cookie";
 import type { Intervalo, Tier } from "@/lib/planes";
 
 export type Briefing = { rol?: string; objetivo?: string; compras?: string; albaranes?: string; tipo?: string };
@@ -17,7 +19,9 @@ export type Local = {
   id: string; name: string; address: string; postal_code: string; ciudad: string; lema: string;
   iva_venta: number; fc_objetivo: number; comensales_dia: number | null; currency: string;
 };
-export type AppCtx = SessionData & { org: OrgInfo; local: Local; tenantId: string; role: Role };
+/** Los locales del negocio (los que el plan permite: de 1 a 5), para el selector. */
+export type LocalRef = { id: string; name: string };
+export type AppCtx = SessionData & { org: OrgInfo; local: Local; locales: LocalRef[]; tenantId: string; role: Role };
 
 export class UserError extends Error {}
 
@@ -48,17 +52,28 @@ export async function userOrgs(userId: string) {
     "select o.id, o.name, m.role from memberships m join organizations o on o.id = m.org_id where m.user_id = $1 order by lower(o.name), o.id", [userId]));
 }
 
-export async function loadLocal(tenantId: string): Promise<Local | null> {
-  return withTenant(tenantId, (c) => one<Local>(c,
-    "select id, name, address, postal_code, ciudad, lema, iva_venta, fc_objetivo, comensales_dia, currency from locales order by created_at limit 1"));
+const COLS_LOCAL = "id, name, address, postal_code, ciudad, lema, iva_venta, fc_objetivo, comensales_dia, currency";
+
+/** Todos los locales del negocio, del más antiguo al más reciente. */
+export async function loadLocales(tenantId: string): Promise<Local[]> {
+  return withTenant(tenantId, (c) => all<Local>(c, `select ${COLS_LOCAL} from locales order by created_at, id`));
+}
+
+/** El local con el que se trabaja: el elegido si es de este negocio (nunca uno ajeno) y, si no, el primero. */
+export async function loadLocal(tenantId: string, elegido?: string | null): Promise<Local | null> {
+  const todos = await loadLocales(tenantId);
+  return todos.find((l) => l.id === elegido) ?? todos[0] ?? null;
 }
 
 export const getAppCtx = cache(async (): Promise<AppCtx | null> => {
   const o = await getOrg();
   if (!o || !o.org || !o.s.verified) return null;
-  const local = await loadLocal(o.org.id);
+  const todos = await loadLocales(o.org.id);
+  // La cookie dice qué local eligió esta persona en este navegador; si no es de este negocio (otro negocio, local borrado) se ignora
+  const elegido = (await cookies()).get(localCookieName())?.value;
+  const local = todos.find((l) => l.id === elegido) ?? todos[0];
   if (!local) return null;
-  return { ...o.s, org: o.org, local, tenantId: o.org.id, role: o.org.role };
+  return { ...o.s, org: o.org, local, locales: todos.map((l) => ({ id: l.id, name: l.name })), tenantId: o.org.id, role: o.org.role };
 });
 
 /** Para páginas y acciones de la app: exige sesión, email verificado, negocio y alta completada. Con la prueba terminada

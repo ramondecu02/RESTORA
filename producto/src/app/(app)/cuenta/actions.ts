@@ -1,4 +1,5 @@
 "use server";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { refresh } from "next/cache";
 import { isUuid, one, sys, withTenant, type Db } from "@/server/db";
@@ -7,6 +8,7 @@ import { run, type Result } from "@/server/action";
 import { audit } from "@/server/audit";
 import { hashPassword, randomToken, sha256, verifyPassword } from "@/server/crypto";
 import { destroyUserSessions, setFlash } from "@/server/session";
+import { cookieBase, localCookieName } from "@/server/session-cookie";
 import { inviteEmail, sendEmail } from "@/server/email";
 import { env } from "@/server/env";
 import { rateLimit } from "@/server/ratelimit";
@@ -14,7 +16,7 @@ import { deleteTenantFiles } from "@/server/storage";
 import { isRole, ROLE_LABEL, type Role } from "@/server/rbac";
 import { cargarDemo, quitarDemo } from "@/server/demo/seed";
 import { cancelarCobros, checkoutUrl, portalUrl, preciosConfigurados, stripeOn } from "@/server/billing";
-import { esIntervalo, esTier } from "@/lib/planes";
+import { esIntervalo, esTier, localesDe } from "@/lib/planes";
 
 export async function guardarLocal(input: { name: string; address: string; postal_code: string; ciudad: string; lema: string; iva_venta: number; fc_objetivo: number; comensales_dia: number | null }): Promise<Result> {
   return run(async () => {
@@ -28,7 +30,8 @@ export async function guardarLocal(input: { name: string; address: string; posta
           input.iva_venta === 21 ? 21 : 10, input.fc_objetivo, input.comensales_dia && input.comensales_dia > 0 ? Math.round(input.comensales_dia) : null]);
       await audit(c, ctx.tenantId, ctx.userId, "editar", "local", ctx.local.id, {});
     });
-    await sys((c) => c.query("update organizations set name = $2 where id = $1", [ctx.tenantId, input.name.trim().slice(0, 80)]));
+    // El nombre del negocio sigue al del primer local; el de los demás locales no lo cambia
+    if (ctx.locales[0]?.id === ctx.local.id) await sys((c) => c.query("update organizations set name = $2 where id = $1", [ctx.tenantId, input.name.trim().slice(0, 80)]));
     refresh();
     return { ok: true, msg: "Local guardado" };
   });
@@ -196,4 +199,44 @@ export async function irAPortal(): Promise<Result<string>> {
   });
   if (r.ok && r.data) redirect(r.data);
   return r;
+}
+
+const recuerdaLocal = async (id: string) => (await cookies()).set(localCookieName(), id, { ...cookieBase(), maxAge: 365 * 24 * 3600 });
+
+/** Cambiar de local (para quien tiene varios). Comprueba que el local es de este negocio. */
+export async function cambiarLocal(f: FormData): Promise<void> {
+  const ctx = await requireApp({ permitirBloqueo: true });
+  const id = f instanceof FormData ? String(f.get("local") ?? "") : "";
+  const l = ctx.locales.find((x) => x.id === id);
+  if (!l) redirect("/cuenta");
+  await recuerdaLocal(l.id);
+  await setFlash(`Ahora trabajas en ${l.name}.`);
+  redirect("/hoy");
+}
+
+/** Añadir un local al negocio, hasta los que permite el plan. Quien lo crea pasa a trabajar en él. */
+export async function crearLocal(name: string): Promise<Result> {
+  return run(async () => {
+    const ctx = await requireApp();
+    requirePerm(ctx, "local:editar");
+    const nombre = name.trim().slice(0, 80);
+    if (nombre.length < 2) throw new UserError("Pon el nombre del local.");
+    const tope = localesDe(ctx.org);
+    const id = await withTenant(ctx.tenantId, async (c) => {
+      // Dos altas a la vez no pueden pasarse del tope: la segunda espera a que la primera termine y cuenta ya con ella
+      await c.query("select pg_advisory_xact_lock(hashtext($1))", ["locales:" + ctx.tenantId]);
+      const n = (await one<{ n: number }>(c, "select count(*)::int as n from locales"))!.n;
+      if (n >= tope) throw new UserError(tope === 1
+        ? "Tu plan incluye un solo local. Elige Pro (hasta 2) o Max (hasta 5) en Facturación para añadir más."
+        : `Tu plan incluye hasta ${tope} locales y ya los tienes. Cambia de plan en Facturación para añadir más.`);
+      const nuevo = (await one<{ id: string }>(c,
+        `insert into locales (tenant_id, name, iva_venta, fc_objetivo, ciudad, postal_code)
+         select tenant_id, $2, iva_venta, fc_objetivo, ciudad, postal_code from locales where id = $1 returning id`, [ctx.local.id, nombre]))!.id;
+      await audit(c, ctx.tenantId, ctx.userId, "crear", "local", nuevo, {});
+      return nuevo;
+    });
+    await recuerdaLocal(id);
+    refresh();
+    return { ok: true, msg: `Local «${nombre}» creado. Ya trabajas en él: completa sus datos.` };
+  });
 }

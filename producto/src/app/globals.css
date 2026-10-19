@@ -1460,3 +1460,17 @@ button.chip { cursor: pointer; font-family: inherit; }
 .ck-det > summary .ic { margin-left: 8px; transition: transform .2s var(--ease-out); color: var(--muted); }
 .ck-det[open] > summary .ic { transform: rotate(180deg); }
 .ck-det > summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; border-radius: 8px; }
+
+/* Selector de local en la barra lateral (solo con más de un local) */
+.side-loc { padding: 0; }
+.side-loc > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-radius: 12px; color: var(--on-brand-3); }
+.side-loc > summary::-webkit-details-marker { display: none; }
+.side-loc > summary span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.side-loc > summary .ic { flex: none; transition: transform .2s var(--ease-out); }
+.side-loc[open] > summary .ic { transform: rotate(180deg); }
+.side-loc > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.side-loc-l { display: flex; flex-direction: column; gap: 2px; padding: 0 6px 8px; }
+.side-loc-i { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 36px; padding: 0 10px; border-radius: 8px; font: inherit; font-size: 13.5px; text-align: left; color: var(--on-brand-2); background: none; border: 0; cursor: pointer; }
+.side-loc-i:hover:not(.is-on) { background: rgba(255, 255, 255, .08); }
+.side-loc-i:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.side-loc-i.is-on { color: #fff; font-weight: 600; }

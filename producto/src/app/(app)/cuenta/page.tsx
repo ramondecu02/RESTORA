@@ -11,6 +11,7 @@ import { bloqueado, estadoPlan } from "@/server/plan";
 import { fecha, plural } from "@/lib/format";
 import { salir } from "../../(auth)/actions";
 import { Negocios } from "../negocios";
+import { Locales } from "../locales";
 import { LocalForm, PerfilForm, PasswordForm, TemaForm, DemoCard, OtrasSesiones, EliminarNegocio } from "./forms";
 
 export const metadata = { title: "Mi local" };
@@ -86,6 +87,7 @@ export default async function Cuenta() {
           ) : null}
         </div>
         <div className="stack">
+          <Locales ctx={ctx} conAlta />
           <Negocios userId={ctx.userId} actual={ctx.org.id} />
           <PerfilForm name={ctx.name} email={ctx.email} />
           <PasswordForm />

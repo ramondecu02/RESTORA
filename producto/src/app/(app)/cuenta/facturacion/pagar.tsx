@@ -36,7 +36,7 @@ export function Pagar({ activo, tieneCliente, disponibles, actual, intervaloActu
                   <div className="plan-price"><b>{eur(precioDe(t, intervalo))}</b><span className="muted small"> {intervalo === "year" ? "/año" : "/mes"} + IVA</span></div>
                   {intervalo === "year" ? <p className="muted small plan-save">Ahorras {eur(ah.ahorro)} al año ({num(ah.meses, 1)} meses gratis)</p> : <p className="muted small plan-save">&nbsp;</p>}
                   <ul className="plan-li small">
-                    <li><Icon name="check" size={16} /> {p.locales === 1 ? "1 local" : `Hasta ${p.locales} locales`}{p.locales > 1 ? " (próximamente)" : ""}</li>
+                    <li><Icon name="check" size={16} /> {p.locales === 1 ? "1 local" : `Hasta ${p.locales} locales`}</li>
                     <li><Icon name="check" size={16} /> {num(p.albaranes, 0)} lecturas de albaranes al mes</li>
                   </ul>
                   {manual ? (

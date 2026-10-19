@@ -6,7 +6,7 @@ import { NumInput } from "@/components/ui/num-input";
 import { Confirm } from "@/components/ui/sheet";
 import { toast, toastError } from "@/components/ui/toast";
 import { cambiarTema } from "../prefs-actions";
-import { cambiarPassword, cerrarOtrasSesiones, demo, eliminarNegocio, guardarLocal, guardarPerfil } from "./actions";
+import { cambiarPassword, cerrarOtrasSesiones, demo, eliminarNegocio, crearLocal, guardarLocal, guardarPerfil } from "./actions";
 
 type L = { name: string; address: string; postal_code: string; ciudad: string; lema: string; iva_venta: number; fc_objetivo: number; comensales_dia: number | null };
 const done = (r: { ok: boolean; error?: string; msg?: string }) => (r.ok ? toast(r.msg ?? "Guardado") : toastError(r.error ?? "Error"));
@@ -120,5 +120,25 @@ export function EliminarNegocio({ nombre }: { nombre: string }) {
         </div>
       )}
     </section>
+  );
+}
+
+export function NuevoLocal() {
+  const router = useRouter();
+  const [n, setN] = useState("");
+  const [pending, start] = useTransition();
+  const crear = () => start(async () => {
+    const r = await crearLocal(n);
+    done(r);
+    if (r.ok) { setN(""); router.push("/cuenta"); router.refresh(); }
+  });
+  return (
+    <form className="row-wrap" onSubmit={(e) => { e.preventDefault(); if (n.trim().length >= 2) crear(); }}>
+      <div className="fld" style={{ flex: "1 1 220px" }}>
+        <label htmlFor="nl-n">Nombre del nuevo local</label>
+        <input id="nl-n" className="inp" value={n} maxLength={80} onChange={(e) => setN(e.target.value)} placeholder="Ej.: Casa Pujol Reus" />
+      </div>
+      <button type="submit" className="btn btn-sm" disabled={pending || n.trim().length < 2}>{pending ? <span className="spin" /> : <Icon name="plus" size={16} />} Añadir local</button>
+    </form>
   );
 }
