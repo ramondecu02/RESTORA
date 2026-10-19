@@ -1,14 +1,14 @@
-# Traspaso de sesión (8 de octubre de 2026)
+# Traspaso de sesión (19 de octubre de 2026)
 
-> Para quien retome el trabajo en una sesión nueva. Léelo entero antes de tocar nada. Lo dejó la sesión «(RESTORA) Auditoría de aislamiento contra Neon» cuando su contexto pasó de la mitad.
+> Para quien retome el trabajo en una sesión nueva. Léelo entero antes de tocar nada. Lo dejó la sesión «(RESTORA) Planes, cobro y varios locales».
 > Es un documento vivo: quien lo use debe actualizarlo (o sustituirlo) cuando deje otro traspaso.
 
 ## 0. Primeros pasos en la sesión nueva, en este orden
 
-1. `git fetch origin claude/new-session-c92ohx && git checkout claude/new-session-c92ohx && git pull --ff-only origin claude/new-session-c92ohx` y `git log --oneline -8`. Arriba tiene que estar «Facturación: sin Stripe se ven los tres planes y cada uno pide el plan por WhatsApp» (`552c57f`) o algo posterior.
-2. **Comprobar el despliegue:** `gh api repos/ramondecu02/RESTORA/commits/<sha>/status` (`gh` funciona en este entorno; debe salir `success`). Vercel despliega esta rama en Producción con cada push. La migración `0013_planes.sql` (autorizada por el propietario el 8/10) se aplica sola en el build. El propietario dijo que en su pantalla de Facturación seguía saliendo la versión vieja («hasta 1.500 al mes», sin «Uso de este mes»): pedirle Ctrl+F5 y que confirme que ve los tres planes con botones «Pedir Premium/Pro/Max». Si sigue viejo, que mire en Vercel → Deployments que el último esté en Production «Ready» y que su registro diga «aplicada 0013_planes.sql».
-3. **Pasar la batería completa de pruebas con la versión final** (la última pasada se hizo con el bloque `plan` desactualizado; ya está corregido): ver sección 5 (hace falta `AUTH_SECRET` y `OCR_PROVIDER=mock`, o fallan la ficha del artículo, los albaranes y la concurrencia sin que sea un fallo de la app). Mirar con navegador `/cuenta/facturacion` con Stripe apagado (3 planes + «Pedir …» a WhatsApp) y con Stripe de mentira (ver sección 5).
-4. **Neon, tabla `playing_with_neon`:** la auditoría de aislamiento (`producto/scripts/audit-tenancy.mjs`) sigue en modo aviso (`--aviso` en el script `build` de `producto/package.json`) porque Neon tiene una tabla de ejemplo que no es nuestra. Está declarada en `GLOBALES`, pero en una base local el rol `restora_app` recibe permisos por defecto sobre ella y la auditoría estricta daría 8 fallos de privilegios. Solución sin migración: que el propietario ejecute en la consola SQL de Neon `drop table playing_with_neon;`. Después, quitar `--aviso`, comprobar que Vercel pasa en estricto (leer el registro con él si falla). Si prefiere migración, usar la `0014` (la `0011` y la `0012` son del Área C) y pedirle antes su visto bueno.
+1. `git fetch origin claude/new-session-c92ohx && git checkout claude/new-session-c92ohx && git pull --ff-only origin claude/new-session-c92ohx` y `git log --oneline -8`. Arriba tiene que estar «Vista de grupo…» o algo posterior.
+2. **Comprobar el despliegue:** `gh api repos/ramondecu02/RESTORA/commits/<sha>/status` (debe salir `success`). Vercel despliega esta rama en Producción con cada push. No hay migraciones nuevas desde la `0013`.
+3. **Pasar la batería completa** con la versión final (sección 5): `tsc`, `eslint`, `vitest` (428) y el e2e (**17 bloques**, ≈ 18 min, incluye `locales.mjs` y `grupo.mjs`).
+4. **Neon, tabla `playing_with_neon`:** la auditoría de aislamiento (`producto/scripts/audit-tenancy.mjs`) sigue en modo aviso (`--aviso` en el script `build` de `producto/package.json`) porque Neon tiene una tabla de ejemplo que no es nuestra. Solución sin migración: que el propietario ejecute en la consola SQL de Neon `drop table playing_with_neon;`. Después, quitar `--aviso` y comprobar que Vercel pasa en estricto.
 5. Solo entonces, lo de la sección 4 según lo que responda el propietario.
 
 ## 1. Reglas fijas
@@ -35,7 +35,12 @@
 - **Margen siempre sobre la base imponible (sin IVA).** El precio de venta se escribe sin IVA.
 - **No tiene alta de autónomo ni empresa todavía**: Stripe real, cobros y factura no se activan hasta entonces. Se le explicó que una OÜ o LTD no le evita el problema si vive y trabaja en España, y que RevenueCat no aporta para una web B2B; la vía más sencilla es autónomo con tarifa plana (confirmar con gestor).
 
-### Hecho en esta sesión (todo subido y desplegado en Producción salvo lo que indica la sección 0)
+### Hecho el 19/10 (interfaz y varios locales; todo subido)
+- **Interfaz móvil:** puntos bajo las tarjetas de «Requiere tu atención» (`ui/puntos-carrusel.tsx`), filtros plegables «Filtros» en Compras y Artículos (`ui/plegable-movil.tsx`), botón «+» que se aparta al bajar, Facturación arranca en Mensual, «Primeros pasos» se pliega cuando queda uno, el consejo de Escandallos señala el encabezado (`data-tour="esc-head"`), y `Screen` admite `sinBuscar` cuando la pantalla ya trae buscador.
+- **Varios locales (B4):** `ctx.local` es el local elegido (cookie `rs_local`, solo vale si es del negocio: `ctx.ts`); `ctx.locales` son todos. Mi local → «Tus locales» (`(app)/locales.tsx`): alta con el tope del plan (`crearLocal`: Premium y prueba 1, Pro 2, Max 5, con bloqueo para altas simultáneas) y cambio de local (`cambiarLocal`); selector en la barra lateral y en Más. El nombre del negocio solo sigue al del primer local. Sin migración. Comprobado: ninguna pantalla enseña datos del otro local, las fichas por id dan 404 y las acciones con ids del otro local no cambian nada (`tests/e2e/locales.mjs`).
+- **Vista de grupo (B6):** `/grupo` (`(app)/grupo/page.tsx`, `server/queries/grupo.ts`), solo con 2 o más locales y solo para quien ve Ventas: cifras del grupo y de cada local en un mes natural frente al anterior (selector de mes), lo que pide atención en cada local y el mismo artículo (mismo nombre y unidad) a precio distinto entre locales. Prueba `tests/e2e/grupo.mjs`.
+
+### Hecho el 8/10 (planes y cobro)
 - **Artículos** (`producto/src/app/(app)/articulos/`): lista interactiva en cliente (`lista.tsx`): búsqueda y orden al momento, pestañas Cocina/Bebidas/Otros, desplegable de tipo, filtros rápidos, grupos plegables y «mostrar más». **Margen de productos que se venden tal cual** (vino, cerveza, licor, bebida, refresco; `src/lib/venta-articulo.ts`): editor de PVP sin IVA y margen enlazados en la propia fila; crea/actualiza una receta `reventa` enlazada (`fijarVentaArticulo`), por lo que sale en Ventas y Carta; cajas y barriles repartidos entre sus ventas (`raciones`).
 - **Planes y cobro** (`producto/src/lib/planes.ts`, `server/billing.ts`, `server/ratelimit.ts`): migración `0013` (`organizations.plan_tier`, `plan_interval`); cupo en `topeDeLecturas(tenantId, org)`; Facturación con selector mensual/anual, uso del mes y locales; sin Stripe, los planes llevan a WhatsApp («Pedir Premium/Pro/Max») y se activan a mano con el SQL de `DESPLIEGUE.md`; con Stripe, un precio por plan y periodo en variables `STRIPE_PRICE_<PLAN>_<MONTH|YEAR>` (el antiguo `STRIPE_PRICE_ID` vale como Premium mensual); el webhook guarda el plan según el precio cobrado; el cambio de plan se hace desde el portal de Stripe.
 - **Web:** página de Precios con los tres planes (cupos, locales «en desarrollo», precio anual, «+ IVA»). `wrangler.toml` apunta ya a la base D1 `restora-leads` con id `c957c4ed-9ef4-4b8c-9fde-16b56b9319fd`. **El propietario aún tiene que publicar la web** (`.bat` → V para verla, P para publicar) y, después, comprobar la tabla `leads` en D1 (`npx wrangler d1 execute restora-leads --remote --command "SELECT name FROM sqlite_master WHERE type='table'"`; si no sale, `--file=./cloudflare/schema.sql`), añadir el dominio `restoraapp.app` en Pages → Custom domains y volver a poner los secretos `RESEND_API_KEY` y `LEAD_NOTIFY_TO`. Hizo falta usar `cmd` o `npx.cmd` porque PowerShell bloquea `npx.ps1`.
@@ -44,10 +49,13 @@
 ## 4. Lo que queda
 
 ### Siguiente trabajo de producto (sin esperar al propietario)
-1. **Varios locales (B4–B6, Tasks 15–17 de `docs/superpowers/plans/2026-10-05-restora-roadmap.md`)**: la app gestiona un local por negocio (`loadLocal` toma el primero). Pro permite 2 y Max 5: construir alta de locales con el límite de `localesDe(org)`, selector de local activo, panel conjunto y aislamiento (RLS por negocio ya existe; revisar `sys()` y `tests/e2e/fugas.mjs`). Mientras no exista, la web y Facturación lo marcan «próximamente / en desarrollo».
-2. **Funcionalidades de Pro y Max** (a decidir con el propietario, propuesta en `PRECIOS-Y-COSTES.md`): comparador de proveedores con propuesta de pedido, informe mensual PDF, previsión de compras, exportación contable y API, roles por local. Hoy los tres planes tienen las mismas funciones y solo cambian cupo y locales.
-3. **Botón de administración** para activar un plan sin SQL (opcional; lo ofrecí).
-4. IVA de venta por producto de reventa: hoy el local tiene un solo `iva_venta`; el margen ya no depende de él, pero el PVP con IVA que se guarda para carta es aproximado en alcohol (21 %). Ofrecer resolverlo.
+1. **B5: RLS también por local** (Task 16, defensa en profundidad). Hoy el aislamiento entre locales lo da el código (cada consulta filtra `local_id`; probado), no la base de datos. Requiere **migración nueva (`0014`) y `withTenant(…, { localId })`**: pedir antes el visto bueno del propietario.
+2. **Baja de un local** (hoy solo hay alta): borrar un local borra en cascada todos sus datos; hace falta confirmación fuerte y exportar antes.
+3. **Web:** cuando el propietario lo decida, quitar «en desarrollo» de los locales en `lib/copy/*.ts` y en las pruebas `tests/web/promesas.test.ts` y `precios.test.ts` (la app ya los permite). La publica él.
+4. **Funcionalidades de Pro y Max** (a decidir con el propietario, propuesta en `PRECIOS-Y-COSTES.md`): comparador de proveedores con propuesta de pedido, informe mensual PDF, previsión de compras, exportación contable y API, roles por local (hoy los roles son del negocio entero). Hoy los tres planes tienen las mismas funciones y solo cambian cupo y locales.
+5. **Interfaz pendiente:** el consejo de Escandallos sigue quedando sobre las primeras filas; revisar el resto de pantallas en móvil con datos reales.
+6. **Botón de administración** para activar un plan sin SQL (opcional).
+7. IVA de venta por producto de reventa: hoy el local tiene un solo `iva_venta`; el PVP con IVA que se guarda para carta es aproximado en alcohol (21 %).
 
 ### Espera al propietario (no avanzar sin su respuesta)
 - **Alta de autónomo** (o sociedad) y datos fiscales (razón social, NIF, domicilio; las páginas legales dicen «Pendiente de completar»), **teléfono nuevo** (la web lleva +34 640 648 985), perfiles de redes, vídeo. Con el alta: cuenta de Stripe, 3 productos y 6 precios sin IVA, webhook, variables y prueba con `4242 4242 4242 4242` (`DESPLIEGUE.md`, sección 8). Preguntas pendientes: Stripe Tax o IVA fijo del 21 %; SEPA desde el principio (no contestó); cómo facturar (Stripe no emite facturas válidas en España).
@@ -74,13 +82,13 @@ cd producto && npm ci
 export DATABASE_URL=postgres://restora@127.0.0.1:5544/restora_a10 AUTH_SECRET=$(openssl rand -hex 32) OCR_PROVIDER=mock
 npm run build                                   # migra, audita y compila
 ALLOW_DEV_MAILBOX=1 nohup npx next start --port 3101 > /var/lib/scratchpg/next.log 2>&1 &
-E2E_BASE=http://localhost:3101 node tests/e2e/run.mjs                      # 15 bloques, ≈ 15 min
+E2E_BASE=http://localhost:3101 node tests/e2e/run.mjs                      # 17 bloques, ≈ 18 min
 ONLY=plan,cuenta-ui E2E_BASE=http://localhost:3101 node tests/e2e/run.mjs  # solo algunos bloques
 ```
 
 **Sin `AUTH_SECRET`** la ficha del artículo da 500 y fallan fugas; **sin `OCR_PROVIDER=mock`** fallan los bloques de albaranes (`calidad`) y la concurrencia. Para ver Facturación con pagos «activos» (sin cobrar nada): arrancar además con `STRIPE_SECRET_KEY=sk_test_fake` y los `STRIPE_PRICE_*` inventados.
 
-Antes de dar por buena una tarea de `producto/`: `npx tsc --noEmit`, `npx eslint src`, `REQUIRE_DB_TESTS=1 npx vitest run` (428 pruebas) y el e2e completo (la sesión anterior solo vio fallos esperados de `plan` por el cambio de cupo; ya corregidos en `tests/e2e/plan.mjs`). Para parar tu servidor: `fuser -k 3101/tcp`.
+Antes de dar por buena una tarea de `producto/`: `npx tsc --noEmit`, `npx eslint src`, `REQUIRE_DB_TESTS=1 npx vitest run` (428 pruebas) y el e2e completo (17 bloques). Para parar tu servidor: `fuser -k 3101/tcp`.
 
 **Web:** `npm ci` en la raíz, `npm run test:web` (21), `npm run build:cf`, `npm run qa:web -- --rapido`. Para una captura de `out/` hay que servirla con la ruta `/es/precios.html` y hacer scroll para que salgan los bloques con animación.
 
@@ -106,6 +114,6 @@ El clúster de pruebas, el servidor del puerto 3101 y el usuario `scratchpg` son
 
 ## 8. Siguiente conversación
 
-- **Título:** «(RESTORA) Planes, cobro y varios locales».
-- **Primer mensaje:** «Lee docs/superpowers/traspaso-de-sesion.md entero y empieza por la sección 0 (comprobar el despliegue de Facturación y pasar la batería completa). Después seguimos con varios locales (Pro 2, Max 5) y las funcionalidades de Pro y Max.»
+- **Título:** «(RESTORA) Varios locales: RLS por local y funcionalidades Pro y Max».
+- **Primer mensaje:** «Lee docs/superpowers/traspaso-de-sesion.md entero y empieza por la sección 0 (comprobar el despliegue y pasar la batería completa). Después seguimos con lo de la sección 4 según lo que decida el propietario.»
 - Las siguientes, según lo que decida el propietario: «(RESTORA) Activar Stripe y primer cobro» (cuando tenga el alta), «(RESTORA) Publicar la web», «(RESTORA) Coste y calidad de la lectura de albaranes».

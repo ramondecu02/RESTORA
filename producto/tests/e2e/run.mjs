@@ -12,6 +12,7 @@ const suites = [
   ["Fugas entre negocios (rutas con id, archivos, acciones, invitaciones, concurrencia)", "fugas.mjs"],
   ["Prueba gratuita y bloqueo", "plan.mjs"],
   ["Varios locales (tope por plan, aislamiento entre locales, local elegido)", "locales.mjs"],
+  ["Vista de grupo (suma, comparativa de precios, cambio de local)", "grupo.mjs"],
   ["Calidad de la lectura (descuento, portes, dudas)", "calidad.mjs"],
   ["Borrar albaranes (impacto, ventas con coste congelado)", "borrado.mjs"],
   ["Corregir y borrar (proveedores, artículos, platos, inventario, ventas, equipo)", "correcciones.mjs"],

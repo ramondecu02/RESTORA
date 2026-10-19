@@ -17,7 +17,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // Cada página decide si se puede usar con la prueba terminada: el marco se pinta igual
   const ctx = await requireApp({ permitirBloqueo: true });
   const b = await navBadges(ctx);
-  const items = buildNav(ctx.role, b);
+  const items = buildNav(ctx.role, b, ctx.locales.length > 1);
   const aviso = avisoPlan(ctx.org);
   // El tema se guarda en la cuenta; si este dispositivo no lo tiene en su cookie (otro navegador, cookies borradas), se le aplica
   const tema = ctx.prefs.theme === "light" || ctx.prefs.theme === "dark" ? ctx.prefs.theme : "system";
@@ -26,7 +26,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <AppFrame>
       <a className="skip" href="#content">Saltar al contenido</a>
       <div className="scr appx">
-        <SideNav items={items} local={ctx.local.name} locales={ctx.locales} localId={ctx.local.id} user={ctx.name} roleLabel={ROLE_LABEL[ctx.role]} initials={initials(ctx.name)} />
+        <SideNav items={items} local={ctx.local.name} locales={ctx.locales.map((l) => ({ id: l.id, name: l.name }))} localId={ctx.local.id} user={ctx.name} roleLabel={ROLE_LABEL[ctx.role]} initials={initials(ctx.name)} />
         <div className="main">
           {aviso ? (
             <div className="planbar" role="status">

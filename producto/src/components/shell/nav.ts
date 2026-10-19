@@ -5,7 +5,8 @@ import type { Role } from "@/server/rbac";
 export type NavItem = { href: string; label: string; icon: IconName; badge?: number; ro?: boolean; match?: string[] } | { group: string };
 export type Badges = { revisar: number; fuera: number; bajo: number; avisos: number };
 
-export function buildNav(role: Role, b: Badges): NavItem[] {
+/** `conGrupo`: el negocio tiene más de un local y se ofrece la vista de grupo (solo a quien ve ventas). */
+export function buildNav(role: Role, b: Badges, conGrupo = false): NavItem[] {
   const cocina = role === "cocina", prop = role === "propietario";
   const it: NavItem[] = [
     { href: "/hoy", label: "Hoy", icon: "home", match: ["/hoy"] },
@@ -21,6 +22,7 @@ export function buildNav(role: Role, b: Badges): NavItem[] {
     { href: "/carta", label: "Carta", icon: "grid", match: ["/carta"] },
   ];
   if (!cocina) it.push({ group: "Ventas" }, { href: "/ventas", label: "Ventas y rentabilidad", icon: "chart", match: ["/ventas"] });
+  if (!cocina && conGrupo) it.push({ href: "/grupo", label: "Grupo de locales", icon: "store", match: ["/grupo"] });
   it.push({ group: "Cuenta" }, { href: "/cuenta", label: "Mi local", icon: "store", ro: !prop, match: ["/cuenta"] });
   if (prop) it.push({ href: "/cuenta/usuarios", label: "Usuarios y roles", icon: "users", match: ["/cuenta/usuarios"] }, { href: "/cuenta/facturacion", label: "Facturación", icon: "card", match: ["/cuenta/facturacion"] });
   return it;
@@ -43,5 +45,5 @@ export const TABS: { key: string; href: string; label: string; icon: IconName; p
   { key: "compras", href: "/compras", label: "Compras", icon: "receipt", prefixes: ["/compras", "/articulos", "/proveedores", "/inventario"] },
   { key: "esc", href: "/escandallos", label: "Escandallos", icon: "book", prefixes: ["/escandallos"] },
   { key: "carta", href: "/carta", label: "Carta", icon: "grid", prefixes: ["/carta"] },
-  { key: "mas", href: "/mas", label: "Más", icon: "more", prefixes: ["/mas", "/ventas", "/cuenta"] },
+  { key: "mas", href: "/mas", label: "Más", icon: "more", prefixes: ["/mas", "/ventas", "/grupo", "/cuenta"] },
 ];

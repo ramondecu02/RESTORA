@@ -17,7 +17,7 @@ export const metadata = { title: "Más" };
 export default async function Mas() {
   const ctx = await requireApp();
   const b = await navBadges(ctx);
-  const items = buildNav(ctx.role, b);
+  const items = buildNav(ctx.role, b, ctx.locales.length > 1);
   const plan = estadoPlan(ctx.org);
   return (
     <Screen title="Más" sub={ctx.local.name}>

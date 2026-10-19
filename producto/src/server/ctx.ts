@@ -19,9 +19,8 @@ export type Local = {
   id: string; name: string; address: string; postal_code: string; ciudad: string; lema: string;
   iva_venta: number; fc_objetivo: number; comensales_dia: number | null; currency: string;
 };
-/** Los locales del negocio (los que el plan permite: de 1 a 5), para el selector. */
-export type LocalRef = { id: string; name: string };
-export type AppCtx = SessionData & { org: OrgInfo; local: Local; locales: LocalRef[]; tenantId: string; role: Role };
+/** `locales` son todos los del negocio (los que el plan permite: de 1 a 5); `local`, el elegido. */
+export type AppCtx = SessionData & { org: OrgInfo; local: Local; locales: Local[]; tenantId: string; role: Role };
 
 export class UserError extends Error {}
 
@@ -73,7 +72,7 @@ export const getAppCtx = cache(async (): Promise<AppCtx | null> => {
   const elegido = (await cookies()).get(localCookieName())?.value;
   const local = todos.find((l) => l.id === elegido) ?? todos[0];
   if (!local) return null;
-  return { ...o.s, org: o.org, local, locales: todos.map((l) => ({ id: l.id, name: l.name })), tenantId: o.org.id, role: o.org.role };
+  return { ...o.s, org: o.org, local, locales: todos, tenantId: o.org.id, role: o.org.role };
 });
 
 /** Para páginas y acciones de la app: exige sesión, email verificado, negocio y alta completada. Con la prueba terminada
