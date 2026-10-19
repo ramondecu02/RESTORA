@@ -120,8 +120,8 @@ async function EscandallosContenido({ ctx, sp }: { ctx: AppCtx; sp: Sp }) {
           ? <Link key={f} className="chip is-on" href={href({ fam: "" })} aria-label={`Quitar el filtro de ${f}`}>{f} <Icon name="close" size={14} /></Link>
           : <Link key={f} className="chip" href={href({ fam: f })}>{f}</Link>)) : null}
       </nav>
-      <section className="card">
-        <div className="card-h" data-tour="esc-list"><h2 className="h3">{rows.length === filas.length ? "Carta completa" : plural(rows.length, "plato", "platos")}</h2><span className="muted small">Objetivo {ctx.local.fc_objetivo} % · media ponderada {pct(res.fc)}</span></div>
+      <section className="card" data-tour="esc-list">
+        <div className="card-h" data-tour="esc-head"><h2 className="h3">{rows.length === filas.length ? "Carta completa" : plural(rows.length, "plato", "platos")}</h2><span className="muted small">Objetivo {ctx.local.fc_objetivo} % · media ponderada {pct(res.fc)}</span></div>
         {rows.length ? <>
           <div className="tbl-wrap pg-wide"><table className="tbl tbl-clk">
             <thead><tr>{th("plato", "Plato", false)}{th("coste", "Coste")}{th("pvp", "PVP")}{th("fc", "Food cost")}{th("margen", "Margen")}{th("uds", "Uds/mes")}<th>Estado</th></tr></thead>
@@ -150,7 +150,7 @@ async function EscandallosContenido({ ctx, sp }: { ctx: AppCtx; sp: Sp }) {
         )}
       </section>
       <div className="note"><Icon name="layers" /><p>Las elaboraciones (salsas, fondos, masas) se calculan una vez y se usan en varios platos. Si sube un ingrediente, todo se recalcula en cascada.</p></div>
-      <Tour k="escandallos" show={!ctx.prefs.seen?.escandallos && rows.length > 0} steps={[{ sel: '[data-tour="esc-list"]', h: "Tus platos, con su coste al día", p: "La etiqueta dice si cada plato cumple tu food cost objetivo. Si sube un ingrediente, se recalcula solo." }]} />
+      <Tour k="escandallos" show={!ctx.prefs.seen?.escandallos && rows.length > 0} steps={[{ sel: '[data-tour="esc-head"]', h: "Tus platos, con su coste al día", p: "La etiqueta dice si cada plato cumple tu food cost objetivo. Si sube un ingrediente, se recalcula solo." }]} />
     </>
   );
 }
