@@ -432,6 +432,9 @@ button.li:hover .li-main b, a.li:hover .li-main b { color: var(--brand); text-de
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tab.is-on { color: var(--accent); } }
 .fab { position: absolute; right: 16px; bottom: 80px; z-index: 10; width: 58px; height: 58px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; box-shadow: 0 14px 28px -10px rgba(20, 32, 26, .6); }
 .fab:hover { background: var(--brand-2); }
+.fab { transition: transform .22s var(--ease-out), opacity .22s var(--ease-out), background-color .15s; }
+.fab-off:not(:focus-visible) { transform: translateY(24px) scale(.8); opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .fab { transition: none; } }
 .tsearch { position: relative; width: 300px; }
 .tsearch .ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
 .tsearch .inp { padding-left: 38px; min-height: 40px; font-size: 14.5px; background: var(--bg); }
@@ -1260,7 +1263,12 @@ a.barh-row:hover .barh-l, button.barh-row:hover .barh-l { color: var(--brand); t
   .focus-list { display: grid; grid-auto-flow: column; grid-auto-columns: 84%; grid-template-columns: none; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px 4px; scroll-padding-inline: 16px; gap: 10px; }
   .focus-list::-webkit-scrollbar { display: none; }
   .focus-list > .fc { scroll-snap-align: start; }
+  .focus .dots { display: flex; justify-content: center; gap: 2px; margin-top: -2px; }
 }
+.dots { display: none; }
+.dot { position: relative; width: 24px; height: 24px; background: none; border: 0; padding: 0; cursor: pointer; }
+.dot::after { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: var(--line-2); transition: background .2s, transform .2s var(--ease-out); }
+.dot[aria-current="true"]::after { background: var(--brand); transform: scale(1.25); }
 
 
 /* ================= Sistema común: fichas, atención y esqueletos en todas las pantallas ================= */
@@ -1432,3 +1440,16 @@ button.chip { cursor: pointer; font-family: inherit; }
 .meter > span.warn { background: var(--warn); }
 .meter > span.bad { background: var(--bad); }
 @media (prefers-reduced-motion: reduce) { .meter > span { transition: none; } }
+
+/* Filtros que se esconden tras un botón en el móvil (PlegableMovil); en ancho, los controles salen siempre */
+.plg-b { display: none; }
+.plg-c { display: contents; }
+@container pg (max-width: 559.98px) {
+  .plg-b { display: inline-flex; align-items: center; gap: 6px; }
+  .plg-b .cnt { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--ink); color: var(--bg); font-size: 12px; font-weight: 700; }
+  .plg-c { display: none; flex-basis: 100%; width: 100%; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .plg-c[data-open] { display: flex; }
+  .plg-c .inp, .plg-c .al-sel, .plg-c .inp-prov { flex: 1 1 140px; width: auto; }
+  .toolbar > .searchbox { flex: 1 1 0; }
+  .al .toolbar > .searchbox { flex: 1 1 0; }
+}

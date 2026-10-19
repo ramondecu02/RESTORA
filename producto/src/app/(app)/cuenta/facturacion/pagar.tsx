@@ -13,7 +13,7 @@ export function Pagar({ activo, tieneCliente, disponibles, actual, intervaloActu
   /** Sin pagos con Stripe: cada plan lleva a WhatsApp con el mensaje escrito y se activa a mano. */ manual?: boolean; negocio?: string;
 }) {
   const [pending, start] = useTransition();
-  const [intervalo, setIntervalo] = useState<Intervalo>(intervaloActual ?? (disponibles.some((d) => d.intervalo === "year") ? "year" : "month"));
+  const [intervalo, setIntervalo] = useState<Intervalo>(intervaloActual ?? (disponibles.some((d) => d.intervalo === "month") ? "month" : "year"));
   const hayAnual = disponibles.some((d) => d.intervalo === "year"), hayMensual = disponibles.some((d) => d.intervalo === "month");
   const puede = (t: Tier) => disponibles.some((d) => d.tier === t && d.intervalo === intervalo);
   const portal = () => start(async () => { const r = await irAPortal(); if (r && !r.ok) toastError(r.error); });

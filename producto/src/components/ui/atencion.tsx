@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/icons";
+import { PuntosCarrusel } from "./puntos-carrusel";
 
 export type Foco = {
   tono: "bad" | "warn" | "info";
@@ -49,6 +50,7 @@ export function Atencion({ focos, titulo, id, max = 4, chip, verTodo, compacta =
           <p className="fc-p">{f.p}</p>
           <div className="fc-a"><Link className="btn btn-2 btn-xs" href={f.a[1]}>{f.a[0]}</Link>{f.b ? <Link className="btn btn-3 btn-xs" href={f.b[1]}>{f.b[0]}</Link> : null}</div>
         </article>))}</div>
+      {Math.min(focos.length, max) > 1 ? <PuntosCarrusel total={Math.min(focos.length, max)} /> : null}
       {verTodo && focos.length > max ? <Link className="linkbtn" href={verTodo[1]}>{verTodo[0]} <Icon name="arrowR" size={16} /></Link> : null}
     </section>
   );

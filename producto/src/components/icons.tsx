@@ -44,6 +44,7 @@ const P = {
   layers: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
   tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  filter: '<path d="M4 6h16M7 12h10M10 18h4"/>',
   sheet: '<path d="M4 4h16v16H4z"/><path d="M4 10h16M10 10v10"/>',
   bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
   printer: '<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/>',

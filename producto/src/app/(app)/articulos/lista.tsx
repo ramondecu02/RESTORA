@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/icons";
 import { NumInput } from "@/components/ui/num-input";
+import { PlegableMovil } from "@/components/ui/plegable-movil";
 import { toast, toastError } from "@/components/ui/toast";
 import { estadoFC } from "@/lib/costing";
 import { eur, pct, pctN, plural, qty } from "@/lib/format";
@@ -130,16 +131,18 @@ export function ListaArticulos({ filas, iva, fcObjetivo, canPrecios, inicial }: 
           <Icon name="search" size={18} />
           <input className="inp" type="search" value={q} onChange={(e) => cambiaQ(e.target.value)} placeholder="Buscar artículo" aria-label="Buscar artículo" enterKeyHint="search" />
         </div>
-        {cats.length > 1 ? (
-          <select className="inp al-sel" value={cat} onChange={(e) => cambiaCat(e.target.value)} aria-label="Tipo de artículo">
-            <option value="">Todos los tipos</option>
-            {cats.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.n})</option>)}
+        <PlegableMovil activos={(cat ? 1 : 0) + (orden !== "nombre" ? 1 : 0)}>
+          {cats.length > 1 ? (
+            <select className="inp al-sel" value={cat} onChange={(e) => cambiaCat(e.target.value)} aria-label="Tipo de artículo">
+              <option value="">Todos los tipos</option>
+              {cats.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.n})</option>)}
+            </select>
+          ) : null}
+          <select className="inp al-sel" value={orden} onChange={(e) => cambiaOrden(e.target.value as Orden)} aria-label="Ordenar">
+            <option value="nombre">Por tipo</option><option value="gasto">Más compra (90 días)</option><option value="subida">Subidas de precio</option>
+            <option value="precio">Más caros</option><option value="margen">Menos margen primero</option>
           </select>
-        ) : null}
-        <select className="inp al-sel" value={orden} onChange={(e) => cambiaOrden(e.target.value as Orden)} aria-label="Ordenar">
-          <option value="nombre">Por tipo</option><option value="gasto">Más compra (90 días)</option><option value="subida">Subidas de precio</option>
-          <option value="precio">Más caros</option><option value="margen">Menos margen primero</option>
-        </select>
+        </PlegableMovil>
       </div>
 
       <div className="al-bar">

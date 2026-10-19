@@ -4,7 +4,7 @@ import { Icon } from "@/components/icons";
 import { requireApp, hasPerm } from "@/server/ctx";
 import { preciosConfigurados, stripeOn } from "@/server/billing";
 import { topeDeLecturas } from "@/server/ratelimit";
-import { avisoCupo, localesDe, nombrePlan, planDe, TIERS } from "@/lib/planes";
+import { avisoCupo, localesDe, planDe, TIERS } from "@/lib/planes";
 import { diasDeGracia } from "@/server/plan";
 import { fecha, num } from "@/lib/format";
 import { CONTACTO_EMAIL, CONTACTO_TEL, CONTACTO_WHATSAPP } from "@/lib/contacto";
@@ -51,7 +51,7 @@ export default async function Facturacion({ searchParams }: { searchParams: Prom
       <section className="card">
         <div className="card-h"><h2 className="h3">Qué incluye</h2></div>
         <ul className="stack-sm small">
-          <li className="row"><Icon name="check" size={18} /> {uso.max > 0 ? `Lectura automática de albaranes, facturas y cartas: ${num(uso.max, 0)} al mes${uso.porPlan || plan == null ? ` (${nombrePlan(ctx.org)})` : ""}` : "Lectura automática de albaranes y facturas: ahora mismo desactivada"}</li>
+          {uso.max > 0 ? null : <li className="row"><Icon name="check" size={18} /> Lectura automática de albaranes y facturas: ahora mismo desactivada</li>}
           <li className="row"><Icon name="check" size={18} /> Escandallos, carta, inventario, ventas y avisos</li>
           <li className="row"><Icon name="check" size={18} /> Todo el equipo del local, con sus roles</li>
           <li className="row"><Icon name="check" size={18} /> Tus datos se pueden exportar y borrar cuando quieras</li>

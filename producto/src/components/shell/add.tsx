@@ -11,7 +11,22 @@ export function AddButton() {
   return <button type="button" className="btn btn-sm only-wide" onClick={open} data-tour="add-top"><Icon name="plus" size={18} /> Añadir</button>;
 }
 export function Fab() {
-  return <button type="button" className="fab only-narrow" onClick={open} aria-label="Añadir" data-tour="add-fab"><Icon name="plus" size={24} /></button>;
+  // Al bajar por una lista se aparta para no tapar precios y cifras; al subir (o al llegar arriba) vuelve.
+  const [oculto, setOculto] = useState(false);
+  useEffect(() => {
+    const c = document.getElementById("content");
+    if (!c) return;
+    let y = c.scrollTop;
+    const f = () => {
+      const n = c.scrollTop;
+      if (Math.abs(n - y) < 8) return;
+      setOculto(n > y && n > 120);
+      y = n;
+    };
+    c.addEventListener("scroll", f, { passive: true });
+    return () => c.removeEventListener("scroll", f);
+  }, []);
+  return <button type="button" className={`fab only-narrow ${oculto ? "fab-off" : ""}`} onClick={open} aria-label="Añadir" data-tour="add-fab"><Icon name="plus" size={24} /></button>;
 }
 
 type Opt = { href: string; icon: IconName; title: string; sub: string; rec?: boolean };

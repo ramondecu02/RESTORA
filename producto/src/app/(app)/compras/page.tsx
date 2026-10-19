@@ -9,6 +9,7 @@ import { Atencion, porGravedad, type Foco } from "@/components/ui/atencion";
 import { CountUp } from "@/components/ui/count-up";
 import { Esqueleto } from "@/components/ui/esqueleto";
 import { Kpi, Kpis } from "@/components/ui/kpi";
+import { PlegableMovil } from "@/components/ui/plegable-movil";
 import { all, one, withTenant } from "@/server/db";
 import { requireApp, hasPerm, type AppCtx } from "@/server/ctx";
 import { navBadges } from "@/server/queries/badges";
@@ -122,12 +123,14 @@ async function ComprasContenido({ ctx, sp, canUpload }: { ctx: AppCtx; sp: Sp; c
             <>
               <form className="toolbar" action="/compras">
                 <div className="searchbox"><Icon name="search" size={18} /><input className="inp" type="search" name="q" defaultValue={q} placeholder="Número o proveedor" aria-label="Buscar documentos" /></div>
-                <select className="inp inp-prov" name="prov" defaultValue={data.prov ?? ""} aria-label="Proveedor">
-                  <option value="">Todos los proveedores</option>
-                  {data.provs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-                {estado !== "todos" ? <input type="hidden" name="estado" value={estado} /> : null}
-                <button className="btn btn-2 btn-sm" type="submit">Filtrar</button>
+                <PlegableMovil activos={data.prov ? 1 : 0}>
+                  <select className="inp inp-prov" name="prov" defaultValue={data.prov ?? ""} aria-label="Proveedor">
+                    <option value="">Todos los proveedores</option>
+                    {data.provs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                  {estado !== "todos" ? <input type="hidden" name="estado" value={estado} /> : null}
+                  <button className="btn btn-2 btn-sm" type="submit">Filtrar</button>
+                </PlegableMovil>
               </form>
               <nav className="chips" aria-label="Filtrar por estado">
                 <Link className={`chip ${estado === "todos" ? "is-on" : ""}`} href={href({ estado: "", p: "" })} aria-current={estado === "todos" ? "page" : undefined}>Todos <span className="cnt">{cu.guardados + badges.revisar}</span></Link>
